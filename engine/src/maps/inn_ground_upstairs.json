@@ -4,37 +4,36 @@
   "ground": {
     "type": "room",
     "rows": [
-      "WWWWWWWWWW",
-      "WWWWWWWWWW",
-      "WffffffffW",
-      "WffffffffW",
-      "WffffffffW",
-      "WffffffffW",
-      "WffffffffW",
-      "WWWWWWWWWW"
+      "WWWWWWWWW",
+      "WWWWWWWWW",
+      "WfffffffW",
+      "WfffffffW",
+      "WWWWWWWWW"
     ],
     "floor": [
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww",
-      "wwwwwwwwwwwwwwwwwwww"
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwww"
     ]
   },
   "spawns": {},
   "exits": [],
   "props": [
-    {"sprite": "stairs_down", "x": 176, "y": 95, "layer": "floor", "behavior": {"type": "stairs", "to": "inn_ground"}}
+    {"sprite": "stairs_down", "x": 144, "y": 95, "layer": "floor", "behavior": {"type": "stairs", "to": "inn_ground"}},
+    {"layer": "wall", "sprite": "wall_door", "x": 105, "y": 64, "behavior": {"type": "door", "to": "inn_ground_upstairs_room"}},
+    {"layer": "wall", "sprite": "wall_door", "x": 57, "y": 64, "behavior": {"type": "door", "to": "inn_ground_upstairs_room_1"}},
+    {"layer": "wall", "sprite": "wall_door", "x": 185, "y": 64, "behavior": {"type": "door", "to": "inn_ground_upstairs_room_2"}},
+    {"layer": "wall", "sprite": "wall_door", "x": 233, "y": 64, "behavior": {"type": "door", "to": "inn_ground_upstairs_room_3"}},
+    {"layer": "floor", "sprite": "runner_left", "x": 93, "y": 117},
+    {"layer": "floor", "sprite": "runner_middle", "x": 124, "y": 117},
+    {"layer": "floor", "sprite": "runner_middle", "x": 156, "y": 117},
+    {"layer": "floor", "sprite": "runner_right", "x": 187, "y": 117}
   ]
 }
