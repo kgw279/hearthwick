@@ -35,7 +35,7 @@ import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { CELL } from '../world/field';
 import { TileMap, TILE } from '../world/tilemap';
-import { wrapWalls } from '../world/room';
+import { unwrapWalls, wallNear, wrapWalls } from '../world/room';
 import { drawSlot } from '../ui/items';
 import { Nav } from '../ui/screen';
 import { Menu, type MenuPage } from './menu';
@@ -872,8 +872,11 @@ export class Editor {
     const sx = Math.floor(cx / 2);
     const sy = Math.floor(cy / 2);
     if (size === CELL && erase && ch === '.') {
-      // erasing wood floor takes the floor away altogether (the whole 32px cell)
-      if (set(ground.rows, sx, sy, '.')) this.roomChanged('Floor removed');
+      // erasing wood floor takes the floor away altogether (the whole 32px cell), and the walls follow:
+      // ones only it needed go, and what's left is walled in again
+      if (!set(ground.rows, sx, sy, '.')) return;
+      ground.rows.splice(0, ground.rows.length, ...unwrapWalls(ground.rows, sx, sy, wallNear(ground.rows, sx, sy, this.wallMat)));
+      this.roomChanged('Floor removed');
       return;
     }
     if (size === CELL) {
@@ -888,7 +891,11 @@ export class Editor {
       return;
     }
     if (erase) {
-      if (set(ground.rows, cx, cy, ch)) this.roomChanged('Wall removed');
+      // a wall erased becomes floor, walled in like painted floor (at the room's edge, where there's
+      // nothing beyond, that leaves a doorway)
+      if (!set(ground.rows, cx, cy, ch)) return;
+      if (ch === 'f') ground.rows.splice(0, ground.rows.length, ...wrapWalls(ground.rows, cx, cy, wallNear(ground.rows, cx, cy, this.wallMat)));
+      this.roomChanged('Wall removed');
       return;
     }
     // painting floor walls itself in with the material of the last wall brush (plain, outer)
@@ -1168,7 +1175,6 @@ export class Editor {
     window.addEventListener('mouseup', (e) => {
       if (e.button === 1) this.pan = null;
     });
-    canvas.addEventListener('contextmenu', (e) => this.active && e.preventDefault());
     canvas.addEventListener('mousedown', (e) => {
       if (!this.active) return;
       this.mouse = toView(e);

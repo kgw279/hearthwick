@@ -60,6 +60,10 @@ export class Input {
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => this.keys.clear());
+    // The browser's right-click menu would take the key-ups of any keys held while it's open, leaving
+    // them stuck down: the game never shows it. (Hiding the page drops held keys for the same reason.)
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('visibilitychange', () => this.keys.clear());
   }
 
   /** Call once per fixed update, before game logic. */

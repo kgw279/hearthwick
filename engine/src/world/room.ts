@@ -283,3 +283,45 @@ export function wrapWalls(rows: string[], x: number, y: number, wall: string): s
   for (let dy = -2; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) set(x + dx, y + dy);
   return out;
 }
+
+/** Outer walls: the ones that wrap round floor (interior walls are drawn on purpose and stay). */
+const WRAPPING = new Set(['W', 'S']);
+
+/**
+ * Wall-wrapping for erasing: after the floor at structure cell (x, y) is taken away, outer walls that
+ * only it needed go, and the floor left round it is walled in again (so the erased cell itself becomes
+ * wall where the rest of the floor needs one). The same rule as painting: a floor cell needs walls one
+ * cell to each side, one below, and two above (the wall face and its cap).
+ */
+export function unwrapWalls(rows: string[], x: number, y: number, wall: string): string[] {
+  let out = rows.slice();
+  const h = out.length;
+  const w = out[0].length;
+  const at = (cx: number, cy: number) => (cx < 0 || cy < 0 || cx >= w || cy >= h ? '.' : out[cy][cx]);
+  const needed = (cx: number, cy: number) => {
+    for (let fy = cy - 1; fy <= cy + 2; fy++) for (let fx = cx - 1; fx <= cx + 1; fx++) if (at(fx, fy) === 'f') return true;
+    return false;
+  };
+  for (let cy = y - 2; cy <= y + 1; cy++) {
+    for (let cx = x - 1; cx <= x + 1; cx++) {
+      if (cx < 0 || cy < 0 || cx >= w || cy >= h || !WRAPPING.has(out[cy][cx]) || needed(cx, cy)) continue;
+      out[cy] = out[cy].slice(0, cx) + '.' + out[cy].slice(cx + 1);
+    }
+  }
+  for (let fy = y - 1; fy <= y + 2; fy++) for (let fx = x - 1; fx <= x + 1; fx++) if (at(fx, fy) === 'f') out = wrapWalls(out, fx, fy, wall);
+  return out;
+}
+
+/** The outer-wall material most used round structure cell (x, y): what new walls there should match. */
+export function wallNear(rows: string[], x: number, y: number, fallback: string): string {
+  let plaster = 0;
+  let stone = 0;
+  for (let cy = y - 2; cy <= y + 2; cy++) {
+    for (let cx = x - 2; cx <= x + 2; cx++) {
+      const c = rows[cy]?.[cx];
+      if (c === 'W') plaster++;
+      else if (c === 'S') stone++;
+    }
+  }
+  return plaster === stone ? fallback : plaster > stone ? 'W' : 'S';
+}
