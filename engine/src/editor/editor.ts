@@ -34,6 +34,7 @@ const MAGNET = 8; // px within which a prop pulls flush against a wall or shore
 const CURSOR_SPEED = 110; // world px per second at zoom 1
 const REPEAT_FIRST = 0.22;
 const REPEAT_NEXT = 0.06;
+const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
 const SLOT = 32;
 const PANEL_H = 80;
 const HUD_H = 22;
@@ -152,30 +153,37 @@ export class Editor {
   }
 
   /**
-   * A tap moves one step (one snap step for props, one tile on the ground). Held, props glide (free snap)
-   * or repeat steps (snapped); ground repeats tile steps.
+   * Left stick: the cursor glides freely, speed by how far it's pushed. D-pad / arrow keys: a tap nudges
+   * one pixel (one tile with the ground tool); holding repeats, then glides. Snapping applies only to
+   * where a prop lands, never to how the cursor moves.
    */
   private moveCursor(dt: number): void {
-    const m = this.game.input.move();
-    const dx = Math.abs(m.x) > 0.3 ? Math.sign(m.x) : 0;
-    const dy = Math.abs(m.y) > 0.3 ? Math.sign(m.y) : 0;
+    const input = this.game.input;
+    const speed = CURSOR_SPEED / this.zoom;
+    const a = input.analog();
+    if (a.x || a.y) {
+      this.mouse = null;
+      this.following = true;
+      this.setCursor(this.cursor.x + a.x * speed * dt, this.cursor.y + a.y * speed * dt);
+      return;
+    }
+    const { x: dx, y: dy } = input.digital();
     if (!dx && !dy) {
       this.repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
       return;
     }
-    this.mouse = null; // keys/pad take over from the mouse
+    this.mouse = null;
     this.following = true;
-    const step = this.tool === 'ground' || this.snap === 'tile' ? TILE : this.snap;
+    const step = this.tool === 'ground' ? TILE : 1;
     if (dx !== this.repeat.dx || dy !== this.repeat.dy) {
       this.repeat = { dx, dy, held: 0, next: REPEAT_FIRST };
       this.setCursor(this.cursor.x + dx * step, this.cursor.y + dy * step);
       return;
     }
     this.repeat.held += dt;
-    if (this.repeat.held < REPEAT_FIRST) return;
-    if (step === 1) {
-      const speed = CURSOR_SPEED / this.zoom;
-      this.setCursor(this.cursor.x + m.x * speed * dt, this.cursor.y + m.y * speed * dt);
+    if (step === 1 && this.repeat.held >= GLIDE_AFTER) {
+      const len = Math.hypot(dx, dy);
+      this.setCursor(this.cursor.x + (dx / len) * speed * dt, this.cursor.y + (dy / len) * speed * dt);
     } else if (this.repeat.held >= this.repeat.next) {
       this.repeat.next += REPEAT_NEXT;
       this.setCursor(this.cursor.x + dx * step, this.cursor.y + dy * step);

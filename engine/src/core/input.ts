@@ -102,10 +102,22 @@ export class Input {
   /** Movement as a vector with length <= 1 (analog stick, or D-pad/keys normalised). */
   move(): { x: number; y: number } {
     if (this.stick.x || this.stick.y) return this.stick;
-    const x = (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0);
-    const y = (this.down('down') ? 1 : 0) - (this.down('up') ? 1 : 0);
-    const len = Math.hypot(x, y) || 1;
-    return { x: x / len, y: y / len };
+    const d = this.digital();
+    const len = Math.hypot(d.x, d.y) || 1;
+    return { x: d.x / len, y: d.y / len };
+  }
+
+  /** The left stick alone (zero inside the dead zone). */
+  analog(): { x: number; y: number } {
+    return this.stick;
+  }
+
+  /** D-pad / arrow keys / WASD alone, each axis -1, 0 or 1. */
+  digital(): { x: number; y: number } {
+    return {
+      x: (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0),
+      y: (this.down('down') ? 1 : 0) - (this.down('up') ? 1 : 0),
+    };
   }
 
   glyph(a: Action): string {
