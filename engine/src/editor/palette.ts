@@ -15,12 +15,11 @@ type Template = Omit<PlacedProp, 'x' | 'y' | 'sprite'>;
 const FLAT = /rug|runner|mat\b|doormat|carpet|stairs|^deco_/;
 
 /** Groups: which atlas sheets they draw from and how their items are placed by default. */
-const GROUPS: Array<{ name: string; sheets: string[]; template: Template; people?: boolean }> = [
+const GROUPS: Array<{ name: string; sheets: string[]; template: Template; living?: boolean }> = [
   { name: 'Furniture', sheets: ['furniture', 'interior', 'stairs', 'tableware'], template: {} },
   { name: 'Kitchen', sheets: ['stations', 'animated'], template: {} },
   { name: 'Town', sheets: ['props', 'buildings', 'farm', 'carts', 'wagons', 'wagons_ns'], template: {} },
-  { name: 'People', sheets: ['characters', 'guests', 'actions'], template: { collider: 'npc' }, people: true },
-  { name: 'Animals', sheets: ['animals', 'ambient'], template: {}, people: true },
+  { name: 'Animals', sheets: ['animals', 'ambient'], template: {}, living: true },
   { name: 'Food', sheets: ['food'], template: { collider: null } },
 ];
 
@@ -34,11 +33,11 @@ export function buildPalette(assets: Assets, content: Content): Category[] {
       if (!s) continue;
       const inAnim = new Set(s.animations.flatMap((a) => assets.animation(a)));
       for (const a of s.animations) {
-        if (g.people && /walk|run/.test(a)) continue; // a walk cycle on the spot looks wrong
+        if (g.living && /walk|run/.test(a)) continue; // a walk cycle on the spot looks wrong
         items.push({ name: a, prop: { ...g.template, ...(FLAT.test(a) ? { flat: true } : {}), sprite: `anim:${a}`, x: 0, y: 0, fps: 4 } });
       }
       for (const f of s.frames) {
-        if (inAnim.has(f) && !(g.people && f.endsWith('_idle'))) continue;
+        if (inAnim.has(f) && !(g.living && f.endsWith('_idle'))) continue;
         items.push({ name: f, prop: { ...g.template, ...(FLAT.test(f) ? { flat: true } : {}), sprite: f, x: 0, y: 0 } });
       }
     }

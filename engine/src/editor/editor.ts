@@ -3,8 +3,8 @@
  * rebuilds the scene through the same code the game uses, and is checked for overlaps and for places
  * the player can no longer walk to.
  *
- * The palette works like the bag: tabs along the top (one per group of pieces, plus Ground for painting
- * terrain, floors and walls, plus the Snap setting), and a row of slots below.
+ * The palette works like the bag: tabs along the top (Floors and, indoors, Walls for painting, then one
+ * per group of pieces), and a grid of slots below; the Snap setting sits in the bottom bar.
  *
  * Mouse and keyboard: left click places (or picks up the piece under the pointer to move it), right
  * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, WASD or the arrows pan,
@@ -81,7 +81,9 @@ export class Editor {
   readonly palette: Category[];
   private cat = 0;
   readonly itemIndex: number[];
-  private brush = 0;
+  /** Ground tabs (Floors, Walls): which one is open and the slot chosen in each. */
+  private gtab = 0;
+  private readonly gpos = [0, 0];
   /** Material that painting floor wraps walls in (the last wall brush used). */
   private wallMat = 'W';
   /** The piece picker window is open (Tab / Y). */
@@ -147,16 +149,43 @@ export class Editor {
     this.pickScroll = Math.max(0, Math.floor(this.selected() / this.pickCols) - 1);
   }
 
+  /** Ground brushes split into tabs: Floors (fine 16px paint) and, indoors, Walls (32px structure). */
+  private get groundTabs(): Array<{ name: string; idx: number[] }> {
+    const all = GROUND_CHARS[this.layout.ground.type];
+    const pick = (fine: boolean) => all.flatMap((b, i) => (b.fine === fine ? [i] : []));
+    const tabs = [{ name: 'Floors', idx: pick(true) }];
+    const walls = pick(false);
+    if (walls.length) tabs.push({ name: 'Walls', idx: walls });
+    return tabs;
+  }
+
+  /** Which ground tab is open (clamped: an outdoor map has no Walls tab). */
+  private get groundTabIndex(): number {
+    return Math.min(this.gtab, this.groundTabs.length - 1);
+  }
+
+  private get groundTab(): { name: string; idx: number[] } {
+    return this.groundTabs[this.groundTabIndex];
+  }
+
+  /** Index into GROUND_CHARS of the brush in hand. */
+  private get brush(): number {
+    const t = this.groundTab;
+    return t.idx[Math.min(this.gpos[this.groundTabIndex], t.idx.length - 1)];
+  }
+
   /** Index of the selected slot in the current tab. */
   private selected(): number {
-    return this.tool === 'ground' ? this.brush : this.itemIndex[this.cat];
+    if (this.tool !== 'ground') return this.itemIndex[this.cat];
+    return this.groundTab.idx.indexOf(this.brush);
   }
 
   /** Entries of the current tab: thumbnails and names (pieces, or ground brushes). */
   private entries(): Array<{ draw: (x: number, y: number) => void; name: string }> {
     const r = this.game.renderer;
     if (this.tool === 'ground') {
-      return GROUND_CHARS[this.layout.ground.type].map((c) => ({
+      const all = GROUND_CHARS[this.layout.ground.type];
+      return this.groundTab.idx.map((i) => all[i]).map((c) => ({
         name: c.name,
         draw: (x, y) => (c.sample ? r.sprite(c.sample, x + 1, y + 1) : r.rect(x + 1, y + 1, 32, 32, '#120e18', true)),
       }));
@@ -182,7 +211,7 @@ export class Editor {
   }
 
   private pickSet(i: number): void {
-    if (this.tool === 'ground') this.brush = i;
+    if (this.tool === 'ground') this.gpos[this.groundTabIndex] = i;
     else this.itemIndex[this.cat] = i;
     const row = Math.floor(i / this.pickCols);
     if (row < this.pickScroll) this.pickScroll = row;
@@ -364,23 +393,29 @@ export class Editor {
     this.cursor.y = Math.floor(this.cursor.y / TILE) * TILE + TILE / 2;
   }
 
-  /** Tabs: one per palette group, then Ground. */
+  /** Tabs: Floors and Walls first, then one per palette group. */
+  private get tabNames(): string[] {
+    return [...this.groundTabs.map((t) => t.name), ...this.palette.map((c) => c.name)];
+  }
+
   private get tabCount(): number {
-    return this.palette.length + 1;
+    return this.groundTabs.length + this.palette.length;
   }
 
   private get tab(): number {
-    return this.tool === 'ground' ? this.palette.length : this.cat;
+    return this.tool === 'ground' ? this.groundTabIndex : this.groundTabs.length + this.cat;
   }
 
   private selectTab(t: number): void {
     if (this.held) return; // moving a prop: finish or cancel first
-    if (t === this.palette.length) {
+    const g = this.groundTabs.length;
+    if (t < g) {
       if (this.tool !== 'ground') this.centreOnTile();
       this.tool = 'ground';
+      this.gtab = t;
     } else {
       this.tool = 'props';
-      this.cat = t;
+      this.cat = t - g;
     }
   }
 
@@ -390,8 +425,8 @@ export class Editor {
 
   private stepItem(d: number): void {
     if (this.tool === 'ground') {
-      const n = GROUND_CHARS[this.layout.ground.type].length;
-      this.brush = (this.brush + d + n) % n;
+      const n = this.groundTab.idx.length;
+      this.pickSet((this.selected() + d + n) % n);
       return;
     }
     if (this.held) return; // moving a prop: the palette is not in play
@@ -1030,7 +1065,7 @@ export class Editor {
     const r = this.game.renderer;
     const assets = this.game.assets;
     const l = this.layout;
-    const mode = this.tool === 'props' ? `Props  snap ${snapName(this.snap)}` : 'Ground';
+    const mode = this.tool === 'props' ? `Props  snap ${snapName(this.snap)}` : this.groundTab.name;
     const zoom = this.zoom === 1 ? '' : `  1/${1 / this.zoom}`;
     const top = `EDIT ${l.id}${this.unsaved.has(l.id) ? '*' : ''}  ${mode}${zoom}  ${Math.round(this.cursor.x)},${Math.round(this.cursor.y)}`;
     r.nine('panel_dark', 2, 2, measure(top) + 12, 19);
@@ -1064,7 +1099,7 @@ export class Editor {
       sel.draw(6, y0 + 6);
       ctx.restore();
     }
-    const tabName = this.tool === 'ground' ? 'Ground' : this.palette[this.cat].name;
+    const tabName = this.tabNames[this.tab];
     drawText(r, assets, this.held ? `Moving ${label(this.held.prop)}` : sel?.name ?? '', 46, y0 + 10);
     r.ctx.globalAlpha = 0.6;
     drawText(r, assets, this.held ? 'click to put it down' : tabName, 46, y0 + 24);
@@ -1089,8 +1124,8 @@ export class Editor {
     r.nine('panel_dark', b.x, b.y, b.w, b.h);
     drawText(r, assets, 'Pieces', b.x + 11, b.y + 9);
 
-    // tabs: groups, then Ground; the strip scrolls so the current tab is always on screen
-    const names = [...this.palette.map((c) => c.name), 'Ground'];
+    // tabs: Floors, Walls, then groups; the strip scrolls so the current tab is always on screen
+    const names = this.tabNames;
     const ty = b.y + 26;
     const widths = names.map((n) => measure(n) + 10);
     const room = b.w - 22;
