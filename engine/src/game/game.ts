@@ -183,10 +183,11 @@ export class Game {
   render(alpha: number): void {
     const r = this.renderer;
     // Snap the camera to whole screen pixels once, so everything in the world moves together.
+    r.begin(this.scene.backdrop);
+    r.setZoom(this.editor.active ? this.editor.zoom : 1);
     const cam = this.camera.at(alpha);
     const cx = r.snap(cam.x);
     const cy = r.snap(cam.y);
-    r.begin(this.scene.backdrop);
     this.scene.ground.draw(r, cx, cy, this.time);
     if (this.debug) this.scene.ground.drawDebug?.(r, cx, cy);
     for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time, alpha));
@@ -195,7 +196,9 @@ export class Game {
     this.floats.draw(r, this.assets, cx, cy, this.time);
 
     if (this.editor.active) {
-      this.editor.draw(cx, cy);
+      this.editor.drawWorld(cx, cy);
+      r.setZoom(1);
+      this.editor.drawUi(cx, cy);
       return;
     }
     const action = this.target?.interaction();

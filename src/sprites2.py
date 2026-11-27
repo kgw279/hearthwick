@@ -98,13 +98,9 @@ def _mask(idx, x, y, variant=0):
     return 1 if corner_value(idx, x, y, variant) > 0.5 else 0
 
 
-def render_terrain(maskfn, other, variant=0):
-    """maskfn(x, y) -> 0 grass / 1 other, defined for any x,y (outside = neighbour estimate)."""
-    g = grass_v(variant)
-    o = BASES[other](variant)
-    s = Sprite()
+def terrain_mask(maskfn):
+    """32x32 0/1 mask from maskfn, despeckled (interior pixels only: border pixels stay formula-exact so tiles keep matching)."""
     m = [[maskfn(x, y) for x in range(32)] for y in range(32)]
-    # despeckle interior pixels only (border pixels must stay formula-exact so tiles keep matching)
     for _ in range(2):
         n = [row[:] for row in m]
         for y in range(1, 31):
@@ -113,6 +109,19 @@ def render_terrain(maskfn, other, variant=0):
                 if diff >= 3:
                     n[y][x] = 1 - m[y][x]
         m = n
+    return m
+
+
+def corner_mask(idx, variant=0):
+    return terrain_mask(lambda x, y: _mask(idx, x, y, variant))
+
+
+def render_terrain(maskfn, other, variant=0):
+    """maskfn(x, y) -> 0 grass / 1 other, defined for any x,y (outside = neighbour estimate)."""
+    g = grass_v(variant)
+    o = BASES[other](variant)
+    s = Sprite()
+    m = terrain_mask(maskfn)
 
     def M(x, y):
         return m[y][x] if 0 <= x < 32 and 0 <= y < 32 else maskfn(x, y)

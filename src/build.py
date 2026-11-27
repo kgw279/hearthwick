@@ -5,13 +5,14 @@
 import json, os, random, sys
 from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(__file__))
+from core import PAL  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
-from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v  # noqa: E402
+from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
 from sprites4 import FOLK, FOLK_NAMES, SHOPS  # noqa: E402
 import gamedata  # noqa: E402
 from items_art import sprite_for  # noqa: E402
-from sprites5 import PATHS, PATH_VARIANTS, CONNECTORS, connector, WALL_KIT, FORAGE  # noqa: E402
+from sprites5 import PATHS, PATH_VARIANTS, CONNECTORS, connector, path_mask, WALL_KIT, FORAGE  # noqa: E402
 from ui_build import build_ui, mock_hud, mock_menus, mock_prompts, mock_ui_kit  # noqa: E402
 from sprites7 import TABLEWARE  # noqa: E402
 from sprites8 import ACTIONS, ANIMATED, LOOPS, SITTERS  # noqa: E402
@@ -126,6 +127,28 @@ def preview(groups):
 # ---------------------------------------------------------------------
 # Mock town: corner map for road + pond, a cell map for narrow paths
 # ---------------------------------------------------------------------
+
+def write_terrain(out):
+    """terrain.json: the shapes behind every ground transition, so the engine can composite any mix of
+    grass, road, path and water per pixel (layered: grass < road/path < water) instead of needing a
+    pre-drawn tile for every combination. Masks are 32 rows of 8 hex digits (bit 31 = leftmost pixel)."""
+    def enc(m):
+        return [format(sum(1 << (31 - x) for x in range(32) if row[x]), '08x') for row in m]
+    data = {
+        'note': 'Ground compositing data for the engine. corner[v][index]: corner-autotile shapes (index TL*1+TR*2+BL*4+BR*8). '
+                'path[v][conn]: narrow-path shapes (conn N*1+E*2+S*4+W*8). bases: plain textures per variant. '
+                'edge colours: dirt lip under grass, grass fringe beside dirt, earth bank above water (2 rows), foam and shallows.',
+        'bases': {'grass': [f'grass_dirt_00_v{v}' for v in range(VARIANTS)],
+                  'dirt': [f'grass_dirt_15_v{v}' for v in range(VARIANTS)],
+                  'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)]},
+        'edges': {'dirt_lip': PAL['B'], 'grass_fringe': PAL['g'], 'bank': PAL['b'], 'bank_low': PAL['B'],
+                  'foam': PAL['p'], 'shallows': PAL['c']},
+        'corner': [[enc(corner_mask(i, v)) for i in range(16)] for v in range(VARIANTS)],
+        'path': [[enc(path_mask(c, v)) for c in range(16)] for v in range(PATH_VARIANTS)],
+    }
+    with open(os.path.join(out, 'terrain.json'), 'w') as f:
+        json.dump(data, f)
+
 
 def corner_map(w, h):
     """Corner grid (w+1)x(h+1): 0 grass, 1 dirt, 2 water."""
@@ -868,6 +891,7 @@ def main():
     atlas['ui'] = build_ui(OUT)
     with open(os.path.join(OUT, 'atlas.json'), 'w') as f:
         json.dump(atlas, f, indent=2)
+    write_terrain(OUT)
     preview(groups)
     mock_town(groups)
     mock_interior(groups)

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node
 import { join, relative } from 'node:path';
 
 /**
- * Ship only what the game loads: atlas.json, gamedata.json and the sheet images atlas.json names.
+ * Ship only what the game loads: atlas.json, gamedata.json, terrain.json and the sheet images atlas.json names.
  * Everything else the art pipeline writes to ../dist (mockups, previews, path maps) stays out of the build.
  */
 function onlyGameAssets(): Plugin {
@@ -17,7 +17,7 @@ function onlyGameAssets(): Plugin {
     closeBundle() {
       const atlas = JSON.parse(readFileSync(join(outDir, 'atlas.json'), 'utf8'));
       const sheets = { ...atlas.sheets, ...atlas.ui } as Record<string, { image: string }>;
-      const keep = new Set(['atlas.json', 'gamedata.json', 'index.html', ...Object.values(sheets).map((s) => s.image)]);
+      const keep = new Set(['atlas.json', 'gamedata.json', 'terrain.json', 'index.html', ...Object.values(sheets).map((s) => s.image)]);
       const walk = (dir: string) => {
         for (const name of readdirSync(dir)) {
           const full = join(dir, name);

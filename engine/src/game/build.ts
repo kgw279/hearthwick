@@ -10,7 +10,7 @@ import type { Ground } from '../world/ground';
 import type { Behavior, Layout, LayoutGround, PlacedProp } from '../world/layout';
 import { RoomMap } from '../world/room';
 import { cellExit, spawnAt, type Exit, type Scene } from '../world/scene';
-import { TileMap, TILE } from '../world/tilemap';
+import { TileMap } from '../world/tilemap';
 import type { Content } from './data';
 
 /** Ways a scene talks back to the game (dialog, emotes, floating text, changing scene). */
@@ -33,7 +33,7 @@ export const COLLIDERS: Record<string, Rect> = {
   bench: { x: 0, y: 20, w: 32, h: 6 },
 };
 
-/** Default footprint depth (px) for wall furniture and for colliders worked out from the art. */
+/** Default footprint depth (px) for colliders worked out from the art. */
 export const FOOTPRINT_DEPTH = 14;
 
 export function buildGround(g: LayoutGround, assets: Assets): Ground {
@@ -103,32 +103,30 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
 
 const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {} };
 
-/** Where a placed prop's sprite goes and what it blocks, all in world pixels. */
+/** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
 export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: number }
 
 export function placeProp(p: PlacedProp, frame: string, assets: Assets): Placement {
-  const dx = p.dx ?? 0;
-  const dy = p.dy ?? 0;
-  const place = p.place ?? 'floor';
   const b = assets.bounds(frame);
-  const base = b.y + b.h; // bottom of the art, relative to the sprite's top
-  const depth = p.depth ?? FOOTPRINT_DEPTH;
-  const footprint: Rect = { x: b.x, y: base - Math.min(depth, b.h), w: b.w, h: Math.min(depth, b.h) };
-  const named = (c: string | Rect | null | undefined, fallback: Rect | undefined): Rect | undefined => {
-    if (c === null) return undefined;
-    if (c === undefined) return fallback;
-    if (typeof c === 'string') {
-      const r = COLLIDERS[c];
-      if (!r) throw new Error(`Unknown collider preset "${c}"`);
-      return r;
-    }
-    return c;
-  };
-  if (place === 'flat') return { x: p.x * TILE + dx, y: p.y * TILE + dy, sortOffset: p.sortOffset ?? -1000 };
-  if (place === 'wall') {
-    return { x: p.x * TILE + dx, y: p.y * TILE + depth - base + dy, solid: named(p.collider, footprint), sortOffset: p.sortOffset };
+  const x = p.x - (b.x + Math.floor(b.w / 2));
+  const y = p.y - (b.y + b.h);
+  if (p.flat) return { x, y, sortOffset: p.sortOffset ?? -1000 };
+  return { x, y, solid: resolveCollider(p, frame, assets), sortOffset: p.sortOffset };
+}
+
+/** A prop's collider relative to its sprite: a named preset, an explicit rect, none, or (by default) its footprint. */
+export function resolveCollider(p: PlacedProp, frame: string, assets: Assets): Rect | undefined {
+  const c = p.collider;
+  if (c === null) return undefined;
+  if (typeof c === 'string') {
+    const r = COLLIDERS[c];
+    if (!r) throw new Error(`Unknown collider preset "${c}"`);
+    return r;
   }
-  return { x: p.x * TILE + dx, y: p.y * TILE + dy, solid: named(p.collider, footprint), sortOffset: p.sortOffset };
+  if (c) return c;
+  const b = assets.bounds(frame);
+  const depth = Math.min(p.depth ?? FOOTPRINT_DEPTH, b.h);
+  return { x: b.x, y: b.y + b.h - depth, w: b.w, h: depth };
 }
 
 export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks: SceneHooks): Prop {

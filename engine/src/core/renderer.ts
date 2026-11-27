@@ -18,6 +18,8 @@ export class Renderer {
   private queue: Queued[] = [];
   private order = 0;
   scale = 1;
+  /** World zoom (the editor zooms out to see a whole map); UI is always drawn at zoom 1. */
+  zoom = 1;
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly assets: Assets) {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
@@ -31,13 +33,35 @@ export class Renderer {
     this.canvas.height = VIEW_H * this.scale;
   }
 
+  /** Screen pixels per logical pixel at the current zoom. */
+  get unit(): number {
+    return this.scale * this.zoom;
+  }
+
+  /** Size of the visible area in logical pixels at the current zoom. */
+  get viewW(): number {
+    return VIEW_W / this.zoom;
+  }
+
+  get viewH(): number {
+    return VIEW_H / this.zoom;
+  }
+
+  /** Switch zoom for what's drawn next (world at the editor's zoom, then UI at 1). */
+  setZoom(z: number): void {
+    this.zoom = z;
+    this.ctx.setTransform(this.unit, 0, 0, this.unit, 0, 0);
+    this.ctx.imageSmoothingEnabled = false;
+  }
+
   /** Round a logical coordinate to the nearest screen pixel. */
   snap(v: number): number {
-    return Math.round(v * this.scale) / this.scale;
+    return Math.round(v * this.unit) / this.unit;
   }
 
   begin(clear = '#1b1520'): void {
     const c = this.ctx;
+    this.zoom = 1;
     c.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     c.imageSmoothingEnabled = false;
     c.globalAlpha = 1;
@@ -106,7 +130,7 @@ export class Renderer {
       this.ctx.fillStyle = color;
       this.ctx.fillRect(this.snap(x), this.snap(y), w, h);
     } else {
-      const px = 1 / this.scale;
+      const px = 1 / this.unit;
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = px;
       this.ctx.strokeRect(this.snap(x) + px / 2, this.snap(y) + px / 2, w - px, h - px);

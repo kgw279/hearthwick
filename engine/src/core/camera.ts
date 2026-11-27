@@ -11,6 +11,8 @@ export class Camera {
   private py = 0;
   /** Screen rows covered by UI at the top and bottom (e.g. the editor's panels); the camera frames the rest. */
   private inset = { top: 0, bottom: 0 };
+  /** World zoom: below 1 the camera sees more of the world. */
+  private zoom = 1;
 
   /** smoothing: how quickly the camera catches up (per second); higher = tighter. */
   constructor(private worldW: number, private worldH: number, private readonly smoothing = 12) {}
@@ -24,14 +26,35 @@ export class Camera {
     this.inset = { top, bottom };
   }
 
+  /** Zoom around the current centre (insets are screen pixels, so they cover more world when zoomed out). */
+  setZoom(z: number): void {
+    const cx = this.x + this.viewW / 2;
+    const cy = this.y + this.top + this.viewH / 2;
+    this.zoom = z;
+    this.centerOn(cx, cy);
+  }
+
+  /** Visible world width, and the height left between the insets, in world pixels. */
+  private get viewW(): number {
+    return VIEW_W / this.zoom;
+  }
+
   private get viewH(): number {
-    return VIEW_H - this.inset.top - this.inset.bottom;
+    return (VIEW_H - this.inset.top - this.inset.bottom) / this.zoom;
+  }
+
+  private get top(): number {
+    return this.inset.top / this.zoom;
+  }
+
+  private get bottom(): number {
+    return this.inset.bottom / this.zoom;
   }
 
   /** Jump straight to a point (no easing, no interpolation from the old spot). */
   centerOn(tx: number, ty: number): void {
-    this.x = tx - VIEW_W / 2;
-    this.y = ty - this.inset.top - this.viewH / 2;
+    this.x = tx - this.viewW / 2;
+    this.y = ty - this.top - this.viewH / 2;
     this.clamp();
     this.px = this.x;
     this.py = this.y;
@@ -41,18 +64,19 @@ export class Camera {
     this.px = this.x;
     this.py = this.y;
     const k = 1 - Math.exp(-this.smoothing * dt);
-    this.x += (tx - VIEW_W / 2 - this.x) * k;
-    this.y += (ty - this.inset.top - this.viewH / 2 - this.y) * k;
+    this.x += (tx - this.viewW / 2 - this.x) * k;
+    this.y += (ty - this.top - this.viewH / 2 - this.y) * k;
     this.clamp();
   }
 
   /** Keep the view inside the world; a world smaller than the screen is centred instead. */
   private clamp(): void {
-    this.x = this.worldW <= VIEW_W ? (this.worldW - VIEW_W) / 2 : Math.max(0, Math.min(this.x, this.worldW - VIEW_W));
-    const { top, bottom } = this.inset;
+    const vw = this.viewW;
+    const { top, bottom } = this;
+    this.x = this.worldW <= vw ? (this.worldW - vw) / 2 : Math.max(0, Math.min(this.x, this.worldW - vw));
     this.y = this.worldH <= this.viewH
       ? (this.worldH - this.viewH) / 2 - top
-      : Math.max(-top, Math.min(this.y, this.worldH - VIEW_H + bottom));
+      : Math.max(-top, Math.min(this.y, this.worldH - VIEW_H / this.zoom + bottom));
   }
 
   /** Position for drawing, blended between the last two game steps (alpha 0..1). */

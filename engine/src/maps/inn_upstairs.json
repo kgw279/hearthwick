@@ -61,19 +61,19 @@
     {"cell": [6, 4], "to": "inn_ground", "spawn": "stairs"}
   ],
   "props": [
-    {"sprite": "runner_left", "x": 1, "y": 4, "place": "flat"},
-    {"sprite": "runner_middle", "x": 2, "y": 4, "place": "flat"},
-    {"sprite": "runner_middle", "x": 3, "y": 4, "place": "flat"},
-    {"sprite": "runner_right", "x": 4, "y": 4, "place": "flat"},
-    {"sprite": "stairs_down", "x": 6, "y": 4, "place": "flat"},
-    {"sprite": "bed", "x": 1, "y": 2, "place": "wall", "depth": 26},
-    {"sprite": "nightstand", "x": 2, "y": 2, "place": "wall"},
-    {"sprite": "bed", "x": 3, "y": 2, "place": "wall", "depth": 26},
-    {"sprite": "wardrobe", "x": 4, "y": 2, "place": "wall"},
-    {"sprite": "floor_lamp", "x": 7, "y": 2, "collider": "small"},
-    {"sprite": "armchair", "x": 8, "y": 2, "place": "wall"},
-    {"sprite": "chest", "x": 8, "y": 5, "collider": "small", "dy": -6},
-    {"sprite": "potted_plant", "x": 1, "y": 5, "collider": "small", "dy": -8},
-    {"sprite": "frog_right_idle", "x": 2, "y": 4, "collider": "npc", "dy": -4, "behavior": {"type": "talk", "who": "Frog traveler", "line": "Ribbit! The beds here are wonderfully soft."}}
+    {"sprite": "runner_left", "x": 49, "y": 150, "flat": true},
+    {"sprite": "runner_middle", "x": 80, "y": 150, "flat": true},
+    {"sprite": "runner_middle", "x": 112, "y": 150, "flat": true},
+    {"sprite": "runner_right", "x": 143, "y": 150, "flat": true},
+    {"sprite": "stairs_down", "x": 208, "y": 159, "flat": true},
+    {"sprite": "bed", "x": 48, "y": 90, "depth": 26},
+    {"sprite": "nightstand", "x": 80, "y": 78},
+    {"sprite": "bed", "x": 112, "y": 90, "depth": 26},
+    {"sprite": "wardrobe", "x": 144, "y": 78},
+    {"sprite": "floor_lamp", "x": 240, "y": 94, "collider": "small"},
+    {"sprite": "armchair", "x": 272, "y": 78},
+    {"sprite": "chest", "x": 272, "y": 184, "collider": "small"},
+    {"sprite": "potted_plant", "x": 48, "y": 182, "collider": "small"},
+    {"sprite": "frog_right_idle", "x": 80, "y": 153, "collider": "npc", "behavior": {"type": "talk", "who": "Frog traveler", "line": "Ribbit! The beds here are wonderfully soft."}}
   ]
 }

@@ -1,5 +1,6 @@
 /**
- * Asset loading. Reads atlas.json (where every picture lives) and gamedata.json (the game's content),
+ * Asset loading. Reads atlas.json (where every picture lives), gamedata.json (the game's content) and
+ * terrain.json (ground transition shapes),
  * loads every sheet image once, and lets the rest of the engine ask for sprites and animations by name.
  */
 
@@ -20,6 +21,15 @@ export interface Frame {
 interface FrameJson { x: number; y: number; w: number; h: number; slice?: number | number[] }
 interface SheetJson { image: string; frames: Record<string, FrameJson>; animations?: Record<string, string[]> }
 interface AtlasJson { sheets: Record<string, SheetJson>; ui: Record<string, SheetJson> }
+
+/** terrain.json: shapes and edge colours the ground compositor uses (written by the art pipeline). */
+export interface TerrainData {
+  bases: { grass: string[]; dirt: string[]; water: string[] };
+  edges: { dirt_lip: string; grass_fringe: string; bank: string; bank_low: string; foam: string; shallows: string };
+  /** corner[variant][index] and path[variant][conn]: 32 rows of 8 hex digits, bit 31 = leftmost pixel. */
+  corner: string[][][];
+  path: string[][][];
+}
 
 /** gamedata.json is large and owned by the content pipeline; the engine reads the parts it needs. */
 export type GameData = Record<string, unknown>;
@@ -48,15 +58,16 @@ export class Assets {
   /** Names defined in more than one sheet; the unqualified name resolves to the first sheet. */
   readonly duplicates: string[] = [];
 
-  private constructor(readonly data: GameData) {}
+  private constructor(readonly data: GameData, readonly terrain: TerrainData) {}
 
   /** base: where the site is served from ('/' locally, '/hearthwick/' on GitHub Pages). */
   static async load(base = '/'): Promise<Assets> {
-    const [atlas, data] = await Promise.all([
+    const [atlas, data, terrain] = await Promise.all([
       fetch(base + 'atlas.json').then((r) => r.json() as Promise<AtlasJson>),
       fetch(base + 'gamedata.json').then((r) => r.json() as Promise<GameData>),
+      fetch(base + 'terrain.json').then((r) => r.json() as Promise<TerrainData>),
     ]);
-    const assets = new Assets(data);
+    const assets = new Assets(data, terrain);
     const sheets = { ...atlas.sheets, ...atlas.ui };
     const files = [...new Set(Object.values(sheets).map((s) => s.image))];
     const images = new Map(await Promise.all(files.map(async (f) => [f, await loadImage(base + f)] as const)));

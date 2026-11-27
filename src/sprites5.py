@@ -2,7 +2,7 @@
 import math, random
 from core import Sprite
 from sprites import _with_shadow, _foliage, tree
-from sprites2 import render_terrain, corner_value, NOISES
+from sprites2 import render_terrain, terrain_mask, corner_value, NOISES
 from sprites3 import ball, inn_wall
 
 # =====================================================================
@@ -54,11 +54,19 @@ def path_value(conn, x, y, variant=0, inside=True):
     return False
 
 
-def path_tile(conn, variant=0):
+def _path_fn(conn, variant):
     def m(x, y):
         inside = 0 <= x < 32 and 0 <= y < 32
         return 1 if path_value(conn, x, y, variant, inside) else 0
-    return render_terrain(m, 'dirt', variant)
+    return m
+
+
+def path_tile(conn, variant=0):
+    return render_terrain(_path_fn(conn, variant), 'dirt', variant)
+
+
+def path_mask(conn, variant=0):
+    return terrain_mask(_path_fn(conn, variant))
 
 
 # A narrow path meeting the wide road: (name, road corner index, path connections)

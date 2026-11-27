@@ -3,17 +3,14 @@
  * The game builds scenes from them and the layout editor reads and writes them, so a map made in the
  * editor is exactly the map the game plays.
  *
- * Positions are in tiles (32px) with optional pixel nudges (dx, dy). How a prop sits is its `place`:
- *   floor  (default) sprite drawn at its tile; collider from a preset, a rect, or the art's own footprint
- *   wall   stands against the back wall whose face ends at the top of row y: base flush with the wall,
- *          taller art rises over the wall face; collider = the art's footprint (width x depth)
- *   flat   lies on the floor (rugs, mats, stairs holes): no collider, always drawn under everything
+ * Ground is a grid of 32px cells. Props are placed freely: a prop's x, y is the world pixel at the middle
+ * of the bottom of its art (where it stands on the ground), so placement follows the art, not a grid.
+ * Its collider is a preset, a rect relative to the sprite, or by default its footprint: the bottom
+ * `depth` px of its art. Flat props (rugs, mats, stairs holes) have no collider and draw under everything.
  * Props can carry a behavior (talk, shop, forage...) that the game wires up when it builds the scene.
  */
 import type { Rect } from '../core/geom';
 import type { Facing } from './scene';
-
-export type Place = 'floor' | 'wall' | 'flat';
 
 export type Behavior =
   | { type: 'talk'; who: string; line: string }
@@ -29,14 +26,14 @@ export type Behavior =
 export interface PlacedProp {
   /** Frame name, a list of frames to loop, or "anim:<name>" for an atlas animation. Shops and forage take theirs from gamedata. */
   sprite?: string | string[];
+  /** World pixel at the middle of the bottom of the art. */
   x: number;
   y: number;
-  dx?: number;
-  dy?: number;
-  place?: Place;
+  /** Lies on the floor: no collider, drawn under everything. */
+  flat?: boolean;
   /** Collider preset name, a rect relative to the sprite, or null for walk-through. Omitted: the art's footprint. */
   collider?: string | Rect | null;
-  /** Footprint depth in px for 'wall' props and auto colliders. */
+  /** Footprint depth in px when the collider is the art's footprint. */
   depth?: number;
   fps?: number;
   sortOffset?: number;
@@ -80,12 +77,11 @@ export const GROUND_CHARS: Record<LayoutGround['type'], Array<{ ch: string; name
 };
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
-const PLACES = new Set(['floor', 'wall', 'flat']);
 const BEHAVIOR_FIELDS: Record<Behavior['type'], string[]> = {
   talk: ['who', 'line'], read: ['text'], enter: ['to', 'spawn'], shop: ['shop'], market: ['shop'],
   pet: [], draw_water: [], forage: ['node'], fish: ['item'],
 };
-const PROP_KEYS = new Set(['sprite', 'x', 'y', 'dx', 'dy', 'place', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
+const PROP_KEYS = new Set(['sprite', 'x', 'y', 'flat', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 
 /** Strict check of a layout's shape; throws with the exact path of the first problem. */
 export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
@@ -144,8 +140,8 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
     for (const k of Object.keys(pr)) if (!PROP_KEYS.has(k)) fail(`${p}.${k}`, 'is not a prop field');
     num(pr.x, `${p}.x`);
     num(pr.y, `${p}.y`);
-    for (const k of ['dx', 'dy', 'depth', 'fps', 'sortOffset'] as const) if (pr[k] !== undefined) num(pr[k], `${p}.${k}`);
-    if (pr.place !== undefined && !PLACES.has(pr.place)) fail(`${p}.place`, 'must be floor/wall/flat');
+    for (const k of ['depth', 'fps', 'sortOffset'] as const) if (pr[k] !== undefined) num(pr[k], `${p}.${k}`);
+    if (pr.flat !== undefined && pr.flat !== true) fail(`${p}.flat`, 'must be true or left out');
     if (pr.sprite !== undefined) {
       if (Array.isArray(pr.sprite)) pr.sprite.forEach((s, j) => str(s, `${p}.sprite[${j}]`));
       else str(pr.sprite, `${p}.sprite`);
