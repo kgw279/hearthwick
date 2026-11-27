@@ -60,6 +60,8 @@ const REPEAT_NEXT = 0.06;
 const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
 const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
+/** Structure cells that are walls (what erasing in the Walls tab turns back into floor). */
+const WALL_CHARS = new Set(['W', 'S', 'I', 'J']);
 const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
 const TURN_STEP = 15; // degrees per R press
 const TURN_FINE = 5; // degrees per Alt+wheel notch
@@ -324,8 +326,9 @@ export class Editor {
 
     if (pad) {
       if (this.tool === 'ground') {
-        if (input.pressed('interact')) this.lastPainted = '';
+        if (input.pressed('interact') || input.pressed('cook')) this.lastPainted = '';
         if (input.down('interact')) this.paint();
+        else if (input.down('cook')) this.paint(true);
       } else {
         if (input.pressed('interact')) this.primary();
         if (input.pressed('cook')) this.remove();
@@ -735,8 +738,14 @@ export class Editor {
     return { ch: b.ch, size: b.fine ? CELL : TILE };
   }
 
-  private paint(): void {
-    const { ch, size } = this.brushInfo;
+  /**
+   * Paint with the brush in hand, or erase (right button / X): erasing takes ground back to its base -
+   * grass outdoors, wood floor indoors - and turns a wall back into floor (an outer wall erased this way
+   * becomes a doorway; the Clear brush removes walls altogether).
+   */
+  private paint(erase = false): void {
+    const { size } = this.brushInfo;
+    let { ch } = this.brushInfo;
     const cx = Math.floor(this.cursor.x / size);
     const cy = Math.floor(this.cursor.y / size);
     const key = `${size}:${cx},${cy}`;
@@ -744,6 +753,16 @@ export class Editor {
     if (this.lastPainted === '') this.strokeRecorded = false; // a new stroke: one undo step for all of it
     this.lastPainted = key;
     const g = this.layout.ground;
+    if (erase) {
+      if (g.type === 'tiles') ch = '.';
+      else if (size === CELL) {
+        if (g.rows[cy >> 1][cx >> 1] !== 'f') return; // no floor here to take back to wood
+        ch = 'w';
+      } else {
+        if (!WALL_CHARS.has(g.rows[cy][cx])) return;
+        ch = 'f';
+      }
+    }
     const set = (rows: string[], x: number, y: number, c: string) => {
       if (rows[y][x] === c) return false;
       if (!this.strokeRecorded) {
@@ -776,6 +795,10 @@ export class Editor {
       return;
     }
     // painting floor walls itself in with the material of the last wall brush (plain, outer)
+    if (erase) {
+      if (set(g.rows, cx, cy, ch)) this.changed('Wall removed', true);
+      return;
+    }
     if ('WI'.includes(ch)) this.wallMat = 'W';
     if ('SJ'.includes(ch)) this.wallMat = 'S';
     if (set(g.rows, cx, cy, ch)) this.changed(undefined, true);
@@ -1037,7 +1060,7 @@ export class Editor {
       }
       this.mouse = m;
       follow(this.mouse);
-      if (this.tool === 'ground' && e.buttons & 1 && !this.overUi(this.mouse)) this.paint();
+      if (this.tool === 'ground' && e.buttons & 3 && !this.overUi(this.mouse)) this.paint(!(e.buttons & 1));
     });
     canvas.addEventListener('mouseleave', () => {
       this.mouse = null;
@@ -1065,6 +1088,10 @@ export class Editor {
       follow(this.mouse);
       if (e.button === 2) {
         if (this.tool === 'props') this.remove();
+        else {
+          this.lastPainted = '';
+          this.paint(true);
+        }
       } else if (e.button === 0) {
         if (this.tool === 'ground') {
           this.lastPainted = '';
