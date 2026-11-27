@@ -85,9 +85,8 @@
       ".....................................................................................d..wwwwww.........................."
     ]
   },
-  "spawns": {"start": {"x": 6, "y": 21, "facing": "down"}, "inn_door": {"x": 5, "y": 21, "facing": "down"}, "from_meadow": {"x": 1, "y": 21, "facing": "right"}, "from_mosswood": {"x": 25, "y": 1, "facing": "down"}, "from_farmstead": {"x": 58, "y": 21, "facing": "left"}, "from_riverside": {"x": 42, "y": 38, "facing": "up"}},
+  "spawns": {"start": {"x": 6, "y": 21, "facing": "down"}, "from_meadow": {"x": 1, "y": 21, "facing": "right"}, "from_mosswood": {"x": 25, "y": 1, "facing": "down"}, "from_farmstead": {"x": 58, "y": 21, "facing": "left"}, "from_riverside": {"x": 42, "y": 38, "facing": "up"}},
   "exits": [
-    {"area": {"x": 147, "y": 666, "w": 28, "h": 8}, "to": "inn_ground", "spawn": "front", "dir": "up"},
     {"area": {"x": 0, "y": 672, "w": 4, "h": 64}, "to": "meadow", "spawn": "from_town", "dir": "left"},
     {"area": {"x": 800, "y": 0, "w": 32, "h": 4}, "to": "mosswood", "spawn": "from_town", "dir": "up"},
     {"area": {"x": 1916, "y": 672, "w": 4, "h": 64}, "to": "farmstead", "spawn": "from_town", "dir": "right"},

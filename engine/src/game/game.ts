@@ -19,6 +19,7 @@ import { Content } from './data';
 import { Editor } from '../editor/editor';
 import { Bag } from '../state/inventory';
 import { Storage } from '../state/storage';
+import { Furnish } from './furnish';
 import { StorageScreen } from '../ui/storageScreen';
 import { Shops } from '../state/shops';
 import { BagScreen } from '../ui/bagScreen';
@@ -60,6 +61,8 @@ export class Game {
   readonly shops: Shops;
   /** What's in every storage container, by its id. */
   readonly storage: Storage;
+  /** Picking furniture up and setting it down in play. */
+  readonly furnish: Furnish;
   /** A full-screen UI (bag, shop) that has the input while it's open. */
   private screen: Screen | null = null;
   private target: Entity | null = null;
@@ -95,6 +98,14 @@ export class Game {
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
     this.shops = new Shops(this.content);
     this.storage = new Storage(e.stack_size);
+    this.furnish = new Furnish({
+      assets, content: this.content, player: this.player,
+      scene: () => this.scene,
+      layout: () => this.layouts.get(this.scene.id)!,
+      rebuild: () => this.rebuildScene(false),
+      changed: (id) => this.editor.markChanged(id),
+      say: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
+    });
     this.shops.restock(1);
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
@@ -242,14 +253,17 @@ export class Game {
       this.target = null;
     } else {
       if (this.input.pressed('menu')) this.screen = new BagScreen(this.bag, this.content, this.assets);
-      this.player.move(dt, this.input, this.blocked);
+      const g = this.scene.ground;
+      this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1);
       const exit = this.exitHit();
       if (exit) {
         this.goTo(exit.to, exit.spawn);
       } else {
-        this.target = this.findTarget();
+        // the use button: a tap uses what's in front; holding it picks furniture up (see Furnish)
+        const tapped = this.furnish.update(dt, this.input);
+        this.target = this.furnish.carrying ? null : this.findTarget();
         const action = this.target?.interaction();
-        if (action && this.input.pressed('interact')) {
+        if (action && tapped) {
           action.use();
           this.target = this.findTarget(); // using something can change or remove its action
         }
@@ -277,6 +291,7 @@ export class Game {
     this.scene.ground.draw(r, cx, cy, this.time);
     if (this.debug) this.scene.ground.drawDebug?.(r, cx, cy);
     for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time, alpha));
+    if (!this.editor.active) this.furnish.draw(r, cx, cy);
     r.flush();
     this.emotes.draw(r, cx, cy, this.time);
     this.floats.draw(r, this.assets, cx, cy, this.time);

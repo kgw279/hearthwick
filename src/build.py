@@ -12,6 +12,8 @@ from art_iwalls import IWALLS  # noqa: E402
 from art_walldecor import WALL_DECOR  # noqa: E402
 from art_kitchen import KITCHEN, BAR  # noqa: E402
 from art_tableware import ITEMS as TABLEWARE_ITEMS, TABLES, CHAIRS  # noqa: E402
+from art_cliffs import CLIFFS  # noqa: E402
+from art_houses import HOUSES  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -46,13 +48,14 @@ def food_entries(data):
 def build_groups(data):
     """name -> (list of (key, Sprite), cell_w, cell_h, cols, preview background)"""
     return {
-        'tiles': ([(n, f()) for n, f in TILES] + [(n, f()) for n, f in TILE_VARIANTS] + GROUND_TILES, 32, 32, 8, None),
+        'tiles': ([(n, f()) for n, f in TILES] + [(n, f()) for n, f in TILE_VARIANTS] + GROUND_TILES + [(n, f()) for n, f in CLIFFS], 32, 32, 8, None),
         'terrain_grass_dirt': ([(f'grass_dirt_{i:02d}_v{v}', AUTOTILES['grass_dirt'][v][i]) for v in range(VARIANTS) for i in range(16)], 32, 32, 16, None),
         'terrain_grass_water': ([(f'grass_water_{i:02d}_v{v}', AUTOTILES['grass_water'][v][i]) for v in range(VARIANTS) for i in range(16)], 32, 32, 16, None),
         'terrain_path': ([(f'path_{i:02d}_v{v}', PATHS[v][i]) for v in range(PATH_VARIANTS) for i in range(16)]
                          + [(f'{n}_v{v}', CONNECTOR_TILES[(n, v)]) for v in range(PATH_VARIANTS) for n, _, _ in CONNECTORS], 32, 32, 16, None),
-        'buildings': ([(n, f()) for n, f in BUILDINGS + SHOPS + TOWN_BUILDINGS], 64, 64, 4, 'grass'),
-        'props': ([(n, f()) for n, f in PROPS + TOWN_PROPS], 32, 32, 8, 'grass'),
+        'buildings': ([(n, f()) for n, f in BUILDINGS + SHOPS + TOWN_BUILDINGS + HOUSES], 64, 64, 4, 'grass'),
+        # the houses are drawn at building size now (art_houses.py), not with the small props
+        'props': ([(n, f()) for n, f in PROPS + TOWN_PROPS if not n.startswith('house_')], 32, 32, 8, 'grass'),
         'forage': ([(f'{n}_{st}', f(st == 'ready')) for n, f, _ in FORAGE for st in ('ready', 'harvested')], 32, 32, 8, 'grass'),
         'walls': ([(n, f()) for n, f in WALL_KIT], 32, 32, 10, 'floor'),
         'interior_walls': ([(n, f()) for n, f in WALL_KIT2 + IWALLS], 32, 32, 18, 'void'),
@@ -144,7 +147,7 @@ def write_terrain(out):
     def enc(m):
         return [format(sum(1 << (31 - x) for x in range(32) if row[x]), '08x') for row in m]
     data = {
-        'note': 'Ground compositing data for the engine. Layers bottom to top: grass, dirt (road + paths), cobble, pavers, water. '
+        'note': 'Ground compositing data for the engine. Layers bottom to top: grass, dirt (road + paths), farmland, cobble, pavers, water, rock. '
                 'corner[v][index]: natural corner-autotile shapes (index TL*1+TR*2+BL*4+BR*8). corner_paved[index]: '
                 'the clean-edged shapes laid paving uses. path[v][conn]: narrow-path shapes (conn N*1+E*2+S*4+W*8). '
                 'bases: plain textures per variant. edge colours: dirt lip under grass, grass fringe beside dirt and paving, '
@@ -153,10 +156,13 @@ def write_terrain(out):
                   'dirt': [f'grass_dirt_15_v{v}' for v in range(VARIANTS)],
                   'cobble': [f'cobble_v{v}' for v in range(PAVE_VARIANTS)],
                   'pavers': [f'pavers_v{v}' for v in range(PAVE_VARIANTS)],
-                  'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)]},
+                  'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)],
+                  'cliff_face': 'cliff_face', 'cliff_top': 'cliff_top'},
         'edges': {'dirt_lip': PAL['B'], 'grass_fringe': PAL['g'], 'bank': PAL['b'], 'bank_low': PAL['B'],
                   'foam': PAL['p'], 'shallows': PAL['c'], 'cobble_kerb': PAL['d'], 'pavers_kerb': PAL['B'],
-                  'flagstone_edge': PAL['e']},
+                  'flagstone_edge': PAL['e'],
+                  # rock: its outline, the dark ledge where its grassy top meets its face, the shade at its foot
+                  'rock_outline': PAL['O'], 'rock_ledge': PAL['e'], 'rock_shadow': PAL['g']},
         'floors': {'wood': 'floor_wood_flagstone_00', 'stone': 'floor_wood_flagstone_15'},
         'corner': [[enc(corner_mask(i, v)) for i in range(16)] for v in range(VARIANTS)],
         'corner_paved': [enc(corner_mask(i, 0, amp=0.0)) for i in range(16)],
@@ -247,7 +253,8 @@ def mock_town(groups):
     for k, x, y in [('tree', 0, 0), ('tree', 5, 0), ('tree', 15, 0), ('bush', 0, 3), ('lamppost', 4, 5), ('lamppost', 10, 5),
                     ('house_red', 11, 3), ('house_blue', 14, 3), ('signpost', 7, 4), ('well', 5, 3), ('tree', 12, 1),
                     ('fence', 0, 9), ('fence', 1, 9), ('barrel', 9, 3)]:
-        sc.alpha_composite(P[k], (x * 32, y * 32 - (0 if k.startswith('house') else 0)))
+        big = k.startswith('house')                                  # houses are building-sized
+        sc.alpha_composite((B if big else P)[k], (x * 32 - (16 if big else 0), y * 32 - (32 if big else 0)))
     for k, x, y in [('wild_wheat_ready', 0, 10), ('wild_wheat_harvested', 1, 10), ('berry_bush_ready', 2, 9),
                     ('mushroom_patch_ready', 0, 11), ('herb_patch_ready', 3, 11), ('carrot_patch_ready', 7, 11),
                     ('potato_patch_harvested', 8, 11), ('apple_tree_ready', 4, 9), ('beehive_ready', 5, 11),

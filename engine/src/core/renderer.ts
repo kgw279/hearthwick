@@ -91,6 +91,30 @@ export class Renderer {
     if (alpha !== 1) this.ctx.globalAlpha = 1;
   }
 
+  /** Sprites washed with a colour (cached per frame and colour): a piece that can't go where it's held. */
+  private readonly tinted = new Map<string, HTMLCanvasElement>();
+
+  /** Draw a sprite washed with `color` (a CSS colour; its alpha is how strong the wash is). */
+  spriteTinted(name: string, x: number, y: number, color: string, alpha = 1): void {
+    const key = `${name}|${color}`;
+    let c = this.tinted.get(key);
+    if (!c) {
+      const f = this.assets.frame(name);
+      c = document.createElement('canvas');
+      c.width = f.w;
+      c.height = f.h;
+      const g = c.getContext('2d')!;
+      g.drawImage(f.img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+      g.globalCompositeOperation = 'source-atop'; // only over the sprite's own pixels
+      g.fillStyle = color;
+      g.fillRect(0, 0, f.w, f.h);
+      this.tinted.set(key, c);
+    }
+    if (alpha !== 1) this.ctx.globalAlpha = alpha;
+    this.ctx.drawImage(c, this.snap(x), this.snap(y));
+    if (alpha !== 1) this.ctx.globalAlpha = 1;
+  }
+
   /** Draw a sprite turned clockwise by deg about `pivot` (sprite-relative), top-left at (x, y) when unturned. */
   spriteTurned(name: string | Frame, x: number, y: number, deg: number, pivot: { x: number; y: number }, alpha = 1): void {
     const f = typeof name === 'string' ? this.assets.frame(name) : name;

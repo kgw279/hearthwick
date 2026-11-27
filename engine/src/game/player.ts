@@ -7,7 +7,7 @@ import type { Renderer } from '../core/renderer';
 import { Entity } from '../world/entity';
 import type { Facing, Spawn } from '../world/scene';
 
-const SPEED = 72; // px per second
+const SPEED = 72; // px per second on ordinary ground (the ground can make it faster or slower)
 // Feet collider relative to the 32x32 sprite's top-left.
 export const FEET: Rect = { x: 10, y: 22, w: 12, h: 6 };
 
@@ -68,7 +68,8 @@ export class Player extends Entity {
     return { x: this.prevX + (this.x - this.prevX) * alpha, y: this.prevY + (this.y - this.prevY) * alpha };
   }
 
-  move(dt: number, input: Input, blocked: (r: Rect) => boolean): void {
+  /** speed: how fast the ground under a world point is walked on (1 = normal). */
+  move(dt: number, input: Input, blocked: (r: Rect) => boolean, speed: (x: number, y: number) => number = () => 1): void {
     this.prevX = this.x;
     this.prevY = this.y;
     const m = input.move();
@@ -77,9 +78,11 @@ export class Player extends Entity {
       if (Math.abs(m.x) > Math.abs(m.y)) this.facing = m.x > 0 ? 'right' : 'left';
       else this.facing = m.y > 0 ? 'down' : 'up';
       // Move one axis at a time so the player slides along walls instead of sticking.
-      const nx = this.x + m.x * SPEED * dt;
+      const f = this.feet();
+      const v = SPEED * speed(f.x + f.w / 2, f.y + f.h / 2);
+      const nx = this.x + m.x * v * dt;
       if (!blocked(this.feet(nx, this.y))) this.x = nx;
-      const ny = this.y + m.y * SPEED * dt;
+      const ny = this.y + m.y * v * dt;
       if (!blocked(this.feet(this.x, ny))) this.y = ny;
     }
     this.anim.play(`${this.look}_${this.moving ? 'walk' : 'idle'}_${this.facing}`);

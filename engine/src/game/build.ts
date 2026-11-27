@@ -37,11 +37,17 @@ export const COLLIDERS: Record<string, Rect> = {
   tree: { x: 11, y: 23, w: 10, h: 6 }, bush: { x: 6, y: 22, w: 20, h: 6 }, barrel: { x: 9, y: 22, w: 14, h: 6 },
   crate: { x: 7, y: 22, w: 18, h: 6 }, fence: { x: 0, y: 21, w: 32, h: 6 }, lamppost: { x: 13, y: 24, w: 6, h: 5 },
   well: { x: 6, y: 20, w: 20, h: 8 }, signpost: { x: 13, y: 24, w: 6, h: 4 }, market_stall: { x: 2, y: 20, w: 28, h: 8 },
-  house: { x: 2, y: 12, w: 28, h: 16 }, forage: { x: 9, y: 22, w: 14, h: 6 }, npc: { x: 10, y: 22, w: 12, h: 6 },
+  // houses and shops: the lower half of their 64x64 art
+  house: { x: 4, y: 30, w: 56, h: 30 }, forage: { x: 9, y: 22, w: 14, h: 6 }, npc: { x: 10, y: 22, w: 12, h: 6 },
   hitching_post: { x: 4, y: 20, w: 24, h: 6 }, chicken_coop: { x: 5, y: 20, w: 22, h: 8 }, hay_bale: { x: 6, y: 18, w: 20, h: 8 },
   feed_trough: { x: 5, y: 20, w: 22, h: 6 }, big_animal: { x: 7, y: 22, w: 18, h: 6 },
   block: { x: 2, y: 22, w: 28, h: 8 }, small: { x: 8, y: 23, w: 16, h: 6 }, table: { x: 0, y: 20, w: 32, h: 8 },
   bench: { x: 0, y: 20, w: 32, h: 6 },
+  // tables: the floor under their whole top, back to front up from the feet of their legs (art in a 64x48
+  // cell: legs end on row 43)
+  table_1: { x: 22, y: 32, w: 20, h: 12 },
+  table_2: { x: 17, y: 28, w: 30, h: 16 },
+  table_4: { x: 7, y: 24, w: 50, h: 20 },
 };
 
 /** Default footprint depth (px) for colliders worked out from the art: the strip it stands on. */
@@ -147,7 +153,7 @@ export function artRect(p: PlacedProp, frame: string, assets: Assets): Rect {
   return { x: at.x + b.x, y: at.y + b.y, w: b.w, h: b.h };
 }
 
-/** The spawn a map's stairs or door to `from` put you on when you arrive from there. */
+/** The spawn a map's stairs, door or building door to `from` puts you on when you arrive from there. */
 export const passageSpawn = (kind: 'stairs' | 'door', from: string) => `${kind}:${from}`;
 
 /** How a passage (stairs or a door) sits in the map: its way through, where you arrive, and what walls it in. */
@@ -165,6 +171,7 @@ const WELL = 32; // px: the stairwell is the lower part of the stairs' art, this
  */
 export function passageLink(p: PlacedProp, here: string, assets: Assets, content: Content): PassageLink | null {
   const b = p.behavior;
+  if (b?.type === 'enter') return entrance(p, b, assets, content);
   if (b?.type !== 'stairs' && b?.type !== 'door') return null;
   const a = artRect(p, propFrames(p, assets, content)[0], assets);
   const bottom = a.y + a.h;
@@ -187,12 +194,33 @@ export function passageLink(p: PlacedProp, here: string, assets: Assets, content
   };
 }
 
-/** Every spawn a layout offers: its own, plus one in front of each of its stairs and doors. */
+/**
+ * A building's way in: its doorstep is just below what it blocks (or its base, if it blocks nothing).
+ * Walking up into the doorstep goes inside; coming back out, you arrive on it, facing out. Both come
+ * from the building, so they move with it. (Inside, the way out leads to spawn "door:<interior>".)
+ */
+function entrance(p: PlacedProp, b: { to: string; spawn: string }, assets: Assets, content: Content): PassageLink {
+  const frame = propFrames(p, assets, content)[0];
+  const at = placeProp(p, frame, assets);
+  const front = at.solid ? at.y + at.solid.y + at.solid.h : p.y;
+  return {
+    exit: { area: { x: Math.round(p.x) - 14, y: Math.round(front) - 2, w: 28, h: 8 }, to: b.to, spawn: b.spawn, dir: 'up' },
+    spawn: { x: Math.round(p.x) - 16, y: Math.round(front) + 8 - 22, facing: 'down' },
+    rails: [],
+  };
+}
+
+/** What a passage's arrival spawn is called in the map it leads from: stairs, doors and buildings' doors. */
+function passageKey(p: PlacedProp): 'stairs' | 'door' {
+  return p.behavior?.type === 'stairs' ? 'stairs' : 'door';
+}
+
+/** Every spawn a layout offers: its own, plus one in front of each of its stairs, doors and buildings. */
 export function layoutSpawns(layout: Layout, assets: Assets, content: Content): Record<string, Spawn> {
   const out: Record<string, Spawn> = Object.fromEntries(Object.entries(layout.spawns).map(([k, s]) => [k, spawnAt(s.x, s.y, s.facing)]));
   for (const p of layout.props) {
     const link = passageLink(p, layout.id, assets, content);
-    if (link) out[passageSpawn(p.behavior!.type as 'stairs' | 'door', link.exit.to)] = link.spawn;
+    if (link) out[passageSpawn(passageKey(p), link.exit.to)] = link.spawn;
   }
   return out;
 }

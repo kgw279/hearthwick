@@ -30,7 +30,7 @@ import type { Action } from '../core/input';
 import { overlaps, type Rect } from '../core/geom';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Game } from '../game/game';
-import { artRect, layoutSpawns, placeProp, propFrames } from '../game/build';
+import { artRect, layoutSpawns, passageSpawn, placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { CELL } from '../world/field';
@@ -601,6 +601,11 @@ export class Editor {
     this.changed('Deleted');
   }
 
+  /** A map was changed outside the editor (the player rearranging furniture): it needs saving. */
+  markChanged(id: string): void {
+    this.unsaved.add(id);
+  }
+
   /** An id for a new container, unique across every map: "<map>_<art>_<n>". */
   private newStorageId(p: PlacedProp): string {
     const used = new Set<string>();
@@ -840,11 +845,20 @@ export class Editor {
       const sy = Math.floor(cy / k);
       const inside = sx >= 0 && sy >= 0 && sx < g.rows[0].length && sy < g.rows.length;
       if (!inside && (erase || ch === '.')) return;
-      if (!erase) {
-        // floor needs room round it for the walls it wraps itself in; a wall needs just its cell
-        const [x0, y0, x1, y1] = size === CELL ? [sx - 1, sy - 2, sx + 1, sy + 1] : [sx, sy, sx, sy];
+      // floor needs room round it for the walls it wraps itself in; a wall needs just its cell; an outer
+      // wall erased becomes floor and needs the same, except past the front or a side of the room, where
+      // nothing beyond it makes a doorway
+      const w = g.rows[0].length;
+      const h = g.rows.length;
+      let need: [number, number, number, number] | null = null;
+      if (!erase) need = size === CELL ? [sx - 1, sy - 2, sx + 1, sy + 1] : [sx, sy, sx, sy];
+      else if (size !== CELL && inside && 'WS'.includes(g.rows[sy][sx])) {
+        need = [sx === 0 ? sx : sx - 1, sy - 2, sx === w - 1 ? sx : sx + 1, sy === h - 1 ? sy : sy + 1];
+      }
+      if (need) {
+        const [x0, y0, x1, y1] = need;
         const grow = () => growRoom(this.layout, x0, y0, x1, y1);
-        if (x0 < 0 || y0 < 0 || x1 >= g.rows[0].length || y1 >= g.rows.length) {
+        if (x0 < 0 || y0 < 0 || x1 >= w || y1 >= h) {
           this.recordStroke();
           const s = grow();
           this.shifted(s);
@@ -1152,14 +1166,11 @@ export class Editor {
     if (p.sprite === undefined) p.sprite = propFrames(p, assets, content)[0]; // keep its look once its shop behavior goes
     const entry = Object.keys(layoutSpawns(inside, assets, content))[0];
     p.behavior = { type: 'enter', to: interiorId, spawn: entry };
-    // the doorstep: just below what the building blocks (or its base, if it blocks nothing)
-    const step = this.solidOf(p);
-    const front = step ? step.y + step.h : p.y;
-    const outside = `from_${interiorId}`;
-    // spawnAt puts the feet 13px into a cell: pick the first row whose feet clear the doorstep
-    here.spawns[outside] = { x: Math.floor(p.x / TILE), y: Math.ceil((front - 13) / TILE), facing: 'down' };
+    // the doorstep, the way in and where you come back out all come from the building now (see
+    // game/build.ts entrance): drop any old ones written for it
+    const outside = passageSpawn('door', interiorId);
+    delete here.spawns[`from_${interiorId}`];
     here.exits = here.exits.filter((e) => e.to !== interiorId);
-    here.exits.push({ area: { x: Math.round(p.x) - 14, y: Math.round(front) - 2, w: 28, h: 8 }, to: interiorId, spawn: entry, dir: 'up' });
     let back = 0;
     for (const ex of inside.exits) {
       if (ex.to === UNLINKED || ex.to === here.id) {
