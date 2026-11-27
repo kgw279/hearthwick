@@ -2,9 +2,9 @@
  * Outdoor ground: a fine character grid (16px cells) composited per pixel into one image, so every
  * terrain blends into every other terrain it touches, whatever the mix.
  *
- *   .  grass     d  dirt (roads, paths)     c  cobblestone     s  town-square pavers     w  water
+ *   .  grass   d  dirt (roads, paths)   f  farmland   c  cobblestone   s  town-square pavers   w  water
  *
- * Terrain is layered, bottom to top: grass, dirt, cobble, pavers, water. Each terrain's shape comes
+ * Terrain is layered, bottom to top: grass, dirt, farmland, cobble, pavers, water. Each terrain's shape comes
  * from its painted cells (see field.ts): one cell is a narrow-path-sized patch, and painting more
  * cells widens it. Each pixel shows its top layer, with edge colours where layers meet (dirt lip,
  * grass fringe, kerbs, earth bank, foam, shallows); textures and colours come from the art pack.
@@ -25,11 +25,13 @@ const WATER_FRAMES = ['water_f0', 'water_f1', 'water_f2', 'water_f3'];
 /** Layers bottom to top: the character painted for each, and how much its edge wobbles. */
 const GRASS = 0;
 const DIRT = 1;
-const COBBLE = 2;
-const PAVERS = 3;
-const WATER = 4;
+const FARM = 2;
+const COBBLE = 3;
+const PAVERS = 4;
+const WATER = 5;
 const LAYERS: Array<{ ch: string; layer: number; wobble: number }> = [
   { ch: 'd', layer: DIRT, wobble: 0.22 },
+  { ch: 'f', layer: FARM, wobble: 0.04 },
   { ch: 'c', layer: COBBLE, wobble: 0.04 },
   { ch: 's', layer: PAVERS, wobble: 0.04 },
   { ch: 'w', layer: WATER, wobble: 0.2 },
@@ -42,7 +44,7 @@ function rgb(hex: string): [number, number, number] {
 
 /** Base textures and edge colours, read once per Assets and shared by every map. */
 interface Kit {
-  bases: { grass: ImageData[]; flowers: ImageData; dirt: ImageData[]; cobble: ImageData[]; pavers: ImageData[]; water: ImageData[] };
+  bases: { grass: ImageData[]; flowers: ImageData; dirt: ImageData[]; farm: ImageData; cobble: ImageData[]; pavers: ImageData[]; water: ImageData[] };
   edges: Record<keyof Assets['terrain']['edges'], [number, number, number]>;
 }
 const kits = new WeakMap<Assets, Kit>();
@@ -67,7 +69,7 @@ function kitFor(assets: Assets): Kit {
   const pixels = tilePixels(assets);
   const kit: Kit = {
     bases: {
-      grass: t.bases.grass.map(pixels), flowers: pixels('grass_flowers'), dirt: t.bases.dirt.map(pixels),
+      grass: t.bases.grass.map(pixels), flowers: pixels('grass_flowers'), dirt: t.bases.dirt.map(pixels), farm: pixels('farmland'),
       cobble: t.bases.cobble.map(pixels), pavers: t.bases.pavers.map(pixels), water: t.bases.water.map(pixels),
     },
     edges: Object.fromEntries(Object.entries(t.edges).map(([k, v]) => [k, rgb(v)])) as Kit['edges'],
@@ -194,6 +196,9 @@ export class TileMap implements Ground {
         } else if (here === COBBLE) {
           src = kit.bases.cobble[pv];
           if (up < COBBLE || down < COBBLE || left < COBBLE || right < COBBLE) col = e.cobble_kerb;
+        } else if (here === FARM) {
+          src = kit.bases.farm;
+          if (up < FARM || down < FARM || left < FARM || right < FARM) col = e.dirt_lip;
         } else if (here === DIRT) {
           src = kit.bases.dirt[v];
           if (up === GRASS) col = e.dirt_lip;

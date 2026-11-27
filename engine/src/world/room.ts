@@ -3,16 +3,17 @@
  * pre-rendered once.
  *
  * Structure, one character per 32px cell:
- *   f  floor          W  plaster wall      N  plaster wall with a window
- *   .  outside        S  stone wall        M  stone wall with a window
+ *   f  floor     W  plaster wall   N  plaster, window   H  plaster, shelf   I  plaster interior wall
+ *   .  outside   S  stone wall     M  stone, window     K  stone, shelf     J  stone interior wall
  * Floor material, one character per 16px cell (twice as many each way): w wood, s flagstone. Floors are
  * composited per pixel: flagstone patches take their shape from their cells (see field.ts), so one
  * painted cell is a small patch and painting more widens it.
  *
  * Walls are autotiled from the shape of the room, the way the kit is drawn (top-down 3/4):
- *   - interior walls (floor on both sides): north-south walls are a narrow cap (with ends where they stop
- *     at open floor), east-west walls a cap along the top with their face below;
- *   - a wall cell with floor below it is a wall *face* (plaster or stone, windowed for N/M), unless that
+ *   - interior walls (I, J) divide a room: one running east-west is a cap along the top with its face
+ *     below (with ends beside a doorway), one running north-south a narrow cap (with ends where it stops
+ *     at open floor); floor shows round them;
+ *   - a wall cell with floor below it is a wall *face* (plaster or stone; window or shelf), unless that
  *     floor is a doorway through a side wall;
  *   - every other wall cell shows the *cap* (top edge) that the floor next to it calls for: T above a
  *     face, L/R beside the room, B along the front, outer corners TL/TR/BL/BR, inner corners where a back
@@ -28,7 +29,13 @@ import type { Ground } from './ground';
 import { tilePixels, TILE } from './tilemap';
 
 const FLOOR = new Set(['f']);
-const WALL = new Set(['W', 'S', 'N', 'M']);
+/** Outer (thick) walls and the face each shows. */
+const OUTER: Record<string, { stone: boolean; face: 'plain' | 'window' | 'shelf' }> = {
+  W: { stone: false, face: 'plain' }, N: { stone: false, face: 'window' }, H: { stone: false, face: 'shelf' },
+  S: { stone: true, face: 'plain' }, M: { stone: true, face: 'window' }, K: { stone: true, face: 'shelf' },
+};
+/** Interior (dividing) walls. */
+const PARTITION: Record<string, { stone: boolean }> = { I: { stone: false }, J: { stone: true } };
 
 export class RoomMap implements Ground {
   readonly w: number;
@@ -125,13 +132,15 @@ export class RoomMap implements Ground {
     return FLOOR.has(this.cell(x, y));
   }
 
+  /** Any wall: outer or interior. */
   private wall(x: number, y: number): boolean {
-    return WALL.has(this.cell(x, y));
+    const c = this.cell(x, y);
+    return c in OUTER || c in PARTITION;
   }
 
   private stone(x: number, y: number): boolean {
     const c = this.cell(x, y);
-    return c === 'S' || c === 'M';
+    return (OUTER[c] ?? PARTITION[c])?.stone ?? false;
   }
 
   /** A floor cell in a wall line: walls on both sides (left/right = through a front or back wall). */
@@ -140,19 +149,19 @@ export class RoomMap implements Ground {
       && !this.floor(x - 2, y) && !this.floor(x + 2, y); // in a run of wall, not a gap between two pieces
   }
 
-  /** An interior wall cell (floor on both sides): thin art, so floor shows round it. */
+  /** An interior wall cell: thin art, so floor shows round it. */
   private interior(x: number, y: number): boolean {
-    return this.wall(x, y) && ((this.floor(x, y - 1) && this.floor(x, y + 1)) || (this.floor(x - 1, y) && this.floor(x + 1, y)));
+    return this.cell(x, y) in PARTITION;
   }
 
-  /** North-south interior wall: only its narrow cap blocks (it's 8px thick, not a whole cell). */
+  /** An interior wall running east-west: it joins a wall on its left or right. */
+  private runsEW(x: number, y: number): boolean {
+    return this.wall(x - 1, y) || this.wall(x + 1, y) || !(this.wall(x, y - 1) || this.wall(x, y + 1));
+  }
+
+  /** North-south interior wall: only its narrow cap blocks (it's 10px thick, not a whole cell). */
   private thinV(x: number, y: number): boolean {
-    return this.wall(x, y) && this.floor(x - 1, y) && this.floor(x + 1, y) && !(this.floor(x, y - 1) && this.floor(x, y + 1));
-  }
-
-  /** A doorway through an east-west interior wall: walls left and right, floor above and below. */
-  private doorWithin(x: number, y: number): boolean {
-    return this.floor(x, y) && this.wall(x - 1, y) && this.wall(x + 1, y) && this.floor(x, y - 1) && this.floor(x, y + 1);
+    return this.interior(x, y) && !this.runsEW(x, y);
   }
 
   /** A floor cell in a side wall: walls above and below. */
@@ -174,24 +183,23 @@ export class RoomMap implements Ground {
 
   private wallPiece(x: number, y: number): string | null {
     const mat = this.stone(x, y) ? 'stone' : 'wood';
-    // interior walls: floor on both sides
+    // interior walls: which way they run, and their ends where they stop at open floor
     const iw = (kind: string) => `iwall_${mat}_${kind}`;
-    if (this.floor(x, y - 1) && this.floor(x, y + 1)) {
-      if (this.doorWithin(x + 1, y)) return iw('H_end_L');
-      if (this.doorWithin(x - 1, y)) return iw('H_end_R');
-      return iw('H');
-    }
-    if (this.floor(x - 1, y) && this.floor(x + 1, y)) {
-      if (this.floor(x, y + 1)) return iw('V_end');
-      if (this.floor(x, y - 1)) return iw('V_top');
+    if (this.interior(x, y)) {
+      if (this.runsEW(x, y)) {
+        if (!this.wall(x + 1, y) && this.wall(x - 1, y)) return iw('H_end_L'); // open on its right
+        if (!this.wall(x - 1, y) && this.wall(x + 1, y)) return iw('H_end_R'); // open on its left
+        return iw('H');
+      }
+      if (!this.wall(x, y + 1)) return iw('V_end');
+      if (!this.wall(x, y - 1)) return iw('V_top');
       return iw('V');
     }
     if (this.face(x, y)) {
-      const window = this.cell(x, y) === 'N' || this.cell(x, y) === 'M';
       if (this.face(x + 1, y) && this.stone(x + 1, y) !== this.stone(x, y)) {
         return this.stone(x, y) ? 'face_stone_to_plaster' : 'face_plaster_to_stone';
       }
-      return `face_${mat === 'stone' ? 'stone' : 'plaster'}_${window ? 'window' : 'plain'}`;
+      return `face_${mat === 'stone' ? 'stone' : 'plaster'}_${OUTER[this.cell(x, y)].face}`;
     }
     const cap = (kind: string) => `cap_${mat}_${kind}`;
     // along a run, a change of material uses the transition piece (taken from the neighbour before it)

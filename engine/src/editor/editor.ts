@@ -621,7 +621,9 @@ export class Editor {
       if (changed) this.changed(undefined, true);
       return;
     }
-    if ('WNSM'.includes(ch)) this.wallMat = ch === 'S' || ch === 'M' ? 'S' : 'W';
+    // painting floor walls itself in with the material of the last wall brush (plain, outer)
+    if ('WNHI'.includes(ch)) this.wallMat = 'W';
+    if ('SMKJ'.includes(ch)) this.wallMat = 'S';
     if (set(g.rows, cx, cy, ch)) this.changed(undefined, true);
   }
 

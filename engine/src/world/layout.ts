@@ -71,6 +71,7 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
   tiles: [
     { ch: '.', name: 'Grass', sample: 'grass', fine: true },
     { ch: 'd', name: 'Dirt', sample: 'dirt_path', fine: true },
+    { ch: 'f', name: 'Farmland', sample: 'farmland', fine: true },
     { ch: 'c', name: 'Cobblestone', sample: 'cobble_v0', fine: true },
     { ch: 's', name: 'Square pavers', sample: 'pavers_v0', fine: true },
     { ch: 'w', name: 'Water', sample: 'water', fine: true },
@@ -80,15 +81,19 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
     { ch: 's', name: 'Stone floor', sample: 'floor_wood_flagstone_15', fine: true },
     { ch: 'W', name: 'Plaster wall', sample: 'face_plaster_plain', fine: false },
     { ch: 'N', name: 'Plaster wall, window', sample: 'face_plaster_window', fine: false },
+    { ch: 'H', name: 'Plaster wall, shelf', sample: 'face_plaster_shelf', fine: false },
+    { ch: 'I', name: 'Interior wall, plaster', sample: 'iwall_wood_H', fine: false },
     { ch: 'S', name: 'Stone wall', sample: 'face_stone_plain', fine: false },
     { ch: 'M', name: 'Stone wall, window', sample: 'face_stone_window', fine: false },
+    { ch: 'K', name: 'Stone wall, shelf', sample: 'face_stone_shelf', fine: false },
+    { ch: 'J', name: 'Interior wall, stone', sample: 'iwall_stone_H', fine: false },
     { ch: '.', name: 'Clear', sample: '', fine: false },
   ],
 };
 
 /** Characters allowed in each grid. */
-const TILE_CHARS = new Set(['.', 'd', 'c', 's', 'w']);
-const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'N', 'S', 'M']);
+const TILE_CHARS = new Set(['.', 'd', 'f', 'c', 's', 'w']);
+const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'N', 'H', 'I', 'S', 'M', 'K', 'J']);
 const FLOOR_CHARS = new Set(['w', 's']);
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
