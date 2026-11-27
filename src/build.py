@@ -11,6 +11,7 @@ from art_town import TOWN_BUILDINGS, TOWN_PROPS, TOWN_ANIMATIONS  # noqa: E402
 from art_iwalls import IWALLS  # noqa: E402
 from art_walldecor import WALL_DECOR  # noqa: E402
 from art_kitchen import KITCHEN, BAR  # noqa: E402
+from art_tableware import ITEMS as TABLEWARE_ITEMS, TABLES, CHAIRS  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -72,6 +73,9 @@ def build_groups(data):
         'characters': ([(n, f()) for n, f in CHARACTERS], 32, 32, 12, 'grass'),
         'guests': ([(n, f()) for n, f in FOLK], 32, 32, 12, 'grass'),
         'food': (food_entries(data), 32, 32, 16, 'cream'),
+        'tableware_items': ([(n, f()) for n, f in TABLEWARE_ITEMS], 32, 32, 12, 'cream'),
+        'tables': ([(n, f()) for n, f in TABLES], 64, 48, 3, 'floor'),
+        'chairs': ([(n, f()) for n, f in CHAIRS], 32, 32, 5, 'floor'),
     }
 
 

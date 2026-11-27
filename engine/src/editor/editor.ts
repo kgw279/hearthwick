@@ -582,6 +582,7 @@ export class Editor {
       return;
     }
     const p = this.ghost();
+    if (p.behavior?.type === 'storage' && !p.behavior.id) p.behavior = { ...p.behavior, id: this.newStorageId(p) };
     this.layout.props.push(p);
     if (isPassage(p) && !p.behavior) return this.passageToNewRoom(p);
     this.changed('Placed');
@@ -598,6 +599,16 @@ export class Editor {
     this.history.record();
     this.layout.props.splice(hit, 1);
     this.changed('Deleted');
+  }
+
+  /** An id for a new container, unique across every map: "<map>_<art>_<n>". */
+  private newStorageId(p: PlacedProp): string {
+    const used = new Set<string>();
+    for (const l of this.game.layouts.values()) for (const q of l.props) if (q.behavior?.type === 'storage') used.add(q.behavior.id);
+    const base = `${this.layout.id}_${String(p.sprite).replace(/^anim:/, '')}`;
+    let n = 1;
+    while (used.has(`${base}_${n}`)) n++;
+    return `${base}_${n}`;
   }
 
   private get slotKey(): string {
@@ -924,10 +935,12 @@ export class Editor {
     const names = this.layout.props.map((p) => label(p));
     const { layouts, assets, content } = this.game;
     const hung = this.layout.props.filter((p) => p.layer === 'wall').map((p) => ({ name: label(p), rect: this.artRect(p) }));
+    const set = this.layout.props.filter((p) => p.layer === 'top').map((p) => ({ name: label(p), rect: this.artRect(p) }));
+    const surfaces = this.layout.props.filter((p) => !p.layer).map((p) => this.artRect(p));
     this.issues = validate(this.game.scene, names, (map, spawn) => {
       const l = layouts.get(map);
       return !!l && spawn in layoutSpawns(l, assets, content);
-    }, hung);
+    }, hung, { set, surfaces });
     this.checkIn = -1;
   }
 
@@ -1411,7 +1424,7 @@ export class Editor {
     const assets = this.game.assets;
     const l = this.layout;
     const layer = this.activeLayer;
-    const layerName = layer === 'floor' ? 'Floor layer' : layer === 'wall' ? 'Wall layer' : 'Standing';
+    const layerName = layer === 'floor' ? 'Floor layer' : layer === 'wall' ? 'Wall layer' : layer === 'top' ? 'Table top' : 'Standing';
     const mode = this.tool === 'props' ? `${layerName}  snap ${snapName(this.snap)}` : this.groundTab.name;
     const zoom = this.zoom === 1 ? '' : `  1/${1 / this.zoom}`;
     const top = `EDIT ${l.id}${this.unsaved.has(l.id) ? '*' : ''}  ${mode}${zoom}  ${Math.round(this.cursor.x)},${Math.round(this.cursor.y)}`;

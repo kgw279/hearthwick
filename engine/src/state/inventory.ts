@@ -1,17 +1,15 @@
 /**
- * The player's bag and purse. A fixed number of slots; each slot holds a stack of one item, up to the
- * stack size. Adding fills existing stacks first, then empty slots, and never adds part of a pile it
- * can't fit: it reports how many it could take. Pure state, no drawing.
+ * Inventories: a fixed number of slots, each holding a stack of one item up to the stack size. The
+ * player's bag is one (with a purse); so is every storage container. Adding fills existing stacks first,
+ * then empty slots, and reports how many it could take. Pure state, no drawing.
  */
 export interface Stack { item: string; count: number }
 
-export class Bag {
+export class Inventory {
   readonly slots: Array<Stack | null>;
-  coins: number;
 
-  constructor(size: number, readonly stackSize: number, coins: number) {
+  constructor(size: number, readonly stackSize: number) {
     this.slots = Array.from({ length: size }, () => null);
-    this.coins = coins;
   }
 
   count(item: string): number {
@@ -59,7 +57,31 @@ export class Bag {
     return true;
   }
 
-  /** Every distinct item carried, in bag order, with its total. */
+  /** Take up to n from the stack in slot i; returns what was taken (null if the slot is empty). */
+  takeFrom(i: number, n: number): Stack | null {
+    const s = this.slots[i];
+    if (!s) return null;
+    const k = Math.min(n, s.count);
+    s.count -= k;
+    if (s.count === 0) this.slots[i] = null;
+    return { item: s.item, count: k };
+  }
+
+  /**
+   * Move up to n from slot i into another inventory, as much as fits there; returns how many moved
+   * (what doesn't fit stays where it was).
+   */
+  moveTo(i: number, n: number, to: Inventory): number {
+    const s = this.slots[i];
+    if (!s) return 0;
+    const k = Math.min(n, s.count, to.room(s.item));
+    if (!k) return 0;
+    to.add(s.item, k);
+    this.takeFrom(i, k);
+    return k;
+  }
+
+  /** Every distinct item held, in slot order, with its total. */
   contents(): Stack[] {
     const out: Stack[] = [];
     for (const s of this.slots) {
@@ -69,5 +91,15 @@ export class Bag {
       else out.push({ ...s });
     }
     return out;
+  }
+}
+
+/** The player's bag: an inventory and the purse. */
+export class Bag extends Inventory {
+  coins: number;
+
+  constructor(size: number, stackSize: number, coins: number) {
+    super(size, stackSize);
+    this.coins = coins;
   }
 }

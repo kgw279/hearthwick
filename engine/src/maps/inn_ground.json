@@ -51,7 +51,7 @@
     {"sprite": "cutting_board", "x": 262, "y": 90},
     {"sprite": "stove", "x": 262, "y": 70},
     {"sprite": "oven", "x": 221, "y": 70},
-    {"sprite": "wash_tub", "x": 80, "y": 70},
+    {"sprite": "wash_tub", "x": 80, "y": 70, "behavior": {"type": "wash"}},
     {"sprite": "anim:cauldron", "x": 121, "y": 70, "fps": 4},
     {"sprite": "hand_mill", "x": 122, "y": 96},
     {"sprite": "anim:fireplace", "x": 57, "y": 134, "fps": 4},
@@ -60,14 +60,14 @@
     {"layer": "floor", "sprite": "stairs_up", "x": 112, "y": 164, "behavior": {"type": "stairs", "to": "inn_ground_upstairs"}},
     {"layer": "floor", "sprite": "runner_right", "x": 173, "y": 196, "rot": 90},
     {"layer": "floor", "sprite": "runner_right", "x": 173, "y": 166, "rot": -90},
-    {"sprite": "dining_table_set_empty", "x": 215, "y": 171},
-    {"sprite": "dining_table_set_empty", "x": 253, "y": 208},
+    {"sprite": "table_2", "x": 215, "y": 171},
+    {"sprite": "table_2", "x": 253, "y": 208},
     {"sprite": "potted_plant", "x": 85, "y": 134},
     {"layer": "wall", "sprite": "deco_painting", "x": 136, "y": 119},
     {"layer": "wall", "sprite": "deco_banner", "x": 177, "y": 55},
-    {"sprite": "barrel_stack", "x": 45, "y": 224},
-    {"sprite": "crate", "x": 67, "y": 210},
-    {"sprite": "crate", "x": 79, "y": 224},
-    {"sprite": "crate", "x": 41, "y": 200}
+    {"sprite": "barrel_stack", "x": 45, "y": 224, "behavior": {"type": "storage", "id": "inn_ground_barrel_stack_1", "slots": 12}},
+    {"sprite": "crate", "x": 67, "y": 210, "behavior": {"type": "storage", "id": "inn_ground_crate_1", "slots": 8, "contents": [{"item": "wood_plate", "count": 4}, {"item": "wood_bowl", "count": 4}, {"item": "wood_mug", "count": 4}, {"item": "wood_cutlery", "count": 4}]}},
+    {"sprite": "crate", "x": 79, "y": 224, "behavior": {"type": "storage", "id": "inn_ground_crate_2", "slots": 8}},
+    {"sprite": "crate", "x": 41, "y": 200, "behavior": {"type": "storage", "id": "inn_ground_crate_3", "slots": 8}}
   ]
 }

@@ -10436,6 +10436,225 @@
           "h": 32
         }
       }
+    },
+    "tableware_items": {
+      "image": "tableware_items.png",
+      "cell": [
+        32,
+        32
+      ],
+      "frames": {
+        "wood_plate": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "clay_plate": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "pewter_plate": {
+          "x": 64,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "wood_bowl": {
+          "x": 96,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "clay_bowl": {
+          "x": 128,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "pewter_bowl": {
+          "x": 160,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "wood_mug": {
+          "x": 192,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "clay_mug": {
+          "x": 224,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "pewter_mug": {
+          "x": 256,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "wood_cutlery": {
+          "x": 288,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "iron_cutlery": {
+          "x": 320,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "pewter_cutlery": {
+          "x": 352,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_wood_plate": {
+          "x": 0,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_clay_plate": {
+          "x": 32,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_pewter_plate": {
+          "x": 64,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_wood_bowl": {
+          "x": 96,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_clay_bowl": {
+          "x": 128,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_pewter_bowl": {
+          "x": 160,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_wood_mug": {
+          "x": 192,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_clay_mug": {
+          "x": 224,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_pewter_mug": {
+          "x": 256,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_wood_cutlery": {
+          "x": 288,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_iron_cutlery": {
+          "x": 320,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "dirty_pewter_cutlery": {
+          "x": 352,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        }
+      }
+    },
+    "tables": {
+      "image": "tables.png",
+      "cell": [
+        64,
+        48
+      ],
+      "frames": {
+        "table_1": {
+          "x": 0,
+          "y": 0,
+          "w": 64,
+          "h": 48
+        },
+        "table_2": {
+          "x": 64,
+          "y": 0,
+          "w": 64,
+          "h": 48
+        },
+        "table_4": {
+          "x": 128,
+          "y": 0,
+          "w": 64,
+          "h": 48
+        }
+      }
+    },
+    "chairs": {
+      "image": "chairs.png",
+      "cell": [
+        32,
+        32
+      ],
+      "frames": {
+        "chair_down": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "chair_up": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "chair_left": {
+          "x": 64,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "chair_right": {
+          "x": 96,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "place_setting": {
+          "x": 128,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      }
     }
   },
   "note": "Pictures only. What things are (items, recipes, sources, shops, folk) lives in gamedata.json.",

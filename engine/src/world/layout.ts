@@ -11,9 +11,10 @@
  *
  * Layers: a prop stands in the room (the default: it has a collider and is depth-sorted with the player),
  * lies on the floor (layer "floor": rugs, mats, stairs; no collider, drawn under everything standing), or
- * hangs on a wall (layer "wall": paintings, windows, shelves; no collider, drawn over the wall it's on).
- * Floor and wall props can be turned to any angle (rot, degrees clockwise).
- * Props can carry a behavior (talk, shop, forage, stairs, door...) that the game wires up when it builds the scene.
+ * hangs on a wall (layer "wall": paintings, windows, shelves; no collider, drawn over the wall it's on),
+ * or sits on top of furniture (layer "top": place settings on a table; no collider, drawn over it).
+ * Floor, wall and top props can be turned to any angle (rot, degrees clockwise).
+ * Props can carry a behavior (talk, shop, forage, stairs, door, storage, wash...) that the game wires up when it builds the scene.
  */
 import type { Rect } from '../core/geom';
 import type { Facing } from './scene';
@@ -30,10 +31,14 @@ export type Behavior =
   | { type: 'fish'; item: string }
   /** Stairs or a door to another map: walking onto / into them goes there, arriving by that map's way back. */
   | { type: 'stairs'; to: string }
-  | { type: 'door'; to: string };
+  | { type: 'door'; to: string }
+  /** A container: `slots` of storage the player can put things in and take them out of, by its id. */
+  | { type: 'storage'; id: string; slots: number; contents?: Array<{ item: string; count: number }> }
+  /** Washes the dirty tableware the player carries. */
+  | { type: 'wash' };
 
-export type PropLayer = 'floor' | 'wall';
-export const PROP_LAYERS: PropLayer[] = ['floor', 'wall'];
+export type PropLayer = 'floor' | 'wall' | 'top';
+export const PROP_LAYERS: PropLayer[] = ['floor', 'wall', 'top'];
 
 export interface PlacedProp {
   /** Frame name, a list of frames to loop, or "anim:<name>" for an atlas animation. Shops and forage take theirs from gamedata. */
@@ -41,9 +46,9 @@ export interface PlacedProp {
   /** World pixel at the middle of the bottom of the art. */
   x: number;
   y: number;
-  /** Lies on the floor or hangs on a wall (no collider); omitted: stands in the room. */
+  /** Lies on the floor, hangs on a wall or sits on furniture (no collider); omitted: stands in the room. */
   layer?: PropLayer;
-  /** Turned clockwise by this many degrees (floor and wall props). */
+  /** Turned clockwise by this many degrees (floor, wall and top props). */
   rot?: number;
   /** Collider preset name, a rect relative to the sprite, or null for walk-through. Omitted: the art's footprint. */
   collider?: string | Rect | null;
@@ -106,9 +111,11 @@ const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'I', 'S', 'J']);
 const FLOOR_CHARS = new Set(['w', 's']);
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
-const BEHAVIOR_FIELDS: Record<Behavior['type'], string[]> = {
-  talk: ['who', 'line'], read: ['text'], enter: ['to', 'spawn'], shop: ['shop'], market: ['shop'],
-  pet: [], draw_water: [], forage: ['node'], fish: ['item'], stairs: ['to'], door: ['to'],
+/** Each behavior's fields: s = non-empty string, n = whole number above 0; ? = may be left out. */
+const BEHAVIOR_FIELDS: Record<Behavior['type'], Record<string, 's' | 'n' | 'contents?'>> = {
+  talk: { who: 's', line: 's' }, read: { text: 's' }, enter: { to: 's', spawn: 's' }, shop: { shop: 's' }, market: { shop: 's' },
+  pet: {}, draw_water: {}, forage: { node: 's' }, fish: { item: 's' }, stairs: { to: 's' }, door: { to: 's' },
+  storage: { id: 's', slots: 'n', contents: 'contents?' }, wash: {},
 };
 const PROP_KEYS = new Set(['sprite', 'x', 'y', 'layer', 'rot', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 
@@ -177,9 +184,9 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
     num(pr.x, `${p}.x`);
     num(pr.y, `${p}.y`);
     for (const k of ['depth', 'fps', 'sortOffset', 'rot'] as const) if (pr[k] !== undefined) num(pr[k], `${p}.${k}`);
-    if (pr.layer !== undefined && !PROP_LAYERS.includes(pr.layer)) fail(`${p}.layer`, 'must be "floor", "wall" or left out');
-    if (pr.rot !== undefined && pr.layer === undefined) fail(`${p}.rot`, 'only floor and wall props turn');
-    if (pr.layer !== undefined && pr.collider !== undefined) fail(`${p}.collider`, 'floor and wall props have no collider');
+    if (pr.layer !== undefined && !PROP_LAYERS.includes(pr.layer)) fail(`${p}.layer`, 'must be "floor", "wall", "top" or left out');
+    if (pr.rot !== undefined && pr.layer === undefined) fail(`${p}.rot`, 'only floor, wall and top props turn');
+    if (pr.layer !== undefined && pr.collider !== undefined) fail(`${p}.collider`, 'floor, wall and top props have no collider');
     if (pr.sprite !== undefined) {
       if (Array.isArray(pr.sprite)) pr.sprite.forEach((s, j) => str(s, `${p}.sprite[${j}]`));
       else str(pr.sprite, `${p}.sprite`);
@@ -189,7 +196,20 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
     if (pr.behavior !== undefined) {
       const fields = BEHAVIOR_FIELDS[pr.behavior.type];
       if (!fields) fail(`${p}.behavior.type`, `"${pr.behavior.type}" is not a behavior`);
-      for (const f of fields) str((pr.behavior as unknown as Record<string, unknown>)[f], `${p}.behavior.${f}`);
+      const b = pr.behavior as unknown as Record<string, unknown>;
+      for (const k of Object.keys(b)) if (k !== 'type' && !(k in fields)) fail(`${p}.behavior.${k}`, `is not a ${pr.behavior.type} field`);
+      for (const [f, kind] of Object.entries(fields)) {
+        const at = `${p}.behavior.${f}`;
+        if (kind === 's') str(b[f], at);
+        else if (kind === 'n' && !(Number.isInteger(b[f]) && (b[f] as number) > 0)) fail(at, 'must be a whole number above 0');
+        else if (kind === 'contents?' && b[f] !== undefined) {
+          if (!Array.isArray(b[f])) fail(at, 'must be a list of {item, count}');
+          (b[f] as Array<{ item: unknown; count: unknown }>).forEach((c, j) => {
+            str(c?.item, `${at}[${j}].item`);
+            if (!(Number.isInteger(c.count) && (c.count as number) > 0)) fail(`${at}[${j}].count`, 'must be a whole number above 0');
+          });
+        }
+      }
     }
     const ownsSprite = pr.behavior?.type === 'shop' || pr.behavior?.type === 'forage';
     if (pr.sprite === undefined && !ownsSprite) fail(`${p}.sprite`, 'is required (only shop and forage props take theirs from gamedata)');

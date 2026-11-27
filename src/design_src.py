@@ -214,7 +214,7 @@ SPOTS = {   # wild forage spots and their find weights
 
 SHOPS = {   # shop id: (name, [(item, price)], building sprite or None)
     'mill': ('Willowmill Bakery', [('wheat', 3), ('flour', 6), ('egg', 4)], 'bakery'),
-    'grocer': ('Greengrocer', [('tomato', 4), ('potato', 3), ('carrot', 3), ('onion', 3), ('cress', 3)], 'general_store'),
+    'grocer': ('General Store', [('tomato', 4), ('potato', 3), ('carrot', 3), ('onion', 3), ('cress', 3)], 'general_store'),
     'dairy': ('Clover Dairy', [('milk', 4), ('cheese', 6)], None),
     'butcher': ("Hollin's Butchery", [('beef', 9), ('venison', 10), ('mutton', 8)], 'butcher'),
     'fish': ('The Fishmonger', [('trout', 8), ('fillet', 10), ('fishstock', 10)], None),

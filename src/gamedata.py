@@ -17,6 +17,8 @@ import content_oats
 import content_drinks
 import revisions
 import content_animals
+import content_tableware
+import art_tableware
 
 # Content packs layered on top of the prototype design. Each may add items,
 # prep steps (TX), combos and dishes, but may never change an existing step.
@@ -235,6 +237,12 @@ def build():
         shops[sh] = {'name': name, 'stock': [{'item': ids[i], 'price': p} for i, p in stock], 'building': building}
         for i, p in stock:
             items[ids[i]]['sources'].append({'type': 'shop', 'shop': sh, 'price': p})
+    # tableware: bought at the General Store, left dirty by guests, washed back (content_tableware.py)
+    for iid, it in content_tableware.items().items():
+        if iid in items: raise ValueError(f'tableware {iid} already exists')
+        items[iid] = it
+    for iid, p in content_tableware.stock():
+        shops[content_tableware.SELLER]['stock'].append({'item': iid, 'price': p})
     for pname, P in PACKS.items():   # packs may add stock to existing shops
         for sh, stock in getattr(P, 'SHOP_STOCK', {}).items():
             for i, p in stock:
@@ -299,6 +307,10 @@ def validate(data):
             errs.append(f'{iid}: raw item has no source')
         if it['kind'] == 'prepared' and not it['made_by']:
             errs.append(f'{iid}: prepared item has no recipe')
+        if it['kind'] == 'tableware':
+            if not art_tableware.has(iid): errs.append(f'{iid}: missing sprite')
+            if it.get('washes_to') and it['washes_to'] not in items: errs.append(f'{iid}: washes to unknown {it["washes_to"]}')
+            continue
         if not it['used_in']['items'] and not it['used_in']['dishes']:
             warns.append(f'{iid}: not used in anything (sell-only / future content)')
         if not has_sprite(iid): errs.append(f'{iid}: missing sprite')

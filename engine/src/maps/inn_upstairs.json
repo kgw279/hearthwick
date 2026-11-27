@@ -48,10 +48,10 @@
     {"sprite": "bed", "x": 48, "y": 90, "depth": 26},
     {"sprite": "nightstand", "x": 80, "y": 78},
     {"sprite": "bed", "x": 112, "y": 90, "depth": 26},
-    {"sprite": "wardrobe", "x": 144, "y": 78},
+    {"sprite": "wardrobe", "x": 144, "y": 78, "behavior": {"type": "storage", "id": "inn_upstairs_wardrobe_1", "slots": 16}},
     {"sprite": "floor_lamp", "x": 240, "y": 94, "collider": "small"},
     {"sprite": "armchair", "x": 272, "y": 78},
-    {"sprite": "chest", "x": 272, "y": 184, "collider": "small"},
+    {"sprite": "chest", "x": 272, "y": 184, "collider": "small", "behavior": {"type": "storage", "id": "inn_upstairs_chest_1", "slots": 12}},
     {"sprite": "potted_plant", "x": 48, "y": 182, "collider": "small"},
     {"sprite": "frog_right_idle", "x": 80, "y": 153, "collider": "npc", "behavior": {"type": "talk", "who": "Frog traveler", "line": "Ribbit! The beds here are wonderfully soft."}}
   ]

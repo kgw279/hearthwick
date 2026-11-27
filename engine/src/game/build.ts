@@ -22,6 +22,10 @@ export interface SceneHooks {
   /** Put items in the player's bag (shows what was picked up); false if there was no room. */
   give(item: string, n: number): boolean;
   openShop(shop: string): void;
+  /** Open a storage container (its contents beside the bag). */
+  openStorage(box: { id: string; slots: number; contents?: Array<{ item: string; count: number }> }, title: string): void;
+  /** Wash the dirty tableware the player carries. */
+  wash(): void;
 }
 
 /**
@@ -50,7 +54,14 @@ export function buildGround(g: LayoutGround, assets: Assets): Ground {
 /** A behavior resolved for one prop: the frames it supplies (if any) and how it reacts to the player. */
 interface Wired { frames?: string[]; interaction?: (prop: Prop) => Interaction }
 
-function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
+/** A piece's art name as a title: "barrel_stack" -> "Barrel stack". */
+function titleOf(frame: string): string {
+  const t = frame.replace(/^anim:/, '').replace(/_f\d+$/, '').replace(/_/g, ' ');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** `art`: the frame the prop shows (names a container's window). */
+function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired {
   switch (b.type) {
     case 'talk':
       return { interaction: () => ({ label: 'Talk', use: () => hooks.say(b.line, b.who) }) };
@@ -76,6 +87,10 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
     case 'stairs':
     case 'door':
       return {}; // an exit, not a button: see passageLink
+    case 'storage':
+      return { interaction: () => ({ label: 'Open', use: () => hooks.openStorage(b, titleOf(art)) }) };
+    case 'wash':
+      return { interaction: () => ({ label: 'Wash dishes', use: () => hooks.wash() }) };
     case 'forage': {
       const node = content.forageNode(b.node);
       return {
@@ -104,7 +119,7 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
   return fromBehavior;
 }
 
-const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {} };
+const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {} };
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
 export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: number }
@@ -115,10 +130,12 @@ export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: nu
  */
 const LAYER_SORT = { floor: -200000, wall: -100000 } as const;
 
+
 export function placeProp(p: PlacedProp, frame: string, assets: Assets): Placement {
   const b = assets.bounds(frame);
   const x = p.x - (b.x + Math.floor(b.w / 2));
   const y = p.y - (b.y + b.h);
+  if (p.layer === 'top') return { x, y }; // no collider; drawn over what it sits on (see seatTops)
   if (p.layer) return { x, y, sortOffset: LAYER_SORT[p.layer] };
   return { x, y, solid: resolveCollider(p, frame, assets), sortOffset: p.sortOffset };
 }
@@ -198,12 +215,34 @@ export function resolveCollider(p: PlacedProp, frame: string, assets: Assets): R
 export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks: SceneHooks): Prop {
   const frames = propFrames(p, assets, content);
   const at = placeProp(p, frames[0], assets);
-  const wired = p.behavior ? wire(p.behavior, content, hooks) : undefined;
+  const wired = p.behavior ? wire(p.behavior, content, hooks, frames[0]) : undefined;
   const prop = new Prop(assets, {
     frames, x: at.x, y: at.y, solid: at.solid, sortOffset: at.sortOffset, fps: p.fps, use: p.use, rot: p.rot,
   });
   if (wired?.interaction) prop.setInteraction(wired.interaction(prop));
   return prop;
+}
+
+/**
+ * Things on top of furniture (place settings) draw just after what they sit on, so they're always over
+ * their table, at the front of it or the back, and behind anyone in front of the table. What they sit on
+ * is the front-most standing piece whose art is under the middle of theirs (the editor flags ones on nothing).
+ */
+function seatTops(layout: Layout, props: Prop[], assets: Assets, content: Content): Prop[] {
+  const art = layout.props.map((p) => artRect(p, propFrames(p, assets, content)[0], assets));
+  layout.props.forEach((p, i) => {
+    if (p.layer !== 'top') return;
+    const cx = art[i].x + art[i].w / 2;
+    const cy = art[i].y + art[i].h / 2;
+    let best = -1;
+    layout.props.forEach((q, j) => {
+      const a = art[j];
+      if (q.layer || cx < a.x || cy < a.y || cx >= a.x + a.w || cy >= a.y + a.h) return;
+      if (best < 0 || props[j].sortY > props[best].sortY) best = j;
+    });
+    if (best >= 0) props[i].setOn(props[best]);
+  });
+  return props;
 }
 
 /** `ground`: reuse an already-built ground (the editor does when only props changed). */
@@ -221,7 +260,7 @@ export function buildScene(layout: Layout, assets: Assets, content: Content, hoo
   return {
     id: layout.id,
     ground: ground ?? buildGround(layout.ground, assets),
-    props: layout.props.map((p) => buildProp(p, assets, content, hooks)),
+    props: seatTops(layout, layout.props.map((p) => buildProp(p, assets, content, hooks)), assets, content),
     spawns: layoutSpawns(layout, assets, content),
     exits,
     blockers,

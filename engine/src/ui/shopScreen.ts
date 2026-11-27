@@ -8,7 +8,7 @@ import type { Input } from '../core/input';
 import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
-import type { Bag } from '../state/bag';
+import type { Bag } from '../state/inventory';
 import type { Shops, TradeResult } from '../state/shops';
 import { gridMove, inside } from './bagScreen';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';

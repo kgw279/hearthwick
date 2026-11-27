@@ -17,7 +17,9 @@ import { loadLayouts, type Layout } from '../world/layout';
 import { buildScene, type SceneHooks } from './build';
 import { Content } from './data';
 import { Editor } from '../editor/editor';
-import { Bag } from '../state/bag';
+import { Bag } from '../state/inventory';
+import { Storage } from '../state/storage';
+import { StorageScreen } from '../ui/storageScreen';
 import { Shops } from '../state/shops';
 import { BagScreen } from '../ui/bagScreen';
 import { drawCoins } from '../ui/items';
@@ -56,6 +58,8 @@ export class Game {
   /** The player's bag and purse, and the shops' shelves: the state a save game will hold. */
   readonly bag: Bag;
   readonly shops: Shops;
+  /** What's in every storage container, by its id. */
+  readonly storage: Storage;
   /** A full-screen UI (bag, shop) that has the input while it's open. */
   private screen: Screen | null = null;
   private target: Entity | null = null;
@@ -81,15 +85,37 @@ export class Game {
         return got === n;
       },
       openShop: (shop) => (this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets)),
+      openStorage: (box, title) => {
+        const inv = this.storage.get(box.id, box.slots, box.contents);
+        this.screen = new StorageScreen(title, inv, this.bag, this.content, assets);
+      },
+      wash: () => this.washDishes(),
     };
     const e = this.content.economy;
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
     this.shops = new Shops(this.content);
+    this.storage = new Storage(e.stack_size);
     this.shops.restock(1);
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
     this.editor = new Editor(this);
     this.enter('town', 'start');
+  }
+
+  /** The wash tub: every dirty piece of tableware the player carries comes clean. */
+  private washDishes(): void {
+    let washed = 0;
+    this.bag.slots.forEach((s, i) => {
+      const clean = s && this.content.item(s.item).washes_to;
+      if (!s || !clean) return;
+      // out of its slot and back in clean, joining any clean stack already carried (the freed slot
+      // means it always fits)
+      this.bag.slots[i] = null;
+      this.bag.add(clean, s.count);
+      washed += s.count;
+    });
+    const at = this.player.center;
+    this.floats.pop(washed ? `Washed ${washed} dish${washed > 1 ? 'es' : ''}` : 'Nothing to wash', at.x, this.player.y, this.time);
   }
 
   /** Forget a scene so it's rebuilt from its layout on the next visit (after the editor changes it). */

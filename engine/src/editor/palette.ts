@@ -15,16 +15,30 @@ type Template = Omit<PlacedProp, 'x' | 'y' | 'sprite'>;
 const FLOOR = /rug|runner|mat\b|doormat|carpet|^stairs_/;
 /** Art that hangs on a wall (no collider, drawn over the wall). */
 const WALL = /^deco_|^wall_|^shelf_jars$/;
-/** How an item from the art is placed by default: its layer (standing pieces stand on a shallow footprint). */
+/** Art that sits on top of furniture: place settings and things set on a table. */
+const TOP = /^place_setting|^salt_cellar|^pepper_mill/;
+/** Containers, and how many slots of storage each holds. */
+const STORAGE: Record<string, number> = { crate: 8, barrel: 6, barrel_stack: 12, chest: 12, cupboard: 12, wardrobe: 16 };
+/** Old art no longer offered: tables with the dishes drawn on (tables are bare now, with place settings set on them). */
+const RETIRED = /^dining_table/;
+
+/**
+ * How an item from the art is placed by default: its layer, and what it does (a container gets its
+ * storage; its id is given when it's placed, see the editor).
+ */
 function placement(name: string): Partial<PlacedProp> {
   if (FLOOR.test(name)) return { layer: 'floor' };
   if (WALL.test(name)) return { layer: 'wall' };
+  if (TOP.test(name)) return { layer: 'top' };
+  if (name in STORAGE) return { behavior: { type: 'storage', id: '', slots: STORAGE[name] } };
+  if (name === 'wash_tub') return { behavior: { type: 'wash' } };
   return {};
 }
 
 /** Groups: which atlas sheets they draw from and how their items are placed by default. */
 const GROUPS: Array<{ name: string; sheets: string[]; template: Template; living?: boolean }> = [
   { name: 'Furniture', sheets: ['furniture', 'interior', 'stairs', 'tableware'], template: {} },
+  { name: 'Tables', sheets: ['tables', 'chairs'], template: {} },
   { name: 'Kitchen', sheets: ['stations', 'animated'], template: {} },
   { name: 'Town', sheets: ['props', 'buildings', 'farm', 'carts', 'wagons', 'wagons_ns'], template: {} },
   { name: 'Animals', sheets: ['animals', 'ambient'], template: {}, living: true },
@@ -47,12 +61,15 @@ export function buildPalette(assets: Assets, content: Content): Category[] {
       }
       for (const f of s.frames) {
         if (inAnim.has(f) && !(g.living && f.endsWith('_idle'))) continue;
+        if (RETIRED.test(f)) continue;
         items.push({ name: f, prop: { ...g.template, ...placement(f), sprite: f, x: 0, y: 0 } });
       }
     }
-    // floor and wall pieces (rugs, stairs, pictures, windows, shelves) go in a tab of their own
-    decor.push(...items.filter((it) => it.prop.layer));
-    const standing = items.filter((it) => !it.prop.layer);
+    // floor and wall pieces (rugs, stairs, pictures, windows, shelves) go in a tab of their own;
+    // things set on tables stay with the tables
+    const isDecor = (it: PaletteItem) => it.prop.layer === 'floor' || it.prop.layer === 'wall';
+    decor.push(...items.filter(isDecor));
+    const standing = items.filter((it) => !isDecor(it));
     if (standing.length) out.push({ name: g.name, items: standing });
     if (g.name === 'Furniture') out.push({ name: 'Decor', items: decor });
   }

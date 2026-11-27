@@ -73,7 +73,15 @@ export class Prop extends Entity {
     this.pivot = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
   }
 
+  /** What this sits on (a place setting's table): it draws just after that, wherever its own base is. */
+  private on: Prop | null = null;
+
+  setOn(surface: Prop): void {
+    this.on = surface;
+  }
+
   get sortY(): number {
+    if (this.on) return this.on.sortY + 0.01;
     return this.y + (this.spec.sortOffset ?? this.h - 4);
   }
 

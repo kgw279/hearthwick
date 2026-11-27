@@ -4,6 +4,7 @@
  *   unreachable  a spawn, exit or usable prop the player can't walk to from the scene's first spawn
  *   dead end     an exit whose destination map or spawn doesn't exist
  *   off the wall a wall piece (picture, window, shelf) that isn't on a wall face (indoors)
+ *   off the table a table-top piece (place setting) that isn't on a piece of furniture
  * Reachability walks the player's own feet box over the map in 4px steps, using the same ground and
  * collider tests the game uses, so "reachable" here means reachable in play.
  */
@@ -21,8 +22,15 @@ const STEP = 4;
  */
 export function validate(
   scene: Scene, names: string[], exists: (map: string, spawn: string) => boolean, hung: Array<{ name: string; rect: Rect }> = [],
+  tops: { set: Array<{ name: string; rect: Rect }>; surfaces: Rect[] } = { set: [], surfaces: [] },
 ): Issue[] {
   const issues: Issue[] = [];
+  for (const t of tops.set) {
+    const cx = t.rect.x + t.rect.w / 2;
+    const cy = t.rect.y + t.rect.h / 2;
+    const on = tops.surfaces.some((s) => cx >= s.x && cx < s.x + s.w && cy >= s.y && cy < s.y + s.h);
+    if (!on) issues.push({ text: `${t.name} isn't on a table`, rects: [t.rect] });
+  }
   const onWall = scene.ground.wallFace?.bind(scene.ground);
   if (onWall) {
     for (const h of hung) {

@@ -5,7 +5,7 @@
  */
 import { hash2 } from '../core/geom';
 import type { Content, StockEntry } from '../game/data';
-import type { Bag } from './bag';
+import type { Bag } from './inventory';
 
 export interface Shelf { item: string; price: number; left: number }
 

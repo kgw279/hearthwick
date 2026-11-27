@@ -34,7 +34,7 @@ export function drawCoins(r: Renderer, assets: Assets, coins: number, x: number,
 export function drawItemInfo(r: Renderer, assets: Assets, content: Content, item: string, x: number, y: number): number {
   const it = content.item(item);
   drawText(r, assets, it.name, x, y);
-  const kind = it.kind === 'raw' ? 'Ingredient' : it.kind === 'prepared' ? 'Prepared' : 'Dish';
+  const kind = ({ raw: 'Ingredient', prepared: 'Prepared', tableware: 'Tableware' } as Record<string, string>)[it.kind] ?? 'Dish';
   const keeps = it.shelf_life_days ? `  keeps ${it.shelf_life_days} day${it.shelf_life_days > 1 ? 's' : ''}` : '';
   r.ctx.globalAlpha = 0.7;
   drawText(r, assets, kind + keeps, x, y + 12);

@@ -8,6 +8,10 @@ export interface ItemData {
   value: number;
   shelf_life_days?: number;
   sprite: { sheet: string; frame: string };
+  /** Tableware: the clean piece a dirty one washes back to. */
+  washes_to?: string;
+  /** Tableware: what a clean piece becomes once used. */
+  dirty?: string;
 }
 export interface StockEntry { item: string; price: number; daily_qty: number }
 interface ShopBase { name: string; building: string | null; buys: string[] }
