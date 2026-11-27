@@ -66,15 +66,22 @@ export class Assets {
 
   /** base: where the site is served from ('/' locally, '/hearthwick/' on GitHub Pages). */
   static async load(base = '/'): Promise<Assets> {
+    // ?v=<build> keeps every file in step with the code that reads it, however the host caches.
+    const v = `?v=${__BUILD_ID__}`;
+    const json = async <T>(file: string): Promise<T> => {
+      const res = await fetch(base + file + v);
+      if (!res.ok) throw new Error(`Could not load ${file} (${res.status})`);
+      return res.json() as Promise<T>;
+    };
     const [atlas, data, terrain] = await Promise.all([
-      fetch(base + 'atlas.json').then((r) => r.json() as Promise<AtlasJson>),
-      fetch(base + 'gamedata.json').then((r) => r.json() as Promise<GameData>),
-      fetch(base + 'terrain.json').then((r) => r.json() as Promise<TerrainData>),
+      json<AtlasJson>('atlas.json'),
+      json<GameData>('gamedata.json'),
+      json<TerrainData>('terrain.json'),
     ]);
     const assets = new Assets(data, terrain);
     const sheets = { ...atlas.sheets, ...atlas.ui };
     const files = [...new Set(Object.values(sheets).map((s) => s.image))];
-    const images = new Map(await Promise.all(files.map(async (f) => [f, await loadImage(base + f)] as const)));
+    const images = new Map(await Promise.all(files.map(async (f) => [f, await loadImage(base + f + v)] as const)));
     for (const [sheet, s] of Object.entries(sheets)) {
       const img = images.get(s.image)!;
       for (const [name, f] of Object.entries(s.frames)) {

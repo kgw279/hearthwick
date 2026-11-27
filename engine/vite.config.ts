@@ -86,6 +86,9 @@ function mapSaving(): Plugin {
 // BASE_PATH is set by the GitHub Pages workflow (the site lives at /<repo>/); locally it is '/'.
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
+  // Stamped into the code and onto every data/image URL it loads, so a new build never runs against
+  // older cached copies of atlas.json, gamedata.json, terrain.json or the sheets (Pages caches them 10 min).
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
   publicDir: '../dist',
   server: { open: true },
   build: { outDir: 'build', emptyOutDir: true },
