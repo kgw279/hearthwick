@@ -1,5 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
-import { readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 /**
@@ -33,6 +33,45 @@ function onlyGameAssets(): Plugin {
   };
 }
 
+/**
+ * Dev server only: lets the layout editor save maps. POST /__maps/<id> with the file's text writes
+ * src/maps/<id>.json. Maps are also kept out of hot reload, so saving doesn't restart the game you're editing
+ * (edit a JSON file by hand and refresh the page to see it).
+ */
+function mapSaving(): Plugin {
+  const dir = join(__dirname, 'src', 'maps');
+  return {
+    name: 'map-saving',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/__maps/', (req, res) => {
+        const id = decodeURIComponent((req.url ?? '').replace(/^\//, ''));
+        if (req.method !== 'POST' || !/^[a-z0-9_]+$/.test(id)) {
+          res.statusCode = 400;
+          res.end('Bad map id');
+          return;
+        }
+        let body = '';
+        req.on('data', (c) => (body += c));
+        req.on('end', () => {
+          try {
+            const parsed = JSON.parse(body) as { id?: string };
+            if (parsed.id !== id) throw new Error('id mismatch');
+            writeFileSync(join(dir, `${id}.json`), body);
+            res.end('ok');
+          } catch (err) {
+            res.statusCode = 400;
+            res.end((err as Error).message);
+          }
+        });
+      });
+    },
+    handleHotUpdate(ctx) {
+      if (ctx.file.startsWith(dir)) return [];
+    },
+  };
+}
+
 // The art pipeline writes everything to ../dist; the engine serves it as static assets.
 // BASE_PATH is set by the GitHub Pages workflow (the site lives at /<repo>/); locally it is '/'.
 export default defineConfig({
@@ -40,5 +79,5 @@ export default defineConfig({
   publicDir: '../dist',
   server: { open: true },
   build: { outDir: 'build', emptyOutDir: true },
-  plugins: [onlyGameAssets()],
+  plugins: [onlyGameAssets(), mapSaving()],
 });

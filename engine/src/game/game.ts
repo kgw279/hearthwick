@@ -13,27 +13,28 @@ import type { Entity } from '../world/entity';
 import type { Scene } from '../world/scene';
 import { drawText } from '../ui/text';
 import { DialogBox, drawPrompt, Emotes, FloatTexts } from '../ui/widgets';
+import { loadLayouts, type Layout } from '../world/layout';
+import { buildScene, type SceneHooks } from './build';
 import { Content } from './data';
-import { buildInnGround, buildInnUpstairs } from './inn';
+import { Editor } from '../editor/editor';
 import { Player } from './player';
-import { buildTownScene, type TownHooks } from './town';
 
 const FADE = 0.22; // seconds for each half of a scene transition
-
-type Builder = (hooks: TownHooks) => Scene;
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
 
 export class Game {
   readonly input = new Input();
-  private readonly content: Content;
-  private readonly builders: Record<string, Builder>;
+  readonly content: Content;
+  /** Every map, by id. The editor changes these in place and asks for the scene to be rebuilt. */
+  readonly layouts: Map<string, Layout>;
   private readonly scenes = new Map<string, Scene>();
-  private scene!: Scene;
+  scene!: Scene;
   private entities: Entity[] = [];
-  private readonly player: Player;
-  private readonly camera: Camera;
-  private readonly hooks: TownHooks;
+  readonly player: Player;
+  readonly camera: Camera;
+  private readonly hooks: SceneHooks;
+  readonly editor: Editor;
   private readonly dialog = new DialogBox();
   private readonly emotes = new Emotes();
   private readonly floats = new FloatTexts();
@@ -43,7 +44,7 @@ export class Game {
   private debug = false;
   stats: LoopStats = { fps: 0 };
 
-  constructor(private readonly assets: Assets, private readonly renderer: Renderer) {
+  constructor(readonly assets: Assets, readonly renderer: Renderer) {
     this.content = new Content(assets.data);
     this.player = new Player(assets, 0, 0);
     this.camera = new Camera(VIEW_W, VIEW_H);
@@ -53,20 +54,17 @@ export class Game {
       float: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
       go: (to, spawn) => this.goTo(to, spawn),
     };
-    this.builders = {
-      town: (h) => buildTownScene(assets, this.content, h),
-      inn_ground: (h) => buildInnGround(assets, h),
-      inn_upstairs: (h) => buildInnUpstairs(assets, h),
-    };
+    this.layouts = loadLayouts();
+    this.editor = new Editor(this);
     this.enter('town', 'start');
   }
 
   private getScene(id: string): Scene {
     let s = this.scenes.get(id);
     if (!s) {
-      const build = this.builders[id];
-      if (!build) throw new Error(`Unknown scene "${id}"`);
-      s = build(this.hooks);
+      const layout = this.layouts.get(id);
+      if (!layout) throw new Error(`Unknown scene "${id}"`);
+      s = buildScene(layout, this.assets, this.content, this.hooks);
       this.scenes.set(id, s);
     }
     return s;
@@ -85,6 +83,17 @@ export class Game {
     this.target = null;
   }
 
+  /** Rebuild the current scene from its (edited) layout, keeping the player where they stand. */
+  rebuildScene(): void {
+    const id = this.scene.id;
+    this.scenes.delete(id);
+    const scene = this.getScene(id);
+    this.scene = scene;
+    this.entities = [...scene.props, this.player];
+    this.camera.setWorld(scene.ground.pixelW, scene.ground.pixelH);
+    this.target = null;
+  }
+
   /** Fade out, change scene, fade in. Ignored while a transition is already running. */
   goTo(id: string, spawnId: string): void {
     if (this.transition) return;
@@ -92,7 +101,7 @@ export class Game {
     this.transition = { phase: 'out', t: 0, to: id, spawn: spawnId };
   }
 
-  private blocked = (r: Rect): boolean => {
+  blocked = (r: Rect): boolean => {
     if (this.scene.ground.blocks(r)) return true;
     for (const e of this.entities) {
       if (e === this.player) continue;
@@ -136,8 +145,11 @@ export class Game {
     this.time += dt;
     this.input.update();
     if (this.input.pressed('debug')) this.debug = !this.debug;
+    if (this.input.pressed('edit') && !this.transition && !this.dialog.open) this.editor.toggle();
 
-    if (this.transition) {
+    if (this.editor.active) {
+      this.editor.update(dt);
+    } else if (this.transition) {
       const tr = this.transition;
       tr.t += dt;
       if (tr.phase === 'out' && tr.t >= FADE) {
@@ -164,7 +176,8 @@ export class Game {
       }
     }
     for (const e of this.entities) e.update(dt);
-    this.camera.follow(this.player.center.x, this.player.center.y, dt);
+    const focus = this.editor.active ? this.editor.focus() : this.player.center;
+    this.camera.follow(focus.x, focus.y, dt);
   }
 
   render(alpha: number): void {
@@ -181,6 +194,10 @@ export class Game {
     this.emotes.draw(r, cx, cy, this.time);
     this.floats.draw(r, this.assets, cx, cy, this.time);
 
+    if (this.editor.active) {
+      this.editor.draw(cx, cy);
+      return;
+    }
     const action = this.target?.interaction();
     if (this.target && action && !this.dialog.open && !this.transition) {
       const p = this.player.at(alpha);

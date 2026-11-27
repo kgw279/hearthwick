@@ -9,7 +9,7 @@ import type { Facing, Spawn } from '../world/scene';
 
 const SPEED = 72; // px per second
 // Feet collider relative to the 32x32 sprite's top-left.
-const FEET: Rect = { x: 10, y: 22, w: 12, h: 6 };
+export const FEET: Rect = { x: 10, y: 22, w: 12, h: 6 };
 
 export class Player extends Entity {
   facing: Facing = 'down';

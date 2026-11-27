@@ -43,6 +43,8 @@ export class Assets {
   private readonly frames = new Map<string, Frame>();
   private readonly anims = new Map<string, string[]>();
   private readonly boundsCache = new Map<string, Rect>();
+  /** World-art sheets (not UI) in atlas order, with their frame and animation names: what the editor offers. */
+  readonly sheets: Array<{ name: string; frames: string[]; animations: string[] }> = [];
   /** Names defined in more than one sheet; the unqualified name resolves to the first sheet. */
   readonly duplicates: string[] = [];
 
@@ -70,6 +72,7 @@ export class Assets {
         if (!assets.anims.has(name)) assets.anims.set(name, list);
         assets.anims.set(`${sheet}/${name}`, list);
       }
+      if (sheet in atlas.sheets) assets.sheets.push({ name: sheet, frames: Object.keys(s.frames), animations: Object.keys(s.animations ?? {}) });
     }
     return assets;
   }

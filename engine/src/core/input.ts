@@ -7,7 +7,7 @@
 export type Action =
   | 'up' | 'down' | 'left' | 'right'
   | 'interact' | 'back' | 'cook' | 'recipes'
-  | 'tab_prev' | 'tab_next' | 'menu' | 'map' | 'debug';
+  | 'tab_prev' | 'tab_next' | 'cat_prev' | 'cat_next' | 'menu' | 'map' | 'debug' | 'edit';
 
 export type Device = 'keyboard' | 'gamepad';
 
@@ -17,12 +17,13 @@ const KEYBOARD: Record<string, Action[]> = {
   KeyE: ['interact'], Space: ['interact'], Enter: ['interact'],
   Escape: ['back'], KeyF: ['cook'], KeyR: ['recipes'],
   KeyQ: ['tab_prev'], KeyC: ['tab_next'], Tab: ['menu'], KeyM: ['map'], F3: ['debug'],
+  KeyZ: ['cat_prev'], KeyX: ['cat_next'], F2: ['edit'],
 };
 
 // Standard gamepad mapping (what browsers report for an Xbox controller).
 const PAD_BUTTONS: Record<number, Action[]> = {
   0: ['interact'], 1: ['back'], 2: ['cook'], 3: ['recipes'],
-  4: ['tab_prev'], 5: ['tab_next'], 8: ['map'], 9: ['menu'],
+  4: ['tab_prev'], 5: ['tab_next'], 6: ['cat_prev'], 7: ['cat_next'], 8: ['map'], 9: ['menu'], 10: ['edit'],
   12: ['up'], 13: ['down'], 14: ['left'], 15: ['right'],
 };
 
@@ -30,11 +31,11 @@ const PAD_BUTTONS: Record<number, Action[]> = {
 const GLYPHS: Record<Device, Partial<Record<Action, string>>> = {
   gamepad: {
     interact: 'xb_a', back: 'xb_b', cook: 'xb_x', recipes: 'xb_y', tab_prev: 'xb_lb', tab_next: 'xb_rb',
-    menu: 'xb_menu', map: 'xb_view', up: 'xb_dpad_up', down: 'xb_dpad_down', left: 'xb_dpad_left', right: 'xb_dpad_right',
+    cat_prev: 'xb_lt', cat_next: 'xb_rt', edit: 'xb_ls', menu: 'xb_menu', map: 'xb_view', up: 'xb_dpad_up', down: 'xb_dpad_down', left: 'xb_dpad_left', right: 'xb_dpad_right',
   },
   keyboard: {
     interact: 'key_e', back: 'key_esc', cook: 'key_f', recipes: 'key_r', tab_prev: 'key_q', tab_next: 'key_c',
-    menu: 'key_tab', map: 'key_m', up: 'key_w', down: 'key_s', left: 'key_a', right: 'key_d',
+    cat_prev: 'key_z', cat_next: 'key_x', menu: 'key_tab', map: 'key_m', up: 'key_w', down: 'key_s', left: 'key_a', right: 'key_d',
   },
 };
 
