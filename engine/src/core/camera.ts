@@ -28,6 +28,7 @@ export class Camera {
 
   /** Zoom around the current centre (insets are screen pixels, so they cover more world when zoomed out). */
   setZoom(z: number): void {
+    if (z === this.zoom) return;
     const cx = this.x + this.viewW / 2;
     const cy = this.y + this.top + this.viewH / 2;
     this.zoom = z;

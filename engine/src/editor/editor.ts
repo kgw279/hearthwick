@@ -31,7 +31,9 @@ interface Held { prop: PlacedProp; from: number; grab: { x: number; y: number } 
 const SNAPS: Snap[] = [1, 8, 16, 'tile'];
 const ZOOMS = [1, 0.5, 0.25];
 const MAGNET = 8; // px within which a prop pulls flush against a wall or shore
-const CURSOR_SPEED = 110; // world px per second at zoom 1
+const STICK_SPEED = 300; // screen px per second at full tilt (like a mouse pointer, so the same at any zoom)
+const DPAD_GLIDE = 110; // screen px per second once a held D-pad direction starts gliding
+const EDGE = 24; // screen px: keys or stick pushing the cursor this close to an edge scroll the view
 const REPEAT_FIRST = 0.22;
 const REPEAT_NEXT = 0.06;
 const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
@@ -68,8 +70,6 @@ export class Editor {
   private readonly slots: Array<{ x: number; y: number; index: number }> = [];
   /** Where the camera is aimed. */
   view = { x: 0, y: 0 };
-  /** True while keys/pad drive the cursor (the camera follows it); false while the mouse does. */
-  private following = true;
   private pan: { x: number; y: number } | null = null;
 
   constructor(private readonly game: Game) {
@@ -90,20 +90,21 @@ export class Editor {
     this.cursor.y = f.y + f.h;
     this.view = { ...this.cursor };
     this.game.camera.setInset(HUD_H, PANEL_H);
+    this.clampView();
     this.check();
   }
 
   private close(): void {
     this.cancelHeld();
     this.active = false;
-    this.setZoom(1);
+    this.zoom = 1;
+    this.game.camera.setZoom(1);
     this.game.camera.setInset(0, 0);
   }
 
   /**
-   * World point the camera follows while editing: the cursor when keys or a pad move it. The mouse moves
-   * the cursor without moving the camera (so the point under the pointer stays put); drag with the middle
-   * button to pan.
+   * World point the camera is aimed at while editing. The cursor moves like a mouse pointer: the view
+   * scrolls only when keys or the stick push the cursor against an edge; drag with the middle button to pan.
    */
   focus(): { x: number; y: number } {
     return this.view;
@@ -111,7 +112,8 @@ export class Editor {
 
   private setZoom(z: number): void {
     this.zoom = z;
-    this.game.camera.setZoom(z);
+    this.clampView();
+    this.moveBy(0, 0);
   }
 
   // ------------------------------------------------------------------ update
@@ -159,12 +161,13 @@ export class Editor {
    */
   private moveCursor(dt: number): void {
     const input = this.game.input;
-    const speed = CURSOR_SPEED / this.zoom;
     const a = input.analog();
     if (a.x || a.y) {
+      // a pointer: velocity straight from the stick, eased so small tilts are precise; nothing snaps or steps
+      const mag = Math.hypot(a.x, a.y);
+      const v = (STICK_SPEED * mag) / this.zoom; // a.x / mag * mag^2
       this.mouse = null;
-      this.following = true;
-      this.setCursor(this.cursor.x + a.x * speed * dt, this.cursor.y + a.y * speed * dt);
+      this.moveBy(a.x * v * dt, a.y * v * dt);
       return;
     }
     const { x: dx, y: dy } = input.digital();
@@ -173,20 +176,20 @@ export class Editor {
       return;
     }
     this.mouse = null;
-    this.following = true;
     const step = this.tool === 'ground' ? TILE : 1;
     if (dx !== this.repeat.dx || dy !== this.repeat.dy) {
       this.repeat = { dx, dy, held: 0, next: REPEAT_FIRST };
-      this.setCursor(this.cursor.x + dx * step, this.cursor.y + dy * step);
+      this.moveBy(dx * step, dy * step);
       return;
     }
     this.repeat.held += dt;
     if (step === 1 && this.repeat.held >= GLIDE_AFTER) {
       const len = Math.hypot(dx, dy);
-      this.setCursor(this.cursor.x + (dx / len) * speed * dt, this.cursor.y + (dy / len) * speed * dt);
+      const v = DPAD_GLIDE / this.zoom;
+      this.moveBy((dx / len) * v * dt, (dy / len) * v * dt);
     } else if (this.repeat.held >= this.repeat.next) {
       this.repeat.next += REPEAT_NEXT;
-      this.setCursor(this.cursor.x + dx * step, this.cursor.y + dy * step);
+      this.moveBy(dx * step, dy * step);
     }
   }
 
@@ -194,7 +197,27 @@ export class Editor {
     const g = this.game.scene.ground;
     this.cursor.x = Math.max(0, Math.min(g.pixelW - 1, x));
     this.cursor.y = Math.max(0, Math.min(g.pixelH - 1, y));
-    if (this.following) this.view = { ...this.cursor };
+  }
+
+  /** Move the cursor like a pointer; the view only scrolls when the cursor pushes against its edge. */
+  private moveBy(dx: number, dy: number): void {
+    this.setCursor(this.cursor.x + dx, this.cursor.y + dy);
+    const z = this.zoom;
+    const hw = VIEW_W / z / 2 - EDGE / z;
+    const hh = (VIEW_H - HUD_H - PANEL_H) / z / 2 - EDGE / z;
+    this.view.x = Math.max(this.cursor.x - hw, Math.min(this.cursor.x + hw, this.view.x));
+    this.view.y = Math.max(this.cursor.y - hh, Math.min(this.cursor.y + hh, this.view.y));
+    this.clampView();
+  }
+
+  /** Keep the aim point where the camera can actually go, so reversing direction scrolls back at once. */
+  private clampView(): void {
+    const g = this.game.scene.ground;
+    const z = this.zoom;
+    const hw = VIEW_W / z / 2;
+    const hh = (VIEW_H - HUD_H - PANEL_H) / z / 2;
+    this.view.x = g.pixelW <= hw * 2 ? g.pixelW / 2 : Math.max(hw, Math.min(g.pixelW - hw, this.view.x));
+    this.view.y = g.pixelH <= hh * 2 ? g.pixelH / 2 : Math.max(hh, Math.min(g.pixelH - hh, this.view.y));
   }
 
   private centreOnTile(): void {
@@ -434,10 +457,10 @@ export class Editor {
       if (this.pan) {
         this.view.x -= (m.x - this.pan.x) / this.zoom;
         this.view.y -= (m.y - this.pan.y) / this.zoom;
+        this.clampView();
         this.pan = m;
       }
       this.mouse = m;
-      this.following = false;
       follow(this.mouse);
       if (this.tool === 'ground' && e.buttons & 1 && !this.overUi(this.mouse)) this.paint();
     });
@@ -463,7 +486,6 @@ export class Editor {
         return;
       }
       if (this.overUi(this.mouse)) return;
-      this.following = false;
       follow(this.mouse);
       if (e.button === 2) {
         if (this.tool === 'props') this.remove();

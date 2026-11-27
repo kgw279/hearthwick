@@ -176,8 +176,12 @@ export class Game {
       }
     }
     for (const e of this.entities) e.update(dt);
-    const focus = this.editor.active ? this.editor.focus() : this.player.center;
-    this.camera.follow(focus.x, focus.y, dt);
+    if (this.editor.active) {
+      // the editor aims the camera directly (no easing), so the world never slides under its pointer
+      this.camera.setZoom(this.editor.zoom);
+      const f = this.editor.focus();
+      this.camera.centerOn(f.x, f.y);
+    } else this.camera.follow(this.player.center.x, this.player.center.y, dt);
   }
 
   render(alpha: number): void {
