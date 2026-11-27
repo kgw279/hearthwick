@@ -29,6 +29,9 @@ const FADE = 0.22; // seconds for each half of a scene transition
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
 
+/** How far (px) the player walks from where they arrived before exits work again while still walking. */
+const ARM_DISTANCE = 48;
+
 export class Game {
   readonly input = new Input();
   readonly content: Content;
@@ -45,6 +48,11 @@ export class Game {
   private readonly emotes = new Emotes();
   private readonly floats = new FloatTexts();
   private transition: Transition | null = null;
+  /**
+   * Where the player arrived, until exits are armed again: they stay off until the player lets go of the
+   * controls or walks away, so arriving beside stairs or a door while still walking doesn't go straight back.
+   */
+  private arrivedAt: { x: number; y: number } | null = null;
   /** The player's bag and purse, and the shops' shelves: the state a save game will hold. */
   readonly bag: Bag;
   readonly shops: Shops;
@@ -108,6 +116,7 @@ export class Game {
     this.scene = scene;
     this.entities = [...scene.props, this.player];
     this.player.place(spawn);
+    this.arrivedAt = { x: this.player.x, y: this.player.y };
     this.camera.setWorld(scene.ground.pixelW, scene.ground.pixelH);
     this.camera.centerOn(this.player.center.x, this.player.center.y);
     this.target = null;
@@ -166,6 +175,12 @@ export class Game {
 
   /** An exit the player is walking into, if any. */
   private exitHit(): { to: string; spawn: string } | null {
+    if (this.arrivedAt) {
+      const m = this.input.move();
+      const away = Math.hypot(this.player.x - this.arrivedAt.x, this.player.y - this.arrivedAt.y) > ARM_DISTANCE;
+      if ((!m.x && !m.y) || away) this.arrivedAt = null;
+      else return null;
+    }
     if (!this.player.moving) return null;
     const feet = this.player.feet();
     for (const ex of this.scene.exits) {

@@ -91,6 +91,18 @@ export class Renderer {
     if (alpha !== 1) this.ctx.globalAlpha = 1;
   }
 
+  /** Draw a sprite turned clockwise by deg about `pivot` (sprite-relative), top-left at (x, y) when unturned. */
+  spriteTurned(name: string | Frame, x: number, y: number, deg: number, pivot: { x: number; y: number }, alpha = 1): void {
+    const f = typeof name === 'string' ? this.assets.frame(name) : name;
+    const c = this.ctx;
+    c.save();
+    if (alpha !== 1) c.globalAlpha = alpha;
+    c.translate(this.snap(x) + pivot.x, this.snap(y) + pivot.y);
+    c.rotate((deg * Math.PI) / 180);
+    c.drawImage(f.img, f.x, f.y, f.w, f.h, -pivot.x, -pivot.y, f.w, f.h);
+    c.restore();
+  }
+
   /** Draw a whole pre-rendered image (e.g. the static ground) with its top-left at (x, y). */
   image(src: CanvasImageSource & { width: number; height: number }, x: number, y: number): void {
     this.ctx.drawImage(src, this.snap(x), this.snap(y));

@@ -8,6 +8,8 @@ export interface Ground {
   draw(r: Renderer, camX: number, camY: number, time: number): void;
   /** True if a world-space rectangle overlaps anything solid in the ground itself (water, walls, map edge). */
   blocks(rect: Rect): boolean;
+  /** Whether a world pixel is on the face of a wall, where wall props (pictures, windows) can hang. */
+  wallFace?(x: number, y: number): boolean;
   /** Optional debug overlay (F3). */
   drawDebug?(r: Renderer, camX: number, camY: number): void;
 }

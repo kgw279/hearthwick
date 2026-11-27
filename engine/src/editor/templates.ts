@@ -41,6 +41,6 @@ export function interiorTemplate(id: string, w: number, h: number): Layout {
     ground: { type: 'room', rows, floor },
     spawns: { entrance: { x: door, y: h - 2, facing: 'up' } },
     exits: [{ cell: [door, h - 1], to: UNLINKED, spawn: UNLINKED, dir: 'down' }],
-    props: [{ sprite: 'doormat', x: door * 32 + 16, y: (h - 2) * 32 + 30, flat: true }],
+    props: [{ sprite: 'doormat', x: door * 32 + 16, y: (h - 2) * 32 + 30, layer: 'floor' }],
   };
 }

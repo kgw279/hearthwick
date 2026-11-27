@@ -27,6 +27,8 @@ export interface PropSpec {
   interaction?: Interaction;
   /** Where the player must stand/face to use it, relative to the sprite; defaults around the collider. */
   use?: Rect;
+  /** Turned clockwise by this many degrees about the middle of its art. */
+  rot?: number;
 }
 
 export abstract class Entity {
@@ -55,6 +57,8 @@ export class Prop extends Entity {
   private readonly w: number;
   private readonly h: number;
   private action: Interaction | null;
+  /** Middle of the art, sprite-relative: what a turned prop turns about. */
+  private readonly pivot: { x: number; y: number };
 
   constructor(assets: Assets, private readonly spec: PropSpec) {
     super(spec.x, spec.y);
@@ -65,6 +69,8 @@ export class Prop extends Entity {
     const f = assets.frame(this.frames[0]);
     this.w = f.w;
     this.h = f.h;
+    const b = assets.bounds(this.frames[0]);
+    this.pivot = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
   }
 
   get sortY(): number {
@@ -98,6 +104,7 @@ export class Prop extends Entity {
 
   draw(r: Renderer, camX: number, camY: number, time: number): void {
     const name = this.frames.length === 1 ? this.frames[0] : loopFrame(this.frames, time, this.fps, this.phase);
-    r.sprite(name, this.x - camX, this.y - camY);
+    if (this.spec.rot) r.spriteTurned(name, this.x - camX, this.y - camY, this.spec.rot, this.pivot);
+    else r.sprite(name, this.x - camX, this.y - camY);
   }
 }

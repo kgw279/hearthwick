@@ -9,6 +9,7 @@ from core import PAL  # noqa: E402
 from art_ground import GROUND_TILES, VARIANTS as PAVE_VARIANTS  # noqa: E402
 from art_town import TOWN_BUILDINGS, TOWN_PROPS, TOWN_ANIMATIONS  # noqa: E402
 from art_iwalls import IWALLS  # noqa: E402
+from art_walldecor import WALL_DECOR  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -54,7 +55,7 @@ def build_groups(data):
         'walls': ([(n, f()) for n, f in WALL_KIT], 32, 32, 10, 'floor'),
         'interior_walls': ([(n, f()) for n, f in WALL_KIT2 + IWALLS], 32, 32, 18, 'void'),
         'floor_transitions': ([(n, f()) for n, f in FLOOR_TRANSITIONS], 32, 32, 16, None),
-        'furniture': ([(n, f()) for n, f in FURNITURE + STAIRS_SMALL], 32, 32, 8, 'floor'),
+        'furniture': ([(n, f()) for n, f in FURNITURE + STAIRS_SMALL + WALL_DECOR], 32, 32, 8, 'floor'),
         'stairs': ([(n, f()) for n, f in STAIRS], 32, 64, 4, 'floor'),
         'stations': ([(n, f()) for n, f, _ in STATIONS], 32, 32, 8, 'floor'),
         'tableware': ([(n, f()) for n, f in TABLEWARE], 32, 32, 6, 'floor'),

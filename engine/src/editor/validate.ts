@@ -3,6 +3,7 @@
  *   overlap      two props' colliders overlap, or a collider sits on ground you can't stand on
  *   unreachable  a spawn, exit or usable prop the player can't walk to from the scene's first spawn
  *   dead end     an exit whose destination map or spawn doesn't exist
+ *   off the wall a wall piece (picture, window, shelf) that isn't on a wall face (indoors)
  * Reachability walks the player's own feet box over the map in 4px steps, using the same ground and
  * collider tests the game uses, so "reachable" here means reachable in play.
  */
@@ -14,11 +15,22 @@ export interface Issue { text: string; rects: Rect[] }
 
 const STEP = 4;
 
-/** exists(map, spawn): whether a door or exit's destination is real. */
-export function validate(scene: Scene, names: string[], exists: (map: string, spawn: string) => boolean): Issue[] {
+/**
+ * exists(map, spawn): whether a door or exit's destination is real.
+ * hung: the wall pieces (pictures, windows, shelves) and where their art is: each must be on a wall face.
+ */
+export function validate(
+  scene: Scene, names: string[], exists: (map: string, spawn: string) => boolean, hung: Array<{ name: string; rect: Rect }> = [],
+): Issue[] {
   const issues: Issue[] = [];
+  const onWall = scene.ground.wallFace?.bind(scene.ground);
+  if (onWall) {
+    for (const h of hung) {
+      if (!onWall(h.rect.x + h.rect.w / 2, h.rect.y + h.rect.h / 2)) issues.push({ text: `${h.name} isn't hanging on a wall`, rects: [h.rect] });
+    }
+  }
   for (const ex of scene.exits) {
-    if (!exists(ex.to, ex.spawn)) issues.push({ text: `exit leads nowhere (${ex.to}/${ex.spawn}): link a door to this map`, rects: [ex.area] });
+    if (!exists(ex.to, ex.spawn)) issues.push({ text: `exit leads nowhere (${ex.to}/${ex.spawn}): link a door or stairs to it`, rects: [ex.area] });
   }
   const solids = scene.props.map((p, i) => ({ i, c: p.collider() })).filter((s): s is { i: number; c: Rect } => !!s.c);
 
@@ -33,6 +45,7 @@ export function validate(scene: Scene, names: string[], exists: (map: string, sp
 
   // ---- reachability: flood fill over feet positions on a 4px grid anchored at the first spawn
   const spawns = Object.entries(scene.spawns);
+  if (!spawns.length) return [...issues, { text: 'no way in: add a spawn, a door or stairs', rects: [] }];
   const first = spawns[0][1];
   const ox = ((first.x + FEET.x) % STEP + STEP) % STEP;
   const oy = ((first.y + FEET.y) % STEP + STEP) % STEP;

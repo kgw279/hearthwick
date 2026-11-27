@@ -5,7 +5,7 @@
     "type": "room",
     "rows": [
       "WWWWWWWWWW",
-      "WWNWWNWWNW",
+      "WWWWWWWWWW",
       "WffffffffW",
       "WffffffffW",
       "WffffffffW",
@@ -29,19 +29,22 @@
       "wwwwwwwwwwwwwwwwwwww"
     ]
   },
-  "spawns": {"stairs": {"x": 6, "y": 5, "facing": "down"}},
+  "spawns": {},
   "exits": [
-    {"cell": [6, 4], "to": "inn_ground", "spawn": "stairs"}
+
   ],
   "props": [
-    {"sprite": "deco_painting", "x": 112, "y": 49, "flat": true},
-    {"sprite": "deco_sconce", "x": 208, "y": 49, "flat": true},
-    {"sprite": "deco_sconce", "x": 48, "y": 49, "flat": true},
-    {"sprite": "runner_left", "x": 49, "y": 150, "flat": true},
-    {"sprite": "runner_middle", "x": 80, "y": 150, "flat": true},
-    {"sprite": "runner_middle", "x": 112, "y": 150, "flat": true},
-    {"sprite": "runner_right", "x": 143, "y": 150, "flat": true},
-    {"sprite": "stairs_down", "x": 208, "y": 159, "flat": true},
+    {"sprite": "wall_window", "x": 80, "y": 51, "layer": "wall"},
+    {"sprite": "wall_window", "x": 176, "y": 51, "layer": "wall"},
+    {"sprite": "wall_window", "x": 272, "y": 51, "layer": "wall"},
+    {"sprite": "deco_painting", "x": 112, "y": 49, "layer": "wall"},
+    {"sprite": "deco_sconce", "x": 208, "y": 49, "layer": "wall"},
+    {"sprite": "deco_sconce", "x": 48, "y": 49, "layer": "wall"},
+    {"sprite": "runner_left", "x": 49, "y": 150, "layer": "floor"},
+    {"sprite": "runner_middle", "x": 80, "y": 150, "layer": "floor"},
+    {"sprite": "runner_middle", "x": 112, "y": 150, "layer": "floor"},
+    {"sprite": "runner_right", "x": 143, "y": 150, "layer": "floor"},
+    {"sprite": "stairs_down", "x": 208, "y": 159, "layer": "floor", "behavior": {"type": "stairs", "to": "inn_ground"}},
     {"sprite": "bed", "x": 48, "y": 90, "depth": 26},
     {"sprite": "nightstand", "x": 80, "y": 78},
     {"sprite": "bed", "x": 112, "y": 90, "depth": 26},

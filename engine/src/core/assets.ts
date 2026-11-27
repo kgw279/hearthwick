@@ -138,6 +138,14 @@ export class Assets {
     return f;
   }
 
+  hasFrame(name: string): boolean {
+    return this.frames.has(name);
+  }
+
+  hasAnimation(name: string): boolean {
+    return this.anims.has(name);
+  }
+
   /** Frame names of an animation from atlas.json, e.g. 'kid_walk_down'. */
   animation(name: string): string[] {
     const a = this.anims.get(name);

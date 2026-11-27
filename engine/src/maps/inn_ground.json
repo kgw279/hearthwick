@@ -5,7 +5,7 @@
     "type": "room",
     "rows": [
       "WWWWWWWWWW",
-      "WWNWWWWNWW",
+      "WWWWWWWWWW",
       "WffffffffW",
       "WffffffffW",
       "WffffffffW",
@@ -32,11 +32,13 @@
       "wwwwwwwwwwwwwwwwwwww"
     ]
   },
-  "spawns": {"front": {"x": 4, "y": 6, "facing": "up"}, "stairs": {"x": 7, "y": 2, "facing": "down"}},
+  "spawns": {"front": {"x": 4, "y": 6, "facing": "up"}},
   "exits": [
     {"cell": [4, 7], "to": "town", "spawn": "inn_door", "dir": "down"}
   ],
   "props": [
-    {"sprite": "doormat", "x": 144, "y": 222, "flat": true}
+    {"sprite": "wall_window", "x": 80, "y": 51, "layer": "wall"},
+    {"sprite": "wall_window", "x": 240, "y": 51, "layer": "wall"},
+    {"sprite": "doormat", "x": 144, "y": 222, "layer": "floor"}
   ]
 }

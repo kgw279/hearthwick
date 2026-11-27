@@ -9,7 +9,7 @@ import { Prop, type Interaction } from '../world/entity';
 import type { Ground } from '../world/ground';
 import type { Behavior, Layout, LayoutGround, PlacedProp } from '../world/layout';
 import { RoomMap } from '../world/room';
-import { cellExit, spawnAt, type Exit, type Scene } from '../world/scene';
+import { cellExit, spawnAt, type Exit, type Scene, type Spawn } from '../world/scene';
 import { TileMap } from '../world/tilemap';
 import type { Content } from './data';
 
@@ -69,6 +69,8 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
       return { interaction: () => ({ label: 'Draw water', use: () => void hooks.give('water', 1) }) };
     case 'fish':
       return { interaction: () => ({ label: 'Fish', use: () => void hooks.give(b.item, 1) }) };
+    case 'stairs':
+      return {}; // an exit, not a button: see stairsLink
     case 'forage': {
       const node = content.forageNode(b.node);
       return {
@@ -102,12 +104,53 @@ const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {}, give: 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
 export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: number }
 
+/**
+ * Depth bands: everything on the floor draws before everything on a wall, which draws before anything
+ * standing in the room (within a band, lower on screen draws later).
+ */
+const LAYER_SORT = { floor: -200000, wall: -100000 } as const;
+
 export function placeProp(p: PlacedProp, frame: string, assets: Assets): Placement {
   const b = assets.bounds(frame);
   const x = p.x - (b.x + Math.floor(b.w / 2));
   const y = p.y - (b.y + b.h);
-  if (p.flat) return { x, y, sortOffset: p.sortOffset ?? -1000 };
+  if (p.layer) return { x, y, sortOffset: LAYER_SORT[p.layer] };
   return { x, y, solid: resolveCollider(p, frame, assets), sortOffset: p.sortOffset };
+}
+
+/** Where a prop's art is drawn, in world pixels (unturned). */
+export function artRect(p: PlacedProp, frame: string, assets: Assets): Rect {
+  const at = placeProp(p, frame, assets);
+  const b = assets.bounds(frame);
+  return { x: at.x + b.x, y: at.y + b.y, w: b.w, h: b.h };
+}
+
+/** The spawn a map's stairs to `from` put you on when you arrive from there. */
+export const stairsSpawn = (from: string) => `stairs:${from}`;
+
+/**
+ * Stairs: the exit they make (the lower part of their art; walking onto it goes to the other map) and
+ * the spawn where you arrive coming back up or down them (just in front, facing into the room).
+ */
+export function stairsLink(p: PlacedProp, here: string, assets: Assets, content: Content): { exit: Exit; spawn: Spawn } | null {
+  if (p.behavior?.type !== 'stairs') return null;
+  const a = artRect(p, propFrames(p, assets, content)[0], assets);
+  const bottom = a.y + a.h;
+  return {
+    exit: { area: { x: a.x + 6, y: bottom - 22, w: a.w - 12, h: 16 }, to: p.behavior.to, spawn: stairsSpawn(here) },
+    // the player sprite's feet are rows 22-28: stand them just below the stairs
+    spawn: { x: Math.round(a.x + a.w / 2 - 16), y: bottom - 20, facing: 'down' },
+  };
+}
+
+/** Every spawn a layout offers: its own, plus one in front of each of its stairs. */
+export function layoutSpawns(layout: Layout, assets: Assets, content: Content): Record<string, Spawn> {
+  const out: Record<string, Spawn> = Object.fromEntries(Object.entries(layout.spawns).map(([k, s]) => [k, spawnAt(s.x, s.y, s.facing)]));
+  for (const p of layout.props) {
+    const link = stairsLink(p, layout.id, assets, content);
+    if (link) out[stairsSpawn(link.exit.to)] = link.spawn;
+  }
+  return out;
 }
 
 /** A prop's collider relative to its sprite: a named preset, an explicit rect, none, or (by default) its footprint. */
@@ -130,7 +173,7 @@ export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks
   const at = placeProp(p, frames[0], assets);
   const wired = p.behavior ? wire(p.behavior, content, hooks) : undefined;
   const prop = new Prop(assets, {
-    frames, x: at.x, y: at.y, solid: at.solid, sortOffset: at.sortOffset, fps: p.fps, use: p.use,
+    frames, x: at.x, y: at.y, solid: at.solid, sortOffset: at.sortOffset, fps: p.fps, use: p.use, rot: p.rot,
   });
   if (wired?.interaction) prop.setInteraction(wired.interaction(prop));
   return prop;
@@ -140,11 +183,15 @@ export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks
 export function buildScene(layout: Layout, assets: Assets, content: Content, hooks: SceneHooks, ground?: Ground): Scene {
   const exits: Exit[] = layout.exits.map((e) =>
     'cell' in e ? cellExit(e.cell[0], e.cell[1], e.to, e.spawn, e.dir) : { area: { ...e.area }, to: e.to, spawn: e.spawn, dir: e.dir });
+  for (const p of layout.props) {
+    const link = stairsLink(p, layout.id, assets, content);
+    if (link) exits.push(link.exit);
+  }
   return {
     id: layout.id,
     ground: ground ?? buildGround(layout.ground, assets),
     props: layout.props.map((p) => buildProp(p, assets, content, hooks)),
-    spawns: Object.fromEntries(Object.entries(layout.spawns).map(([k, s]) => [k, spawnAt(s.x, s.y, s.facing)])),
+    spawns: layoutSpawns(layout, assets, content),
     exits,
     backdrop: layout.backdrop,
   };

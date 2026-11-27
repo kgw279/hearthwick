@@ -3,8 +3,9 @@
  * pre-rendered once.
  *
  * Structure, one character per 32px cell:
- *   f  floor     W  plaster wall   N  plaster, window   H  plaster, shelf   I  plaster interior wall
- *   .  outside   S  stone wall     M  stone, window     K  stone, shelf     J  stone interior wall
+ *   f  floor     W  plaster wall   I  plaster interior wall
+ *   .  outside   S  stone wall     J  stone interior wall
+ * Windows, shelves and pictures are wall-layer props hung on a wall face, not kinds of wall.
  * Floor material, one character per 16px cell (twice as many each way): w wood, s flagstone. Floors are
  * composited per pixel: flagstone patches take their shape from their cells (see field.ts), so one
  * painted cell is a small patch and painting more widens it.
@@ -13,7 +14,7 @@
  *   - interior walls (I, J) divide a room: one running east-west is a cap along the top with its face
  *     below (with ends beside a doorway), one running north-south a narrow cap (with ends where it stops
  *     at open floor); floor shows round them;
- *   - a wall cell with floor below it is a wall *face* (plaster or stone; window or shelf), unless that
+ *   - a wall cell with floor below it is a wall *face* (plaster or stone), unless that
  *     floor is a doorway through a side wall;
  *   - every other wall cell shows the *cap* (top edge) that the floor next to it calls for: T above a
  *     face, L/R beside the room, B along the front, outer corners TL/TR/BL/BR, inner corners where a back
@@ -29,11 +30,8 @@ import type { Ground } from './ground';
 import { tilePixels, TILE } from './tilemap';
 
 const FLOOR = new Set(['f']);
-/** Outer (thick) walls and the face each shows. */
-const OUTER: Record<string, { stone: boolean; face: 'plain' | 'window' | 'shelf' }> = {
-  W: { stone: false, face: 'plain' }, N: { stone: false, face: 'window' }, H: { stone: false, face: 'shelf' },
-  S: { stone: true, face: 'plain' }, M: { stone: true, face: 'window' }, K: { stone: true, face: 'shelf' },
-};
+/** Outer (thick) walls. */
+const OUTER: Record<string, { stone: boolean }> = { W: { stone: false }, S: { stone: true } };
 /** Interior (dividing) walls. */
 const PARTITION: Record<string, { stone: boolean }> = { I: { stone: false }, J: { stone: true } };
 
@@ -199,7 +197,7 @@ export class RoomMap implements Ground {
       if (this.face(x + 1, y) && this.stone(x + 1, y) !== this.stone(x, y)) {
         return this.stone(x, y) ? 'face_stone_to_plaster' : 'face_plaster_to_stone';
       }
-      return `face_${mat === 'stone' ? 'stone' : 'plaster'}_${OUTER[this.cell(x, y)].face}`;
+      return `face_${mat === 'stone' ? 'stone' : 'plaster'}_plain`;
     }
     const cap = (kind: string) => `cap_${mat}_${kind}`;
     // along a run, a change of material uses the transition piece (taken from the neighbour before it)
@@ -234,6 +232,14 @@ export class RoomMap implements Ground {
 
   draw(r: Renderer, camX: number, camY: number): void {
     r.image(this.canvas, -camX, -camY);
+  }
+
+  wallFace(px: number, py: number): boolean {
+    const x = Math.floor(px / TILE);
+    const y = Math.floor(py / TILE);
+    if (this.face(x, y)) return true;
+    // an east-west interior wall: its face is below its cap
+    return this.interior(x, y) && this.runsEW(x, y) && py - y * TILE >= 8;
   }
 
   blocks(rect: Rect): boolean {

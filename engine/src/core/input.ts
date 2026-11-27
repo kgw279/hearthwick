@@ -49,6 +49,7 @@ export class Input {
   private now = new Set<Action>();
   private prev = new Set<Action>();
   private stick = { x: 0, y: 0 };
+  private rstick = { x: 0, y: 0 };
 
   constructor() {
     window.addEventListener('keydown', (e) => {
@@ -70,6 +71,7 @@ export class Input {
     this.tapped.clear();
 
     this.stick = { x: 0, y: 0 };
+    this.rstick = { x: 0, y: 0 };
     const pad = [...(navigator.getGamepads?.() ?? [])].find((p) => p && p.connected);
     if (pad) {
       let used = false;
@@ -84,6 +86,11 @@ export class Input {
       if (mag > STICK_DEADZONE) {
         const k = Math.min(1, (mag - STICK_DEADZONE) / (1 - STICK_DEADZONE)) / mag;
         this.stick = { x: ax * k, y: ay * k };
+        used = true;
+      }
+      const [, , rx = 0, ry = 0] = pad.axes;
+      if (Math.hypot(rx, ry) > STICK_DEADZONE) {
+        this.rstick = { x: rx, y: ry };
         used = true;
       }
       if (used) this.device = 'gamepad';
@@ -110,6 +117,11 @@ export class Input {
   /** The left stick alone (zero inside the dead zone). */
   analog(): { x: number; y: number } {
     return this.stick;
+  }
+
+  /** The right stick (zero inside the dead zone). */
+  rightStick(): { x: number; y: number } {
+    return this.rstick;
   }
 
   /** D-pad / arrow keys / WASD alone, each axis -1, 0 or 1. */

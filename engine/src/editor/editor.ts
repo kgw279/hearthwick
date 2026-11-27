@@ -7,12 +7,16 @@
  * per group of pieces), and a grid of slots below; the Snap setting sits in the bottom bar.
  *
  * Mouse and keyboard: left click places (or picks up the piece under the pointer to move it), right
- * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, WASD or the arrows pan,
- * middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, new map, open, rename,
- * Door to), F2 leaves the editor.
+ * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, R / Shift+R turn the piece
+ * in hand or under the pointer (Alt+wheel turns it finely), Ctrl+Z / Ctrl+Y undo and redo, WASD or the
+ * arrows pan, middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, undo, snap, new
+ * map, open, rename, Door to), F2 leaves the editor.
  * Controller: the left stick moves the cursor like a mouse, the D-pad nudges it a pixel at a time,
- * A places, X deletes, LB/RB pick a slot, LT/RT a tab, Y shows/hides the palette, View changes snap,
- * right stick click zooms, Menu opens the menu, B cancels a move.
+ * A places, X deletes, the right stick turns, LB/RB pick a slot, LT/RT a tab, Y shows/hides the palette,
+ * View undoes, right stick click zooms, Menu opens the menu (redo and snap are there), B cancels a move.
+ *
+ * Pieces are layered: floor pieces (rugs, stairs) under everything, wall pieces (pictures, windows,
+ * shelves) on the wall faces, standing pieces in the room. Placing stairs makes the room they lead to.
  *
  * Props are placed freely; snap rounds where they land (free / 8px / 16px / tile). Except on tile snap, a
  * piece brought near a wall or the water's edge pulls in flush against it. Painting floor indoors wraps
@@ -24,7 +28,7 @@ import type { Action } from '../core/input';
 import { overlaps, type Rect } from '../core/geom';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Game } from '../game/game';
-import { placeProp, propFrames } from '../game/build';
+import { artRect, layoutSpawns, placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { CELL } from '../world/field';
@@ -36,6 +40,9 @@ import { Menu, type MenuPage } from './menu';
 import { buildPalette, type Category } from './palette';
 import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates';
 import { validate, type Issue } from './validate';
+import { History } from './history';
+import { canTurnFreely, normalise, turn } from './turn';
+import { blankRoom, ensureStairsBack, isStairs, size, stairsIn } from './stairs';
 
 type Tool = 'props' | 'ground';
 type Snap = 1 | 8 | 16 | 'tile';
@@ -54,6 +61,9 @@ const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel
 const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
 const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
+const TURN_STEP = 15; // degrees per R press
+const TURN_FINE = 5; // degrees per Alt+wheel notch
+const TURN_SPEED = 120; // degrees per second at full right-stick tilt
 /** The strip along the bottom: the piece in hand, snap, and control hints. */
 const BAR_H = 46;
 /** The piece picker window: slots per row and rows visible. */
@@ -62,12 +72,14 @@ const HUD_H = 22;
 const TAB_H = 16;
 /** Hints per device: glyph frames (or actions, resolved to the pad's glyphs) and what they do. */
 const MOUSE_HINTS: Array<[string[], string]> = [
-  [['key_tab'], 'Pieces'], [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['key_esc'], 'Menu'],
-  [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'], [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'],
+  [['key_tab'], 'Pieces'], [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['key_r'], 'Turn'],
+  [['key_ctrl', 'key_z'], 'Undo'], [['key_esc'], 'Menu'], [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'],
+  [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'],
 ];
-const PAD_HINTS: Array<[Action[], string]> = [
-  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['menu'], 'Menu'],
-  [['tab_prev', 'tab_next'], 'Pick'], [['map'], 'Snap'], [['zoom'], 'Zoom'],
+/** Actions (shown with the pad's glyph for them), or a glyph frame for a control that isn't an action. */
+const PAD_HINTS: Array<[Array<Action | 'xb_rs_move'>, string]> = [
+  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['xb_rs_move'], 'Turn'], [['map'], 'Undo'],
+  [['menu'], 'Menu'], [['tab_prev', 'tab_next'], 'Pick'], [['zoom'], 'Zoom'],
 ];
 
 export class Editor {
@@ -105,17 +117,28 @@ export class Editor {
   private time = 0;
   private repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
   private lastPainted = '';
+  /** The current paint stroke has been recorded for undo. */
+  private strokeRecorded = false;
   /** Mouse position in logical screen pixels while the mouse is driving the cursor. */
   private mouse: { x: number; y: number } | null = null;
   cam = { x: 0, y: 0 };
   /** Where the camera is aimed. */
   view = { x: 0, y: 0 };
   private pan: { x: number; y: number } | null = null;
+  private readonly history: History;
+  /** How far each palette piece will be turned when placed (degrees), by "tab:slot". */
+  private readonly turns = new Map<string, number>();
+  /** The right stick is turning a placed piece (recorded for undo once, when it starts). */
+  private stickTurning = false;
+  /** The right stick was pushed past the step threshold (for pieces that turn a facing at a time). */
+  private stickStepped = false;
 
   constructor(private readonly game: Game) {
     this.palette = buildPalette(game.assets, game.content);
     this.itemIndex = this.palette.map(() => 0);
+    this.history = new History(game.layouts, this.unsaved);
     this.listenMouse(game.renderer.ctx.canvas);
+    this.listenKeys();
   }
 
   private get layout(): Layout {
@@ -286,7 +309,8 @@ export class Editor {
       if (input.pressed('tab_next')) this.stepItem(1);
       if (input.pressed('cat_prev')) this.stepTab(-1);
       if (input.pressed('cat_next')) this.stepTab(1);
-      if (input.pressed('map')) this.cycleSnap();
+      if (input.pressed('map')) this.undo();
+      this.stickTurn(input.rightStick().x, dt);
       if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
     } else if (input.pressed('menu')) {
       this.togglePicker();
@@ -453,7 +477,10 @@ export class Editor {
   private stamp(): PlacedProp {
     const p = structuredClone(this.palette[this.cat].items[this.itemIndex[this.cat]].prop);
     const b = this.game.assets.bounds(propFrames(p, this.game.assets, this.game.content)[0]);
-    return { ...p, x: this.cursor.x, y: this.cursor.y + Math.round(b.h / 2) };
+    const out: PlacedProp = { ...p, x: this.cursor.x, y: this.cursor.y + Math.round(b.h / 2) };
+    const deg = this.turns.get(this.slotKey) ?? 0;
+    if (canTurnFreely(out) && deg) out.rot = deg;
+    return out;
   }
 
   /** Apply the snap mode, then pull the prop flush against nearby walls or shore. */
@@ -465,7 +492,7 @@ export class Editor {
     }
     p.x = Math.round(p.x / this.snap) * this.snap;
     p.y = Math.round(p.y / this.snap) * this.snap;
-    if (!p.flat) this.magnet(p);
+    if (!p.layer) this.magnet(p); // floor and wall pieces go exactly where they're put
     return p;
   }
 
@@ -522,26 +549,151 @@ export class Editor {
       return;
     }
     const hit = this.propAtCursor();
+    this.history.record(); // picking up starts a move: undo puts it back where it was
     if (hit >= 0) {
       const [p] = this.layout.props.splice(hit, 1);
       this.held = { prop: p, from: hit, grab: { x: p.x - this.cursor.x, y: p.y - this.cursor.y } };
       this.changed();
       return;
     }
-    this.layout.props.push(this.ghost());
+    const p = this.ghost();
+    this.layout.props.push(p);
+    if (isStairs(p) && !p.behavior) return this.stairsToNewRoom(p);
     this.changed('Placed');
   }
 
   private remove(): void {
     if (this.held) {
-      this.held = null; // already out of the layout
+      this.held = null; // already out of the layout (the pick-up was recorded)
       this.changed('Deleted');
       return;
     }
     const hit = this.propAtCursor();
     if (hit < 0) return;
+    this.history.record();
     this.layout.props.splice(hit, 1);
     this.changed('Deleted');
+  }
+
+  private get slotKey(): string {
+    return `${this.cat}:${this.itemIndex[this.cat]}`;
+  }
+
+  /** New stairs: make the room they lead to (blank, this room's size) with stairs back already in it. */
+  private stairsToNewRoom(p: PlacedProp): void {
+    const here = this.layout;
+    const base = `${here.id}_${p.sprite === 'stairs_up' ? 'upstairs' : 'downstairs'}`;
+    const id = this.game.layouts.has(base) ? this.freeId(base) : base;
+    const { w, h } = size(here);
+    const room = blankRoom(id, w, Math.max(h, 5));
+    room.props.push(stairsIn(room, p.sprite === 'stairs_up' ? 'stairs_down' : 'stairs_up', here.id));
+    this.game.layouts.set(id, room);
+    p.behavior = { type: 'stairs', to: id };
+    this.unsaved.add(id);
+    this.changed(`Stairs lead to ${id} (new room: Open map to build it)`);
+  }
+
+  /** Point stairs at another room, adding stairs back there if it has none. */
+  private linkStairs(index: number, roomId: string): void {
+    this.history.record();
+    const here = this.layout;
+    const p = here.props[index];
+    const room = this.game.layouts.get(roomId)!;
+    p.behavior = { type: 'stairs', to: roomId };
+    const added = ensureStairsBack(room, here.id, p.sprite as string);
+    this.unsaved.add(roomId);
+    this.game.forgetScene(roomId);
+    this.changed(`Stairs lead to ${roomId}${added ? ' (stairs back added there)' : ''}`);
+  }
+
+  // ------------------------------------------------------------------ undo, turning
+
+  private undo(): void {
+    this.applyHistory(this.history.undo(), 'Undone', 'Nothing to undo');
+  }
+
+  private redo(): void {
+    this.applyHistory(this.history.redo(), 'Redone', 'Nothing to redo');
+  }
+
+  private applyHistory(changedIds: string[] | null, done: string, nothing: string): void {
+    if (this.held) {
+      this.held = null; // the snapshot has it where it was before it was picked up
+    }
+    if (!changedIds) return this.say(nothing);
+    for (const id of changedIds) if (id !== this.game.scene.id) this.game.forgetScene(id);
+    if (!this.game.layouts.has(this.game.scene.id)) {
+      this.openMap([...this.game.layouts.keys()][0]);
+    } else if (changedIds.includes(this.game.scene.id)) {
+      this.game.rebuildScene(true);
+      this.checkIn = 0.05;
+    }
+    this.say(done);
+  }
+
+  /**
+   * Turn the piece in hand, else the one under the cursor, else the next one to be placed. Floor and
+   * wall pieces turn by deg; standing pieces with facings step to the next facing.
+   */
+  private turnBy(deg: number, record = true): void {
+    const assets = this.game.assets;
+    if (this.tool !== 'props') return;
+    if (this.held) {
+      if (!turn(this.held.prop, deg, assets)) this.say(`${label(this.held.prop)} doesn't turn`);
+      return;
+    }
+    const hit = this.propAtCursor();
+    if (hit >= 0) {
+      const p = this.layout.props[hit];
+      const trial = structuredClone(p);
+      if (!turn(trial, deg, assets)) return this.say(`${label(p)} doesn't turn`);
+      if (record) this.history.record();
+      this.layout.props[hit] = trial;
+      this.changed();
+      return;
+    }
+    const item = this.palette[this.cat].items[this.itemIndex[this.cat]].prop;
+    if (canTurnFreely(item)) {
+      this.turns.set(this.slotKey, normalise((this.turns.get(this.slotKey) ?? 0) + deg));
+      return;
+    }
+    const trial = structuredClone(item);
+    if (!turn(trial, deg, assets)) return this.say(`${label(item)} doesn't turn`);
+    const i = this.palette[this.cat].items.findIndex((it) => it.prop.sprite === trial.sprite);
+    if (i >= 0) this.itemIndex[this.cat] = i;
+  }
+
+  /** Right stick: floor and wall pieces turn smoothly with the tilt; pieces with facings step once per push. */
+  private stickTurn(x: number, dt: number): void {
+    if (Math.abs(x) < 0.3) {
+      this.stickTurning = false;
+      this.stickStepped = false;
+      return;
+    }
+    const target = this.held?.prop ?? this.layout.props[this.propAtCursor()] ?? this.palette[this.cat].items[this.itemIndex[this.cat]].prop;
+    if (canTurnFreely(target)) {
+      const first = !this.stickTurning;
+      this.stickTurning = true;
+      this.turnBy(x * TURN_SPEED * dt, first);
+    } else if (!this.stickStepped && Math.abs(x) > 0.6) {
+      this.stickStepped = true;
+      this.turnBy(Math.sign(x) * 90);
+    }
+  }
+
+  private listenKeys(): void {
+    window.addEventListener('keydown', (e) => {
+      if (!this.active || this.menu.open || this.picking) return;
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        e.preventDefault();
+        return e.shiftKey ? this.redo() : this.undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
+        e.preventDefault();
+        return this.redo();
+      }
+      if (e.code === 'KeyR' && !e.ctrlKey && !e.metaKey && !e.repeat) this.turnBy(e.shiftKey ? -TURN_STEP : TURN_STEP);
+    });
   }
 
   private cancelHeld(): void {
@@ -554,10 +706,7 @@ export class Editor {
   /** Where a prop's art is drawn, in world pixels. */
   private artRect(p: PlacedProp): Rect {
     const { assets, content } = this.game;
-    const frame = propFrames(p, assets, content)[0];
-    const at = placeProp(p, frame, assets);
-    const b = assets.bounds(frame);
-    return { x: at.x + b.x, y: at.y + b.y, w: b.w, h: b.h };
+    return artRect(p, propFrames(p, assets, content)[0], assets);
   }
 
   /** The front-most prop whose art covers the cursor. */
@@ -592,10 +741,15 @@ export class Editor {
     const cy = Math.floor(this.cursor.y / size);
     const key = `${size}:${cx},${cy}`;
     if (key === this.lastPainted) return;
+    if (this.lastPainted === '') this.strokeRecorded = false; // a new stroke: one undo step for all of it
     this.lastPainted = key;
     const g = this.layout.ground;
     const set = (rows: string[], x: number, y: number, c: string) => {
       if (rows[y][x] === c) return false;
+      if (!this.strokeRecorded) {
+        this.history.record();
+        this.strokeRecorded = true;
+      }
       rows[y] = rows[y].slice(0, x) + c + rows[y].slice(x + 1);
       return true;
     };
@@ -622,8 +776,8 @@ export class Editor {
       return;
     }
     // painting floor walls itself in with the material of the last wall brush (plain, outer)
-    if ('WNHI'.includes(ch)) this.wallMat = 'W';
-    if ('SMKJ'.includes(ch)) this.wallMat = 'S';
+    if ('WI'.includes(ch)) this.wallMat = 'W';
+    if ('SJ'.includes(ch)) this.wallMat = 'S';
     if (set(g.rows, cx, cy, ch)) this.changed(undefined, true);
   }
 
@@ -639,8 +793,12 @@ export class Editor {
 
   private check(): void {
     const names = this.layout.props.map((p) => label(p));
-    const layouts = this.game.layouts;
-    this.issues = validate(this.game.scene, names, (map, spawn) => !!layouts.get(map)?.spawns[spawn]);
+    const { layouts, assets, content } = this.game;
+    const hung = this.layout.props.filter((p) => p.layer === 'wall').map((p) => ({ name: label(p), rect: this.artRect(p) }));
+    this.issues = validate(this.game.scene, names, (map, spawn) => {
+      const l = layouts.get(map);
+      return !!l && spawn in layoutSpawns(l, assets, content);
+    }, hung);
     this.checkIn = -1;
   }
 
@@ -685,16 +843,22 @@ export class Editor {
       title: `Map: ${here}`,
       items: [
         { label: 'Save', note: this.unsaved.size ? `${this.unsaved.size} changed` : 'saved', run: () => void this.saveAll() },
+        { label: 'Undo', disabled: !this.history.canUndo, run: () => this.undo() },
+        { label: 'Redo', disabled: !this.history.canRedo, run: () => this.redo() },
+        { label: 'Snap', note: snapName(this.snap), run: () => this.cycleSnap() },
         { label: 'New map', run: () => this.newMapMenu() },
         { label: 'Open map', run: () => this.openMenu() },
         { label: 'Rename this map', run: () => this.renamePrompt() },
         {
           label: 'Door to...',
-          note: hit >= 0 ? label(this.layout.props[hit]) : 'point at a building',
+          note: hit >= 0 ? label(this.layout.props[hit]) : 'point at a building or stairs',
           disabled: hit < 0 || !interiors.length,
           run: () => ({
-            title: `${label(this.layout.props[hit])} leads into`,
-            items: interiors.map((l) => ({ label: l.id, run: () => this.linkDoor(hit, l.id) })),
+            title: `${label(this.layout.props[hit])} leads ${isStairs(this.layout.props[hit]) ? 'to' : 'into'}`,
+            items: interiors.map((l) => ({
+              label: l.id,
+              run: () => (isStairs(this.layout.props[hit]) ? this.linkStairs(hit, l.id) : this.linkDoor(hit, l.id)),
+            })),
           }),
         },
         { label: 'Close editor', run: () => this.close() },
@@ -760,6 +924,7 @@ export class Editor {
 
   private createMap(kind: 'interior' | 'outdoor', id: string, w: number, h: number): void {
     if (!this.validId(id)) return;
+    this.history.record();
     const l = kind === 'interior' ? interiorTemplate(id, w, h) : outdoorTemplate(id, w, h);
     this.game.layouts.set(id, l);
     this.unsaved.add(id);
@@ -770,7 +935,8 @@ export class Editor {
   private openMap(id: string): void {
     this.cancelHeld();
     const l = this.game.layouts.get(id)!;
-    this.game.enter(id, Object.keys(l.spawns)[0]);
+    const { assets, content } = this.game;
+    this.game.enter(id, Object.keys(layoutSpawns(l, assets, content))[0]);
     const f = this.game.player.feet();
     this.cursor.x = f.x + f.w / 2;
     this.cursor.y = f.y + f.h;
@@ -783,6 +949,7 @@ export class Editor {
   private rename(to: string): void {
     const from = this.layout.id;
     if (to === from || !this.validId(to)) return;
+    this.history.clear(); // renames change files on disk when saved: not something to step back through
     const l = this.layout;
     l.id = to;
     this.game.layouts.delete(from);
@@ -809,12 +976,13 @@ export class Editor {
    * back to that spawn.
    */
   private linkDoor(index: number, interiorId: string): void {
+    this.history.record();
     const here = this.layout;
     const inside = this.game.layouts.get(interiorId)!;
     const p = here.props[index];
     const { assets, content } = this.game;
     if (p.sprite === undefined) p.sprite = propFrames(p, assets, content)[0]; // keep its look once its shop behavior goes
-    const entry = Object.keys(inside.spawns)[0];
+    const entry = Object.keys(layoutSpawns(inside, assets, content))[0];
     p.behavior = { type: 'enter', to: interiorId, spawn: entry };
     // the doorstep: just below what the building blocks (or its base, if it blocks nothing)
     const step = this.solidOf(p);
@@ -920,10 +1088,11 @@ export class Editor {
       while (Math.abs(this.wheel) >= WHEEL_NOTCH) {
         const d = Math.sign(this.wheel);
         this.wheel -= d * WHEEL_NOTCH;
-        if (e.ctrlKey || e.altKey) {
+        if (e.ctrlKey) {
           const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(this.zoom) + d));
           this.setZoom(ZOOMS[i]);
-        } else if (e.shiftKey) this.stepTab(d);
+        } else if (e.altKey) this.turnBy(d * TURN_FINE);
+        else if (e.shiftKey) this.stepTab(d);
         else this.stepItem(d);
       }
     }, { passive: false });
@@ -1016,7 +1185,11 @@ export class Editor {
       const gp = this.ghost();
       const frames = propFrames(gp, assets, content);
       const at = placeProp(gp, frames[0], assets);
-      r.sprite(frames[Math.floor(this.time * 4) % frames.length], at.x - cx, at.y - cy, 0.7);
+      const frame = frames[Math.floor(this.time * 4) % frames.length];
+      if (gp.rot) {
+        const b = assets.bounds(frames[0]);
+        r.spriteTurned(frame, at.x - cx, at.y - cy, gp.rot, { x: b.x + b.w / 2, y: b.y + b.h / 2 }, 0.7);
+      } else r.sprite(frame, at.x - cx, at.y - cy, 0.7);
       const c = this.solidOf(gp);
       if (c) {
         const bad = scene.ground.blocks(c) || scene.props.some((p) => {
@@ -1173,7 +1346,7 @@ export class Editor {
   private hintList(): Array<[string[], string]> {
     const input = this.game.input;
     return input.device === 'gamepad'
-      ? PAD_HINTS.map(([acts, text]) => [acts.map((a) => input.glyph(a)), text])
+      ? PAD_HINTS.map(([acts, text]) => [acts.map((a) => (a === 'xb_rs_move' ? a : input.glyph(a))), text])
       : MOUSE_HINTS;
   }
 

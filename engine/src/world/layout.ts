@@ -7,8 +7,13 @@
  * (the structure) plus a 16px grid of floor materials. Props are placed freely: a prop's x, y is the world pixel at the middle
  * of the bottom of its art (where it stands on the ground), so placement follows the art, not a grid.
  * Its collider is a preset, a rect relative to the sprite, or by default its footprint: the bottom
- * `depth` px of its art. Flat props (rugs, mats, stairs holes) have no collider and draw under everything.
- * Props can carry a behavior (talk, shop, forage...) that the game wires up when it builds the scene.
+ * `depth` px of its art.
+ *
+ * Layers: a prop stands in the room (the default: it has a collider and is depth-sorted with the player),
+ * lies on the floor (layer "floor": rugs, mats, stairs; no collider, drawn under everything standing), or
+ * hangs on a wall (layer "wall": paintings, windows, shelves; no collider, drawn over the wall it's on).
+ * Floor and wall props can be turned to any angle (rot, degrees clockwise).
+ * Props can carry a behavior (talk, shop, forage, stairs...) that the game wires up when it builds the scene.
  */
 import type { Rect } from '../core/geom';
 import type { Facing } from './scene';
@@ -22,7 +27,12 @@ export type Behavior =
   | { type: 'pet' }
   | { type: 'draw_water' }
   | { type: 'forage'; node: string }
-  | { type: 'fish'; item: string };
+  | { type: 'fish'; item: string }
+  /** Stairs to another map: walking onto them goes there, arriving by that map's stairs back here. */
+  | { type: 'stairs'; to: string };
+
+export type PropLayer = 'floor' | 'wall';
+export const PROP_LAYERS: PropLayer[] = ['floor', 'wall'];
 
 export interface PlacedProp {
   /** Frame name, a list of frames to loop, or "anim:<name>" for an atlas animation. Shops and forage take theirs from gamedata. */
@@ -30,8 +40,10 @@ export interface PlacedProp {
   /** World pixel at the middle of the bottom of the art. */
   x: number;
   y: number;
-  /** Lies on the floor: no collider, drawn under everything. */
-  flat?: boolean;
+  /** Lies on the floor or hangs on a wall (no collider); omitted: stands in the room. */
+  layer?: PropLayer;
+  /** Turned clockwise by this many degrees (floor and wall props). */
+  rot?: number;
   /** Collider preset name, a rect relative to the sprite, or null for walk-through. Omitted: the art's footprint. */
   collider?: string | Rect | null;
   /** Footprint depth in px when the collider is the art's footprint. */
@@ -80,12 +92,8 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
     { ch: 'w', name: 'Wood floor', sample: 'floor_wood_flagstone_00', fine: true },
     { ch: 's', name: 'Stone floor', sample: 'floor_wood_flagstone_15', fine: true },
     { ch: 'W', name: 'Plaster wall', sample: 'face_plaster_plain', fine: false },
-    { ch: 'N', name: 'Plaster wall, window', sample: 'face_plaster_window', fine: false },
-    { ch: 'H', name: 'Plaster wall, shelf', sample: 'face_plaster_shelf', fine: false },
     { ch: 'I', name: 'Interior wall, plaster', sample: 'iwall_wood_H', fine: false },
     { ch: 'S', name: 'Stone wall', sample: 'face_stone_plain', fine: false },
-    { ch: 'M', name: 'Stone wall, window', sample: 'face_stone_window', fine: false },
-    { ch: 'K', name: 'Stone wall, shelf', sample: 'face_stone_shelf', fine: false },
     { ch: 'J', name: 'Interior wall, stone', sample: 'iwall_stone_H', fine: false },
     { ch: '.', name: 'Clear', sample: '', fine: false },
   ],
@@ -93,15 +101,15 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
 
 /** Characters allowed in each grid. */
 const TILE_CHARS = new Set(['.', 'd', 'f', 'c', 's', 'w']);
-const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'N', 'H', 'I', 'S', 'M', 'K', 'J']);
+const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'I', 'S', 'J']);
 const FLOOR_CHARS = new Set(['w', 's']);
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
 const BEHAVIOR_FIELDS: Record<Behavior['type'], string[]> = {
   talk: ['who', 'line'], read: ['text'], enter: ['to', 'spawn'], shop: ['shop'], market: ['shop'],
-  pet: [], draw_water: [], forage: ['node'], fish: ['item'],
+  pet: [], draw_water: [], forage: ['node'], fish: ['item'], stairs: ['to'],
 };
-const PROP_KEYS = new Set(['sprite', 'x', 'y', 'flat', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
+const PROP_KEYS = new Set(['sprite', 'x', 'y', 'layer', 'rot', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 
 /** Strict check of a layout's shape; throws with the exact path of the first problem. */
 export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
@@ -139,7 +147,10 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
   const fields = g.type === 'room' ? ['type', 'rows', 'floor'] : ['type', 'rows'];
   for (const k of Object.keys(g)) if (!fields.includes(k)) fail(`ground.${k}`, 'is not a ground field');
 
-  if (!l.spawns || typeof l.spawns !== 'object' || Object.keys(l.spawns).length === 0) fail('spawns', 'needs at least one spawn');
+  if (!l.spawns || typeof l.spawns !== 'object') fail('spawns', 'must be an object');
+  if (Object.keys(l.spawns).length === 0 && !l.props?.some((p) => p.behavior?.type === 'stairs')) {
+    fail('spawns', 'needs at least one spawn (or stairs to arrive by)');
+  }
   for (const [k, s] of Object.entries(l.spawns)) {
     num(s.x, `spawns.${k}.x`);
     num(s.y, `spawns.${k}.y`);
@@ -164,8 +175,10 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
     for (const k of Object.keys(pr)) if (!PROP_KEYS.has(k)) fail(`${p}.${k}`, 'is not a prop field');
     num(pr.x, `${p}.x`);
     num(pr.y, `${p}.y`);
-    for (const k of ['depth', 'fps', 'sortOffset'] as const) if (pr[k] !== undefined) num(pr[k], `${p}.${k}`);
-    if (pr.flat !== undefined && pr.flat !== true) fail(`${p}.flat`, 'must be true or left out');
+    for (const k of ['depth', 'fps', 'sortOffset', 'rot'] as const) if (pr[k] !== undefined) num(pr[k], `${p}.${k}`);
+    if (pr.layer !== undefined && !PROP_LAYERS.includes(pr.layer)) fail(`${p}.layer`, 'must be "floor", "wall" or left out');
+    if (pr.rot !== undefined && pr.layer === undefined) fail(`${p}.rot`, 'only floor and wall props turn');
+    if (pr.layer !== undefined && pr.collider !== undefined) fail(`${p}.collider`, 'floor and wall props have no collider');
     if (pr.sprite !== undefined) {
       if (Array.isArray(pr.sprite)) pr.sprite.forEach((s, j) => str(s, `${p}.sprite[${j}]`));
       else str(pr.sprite, `${p}.sprite`);

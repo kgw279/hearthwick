@@ -11,8 +11,21 @@ export interface Category { name: string; items: PaletteItem[] }
 
 type Template = Omit<PlacedProp, 'x' | 'y' | 'sprite'>;
 
-/** Art that lies on the floor (no collider, drawn under everything). */
-const FLAT = /rug|runner|mat\b|doormat|carpet|stairs|^deco_/;
+/** Art that lies on the floor (no collider, drawn under everything standing). */
+const FLOOR = /rug|runner|mat\b|doormat|carpet|^stairs_/;
+/** Art that hangs on a wall (no collider, drawn over the wall). */
+const WALL = /^deco_|^wall_|^shelf_jars$/;
+/** Furniture built to stand against a wall: a shallow footprint, so it sits right up against the wall face. */
+const BACKED = /fireplace|oven|bookshelf|cupboard|wardrobe/;
+const BACKED_DEPTH = 6;
+
+/** How an item from the art is placed by default: its layer, or a shallow footprint for wall-backed furniture. */
+function placement(name: string): Partial<PlacedProp> {
+  if (FLOOR.test(name)) return { layer: 'floor' };
+  if (WALL.test(name)) return { layer: 'wall' };
+  if (BACKED.test(name)) return { depth: BACKED_DEPTH };
+  return {};
+}
 
 /** Groups: which atlas sheets they draw from and how their items are placed by default. */
 const GROUPS: Array<{ name: string; sheets: string[]; template: Template; living?: boolean }> = [
@@ -26,6 +39,7 @@ const GROUPS: Array<{ name: string; sheets: string[]; template: Template; living
 export function buildPalette(assets: Assets, content: Content): Category[] {
   const bySheet = new Map(assets.sheets.map((s) => [s.name, s]));
   const out: Category[] = [];
+  const decor: PaletteItem[] = []; // filled as the groups are read; shown right after Furniture
   for (const g of GROUPS) {
     const items: PaletteItem[] = [];
     for (const name of g.sheets) {
@@ -34,14 +48,18 @@ export function buildPalette(assets: Assets, content: Content): Category[] {
       const inAnim = new Set(s.animations.flatMap((a) => assets.animation(a)));
       for (const a of s.animations) {
         if (g.living && /walk|run/.test(a)) continue; // a walk cycle on the spot looks wrong
-        items.push({ name: a, prop: { ...g.template, ...(FLAT.test(a) ? { flat: true } : {}), sprite: `anim:${a}`, x: 0, y: 0, fps: 4 } });
+        items.push({ name: a, prop: { ...g.template, ...placement(a), sprite: `anim:${a}`, x: 0, y: 0, fps: 4 } });
       }
       for (const f of s.frames) {
         if (inAnim.has(f) && !(g.living && f.endsWith('_idle'))) continue;
-        items.push({ name: f, prop: { ...g.template, ...(FLAT.test(f) ? { flat: true } : {}), sprite: f, x: 0, y: 0 } });
+        items.push({ name: f, prop: { ...g.template, ...placement(f), sprite: f, x: 0, y: 0 } });
       }
     }
-    if (items.length) out.push({ name: g.name, items });
+    // floor and wall pieces (rugs, stairs, pictures, windows, shelves) go in a tab of their own
+    decor.push(...items.filter((it) => it.prop.layer));
+    const standing = items.filter((it) => !it.prop.layer);
+    if (standing.length) out.push({ name: g.name, items: standing });
+    if (g.name === 'Furniture') out.push({ name: 'Decor', items: decor });
   }
   // harvestable forage and the shops come from gamedata, with their behaviors attached
   out.push({
