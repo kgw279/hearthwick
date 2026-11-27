@@ -245,11 +245,27 @@ def deer(view, frame='idle'):
 
 # ------------------------------------------------------------------ horse (travelers' and the wagon's)
 def _horse_head(s, dy):
-    y = 4 + dy
+    if dy:
+        _horse_grazing(s)
+        return
+    y = 4
     s.rect(8, y + 4, 11, 14, 'B'); s.rect(9, y + 3, 12, y + 9, 'K')                              # neck + mane
     s.rect(3, y + 4, 8, y + 8, 'B'); s.rect(2, y + 6, 4, y + 9, 'b'); s.set(2, y + 7, 'K')         # head, muzzle
     s.set(6, y + 5, 'K'); s.rect(8, y + 2, 8, y + 3, 'B'); s.set(9, y + 2, 'B')                    # eye, ear
-    s.rect(4, y + 3, 6, y + 3, 'W') if dy == 0 else None                                           # blaze
+    s.rect(4, y + 3, 6, y + 3, 'W')                                                                # blaze
+
+
+def _horse_grazing(s):
+    """Head down to the grass: the neck arches forward and down from the withers (not straight down),
+    the head angled with the muzzle in the grass, the mane following the top of the curve."""
+    curve = [(11, 10), (10, 11), (9, 12), (8, 13), (7, 15), (6, 16), (5, 18)]
+    for x, y in curve:
+        s.rect(x - 1, y, x + 2, y + 3, 'B')                                                        # neck, 4px thick
+    for x, y in curve[:-1]:
+        s.set(x + 2, y, 'K'); s.set(x + 1, y - 1, 'K')                                             # mane along its top
+    s.rect(2, 19, 6, 23, 'B'); s.rect(1, 22, 4, 25, 'b'); s.set(1, 24, 'K')                       # head, muzzle, nostril
+    s.set(5, 20, 'K'); s.rect(6, 17, 7, 18, 'B'); s.set(7, 16, 'B')                               # eye, ear
+    s.rect(3, 20, 3, 22, 'W')                                                                      # blaze
 
 
 def _horse_extra(s, frame):

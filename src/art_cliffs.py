@@ -1,9 +1,9 @@
-"""Rock crags and cliff walls for outdoors: two tiling 32x32 textures the engine composites per pixel
-(world/tilemap.ts). Painted rock shows its grassy top along its upper edge and rock face below it, so
-painting it taller makes a taller cliff.
+"""Walls of the land itself, for outdoors: the faces of the two kinds, as tiling 32x32 textures the engine
+composites per pixel (world/tilemap.ts). Along its upper edge each shows the ground painted there (its
+top), and below that its face, so painting it taller makes a taller wall.
 
-  cliff_face  layered rock: ledges of grey stone, darker cracks between
-  cliff_top   the crag's top: grass with stones breaking through
+  cliff_face   a retaining wall of rock: ledges of grey stone, darker joints between
+  cliff_earth  a natural bank: layered soil, bedded stones, roots
 """
 from core import Sprite
 
@@ -34,20 +34,25 @@ def cliff_face():
     return s
 
 
-def cliff_top():
+def cliff_earth():
+    """A natural bank of earth: packed soil in uneven layers, stones bedded in it, roots threading through."""
     s = Sprite()
     for y in range(32):
         for x in range(32):
-            s.set(x, y, 'G' if _h(x, y, 7) % 7 else 'g')
-    for i in range(7):                                                 # stones through the turf
-        cx, cy = _h(i, 1, 8) % 30 + 1, _h(i, 2, 9) % 30 + 1
-        for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1), (2, 0)):
-            if _h(i, dx + dy, 10) % 4: s.set((cx + dx) % 32, (cy + dy) % 32, 'S' if dy == 0 else 'd')
-        s.set(cx % 32, cy % 32, 's')
-    for i in range(10):                                                # tufts
-        x, y = _h(i, 3, 11) % 32, _h(i, 4, 12) % 32
-        if s.px[y][x] == 'G': s.set(x, y, 'L')
+            # soil in clods: each 4x3 clod its own shade, darker toward the foot of a layer
+            clod = _h(x // 4 + (y // 3) * 7, y // 3, 13) % 5
+            c = ('B', 'B', 'b', 'B', 'H')[clod] if clod != 4 or _h(x, y, 19) % 3 == 0 else 'B'
+            if _h(x, y, 14) % 7 == 0: c = 'b'                          # grain
+            s.set(x, y, c)
+    for i in range(8):                                                 # stones bedded in the soil
+        cx, cy = _h(i, 1, 15) % 30, _h(i, 2, 16) % 30
+        for dx, dy, c in ((0, 0, 'S'), (1, 0, 'S'), (2, 0, 's'), (0, 1, 'd'), (1, 1, 'S'), (2, 1, 'd')):
+            s.set((cx + dx) % 32, (cy + dy) % 32, c)
+    for i in range(3):                                                 # roots
+        x, y = _h(i, 3, 17) % 32, _h(i, 4, 18) % 32
+        for k in range(7):
+            s.set((x + k) % 32, (y + (k * (i + 1)) // 4) % 32, 'b')
     return s
 
 
-CLIFFS = [('cliff_face', cliff_face), ('cliff_top', cliff_top)]
+CLIFFS = [('cliff_face', cliff_face), ('cliff_earth', cliff_earth)]

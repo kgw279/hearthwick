@@ -1,7 +1,9 @@
 /**
  * Rearranging furniture in play: hold the use button (A / E) on a piece in front of you to pick it up;
  * it rides just in front of you as you walk, washed red wherever it won't fit; tap the button to set it
- * down there, or Back (B / Esc) to put it back where it was. Indoors only, and only furniture and decor
+ * down there, or Back (B / Esc) to put it back where it was. While carrying, hold the turn button (R / Y)
+ * and scroll (or push the right stick) to turn it: rugs and other floor, wall and table-top pieces by
+ * 15 degrees a step, pieces that come in facings (chairs) to the next facing. It keeps whatever turn it had. Indoors only, and only furniture and decor
  * (not stairs, doors, shop counters or people). A tap that isn't a pick-up is an ordinary "use".
  *
  * Moving a piece changes the map's layout (the editor saves it with everything else).
@@ -14,6 +16,7 @@ import type { Layout, PlacedProp } from '../world/layout';
 import type { Scene } from '../world/scene';
 import type { Player } from './player';
 import { artRect, placeProp, propFrames, resolveCollider } from './build';
+import { turn } from '../world/turn';
 import type { Content } from './data';
 
 /** How long (s) the button is held before it picks a piece up. */
@@ -21,6 +24,9 @@ const HOLD = 0.4;
 /** Pieces the player can move: anything with no behavior, and furniture that does something in place. */
 const MOVABLE = new Set(['storage', 'wash']);
 const BAD = 'rgba(217, 87, 99, 0.55)';
+const TURN_STEP = 15; // degrees a step (5 with Shift on the wheel)
+const TURN_REPEAT = 0.18; // seconds between steps while the right stick is held over
+const WHEEL_NOTCH = 100; // wheel delta per step
 
 export interface FurnishWorld {
   readonly assets: Assets;
@@ -38,7 +44,9 @@ export interface FurnishWorld {
 
 export class Furnish {
   /** The piece being carried, and where it came from (its place in the layout, its old spot). */
-  private carried: { prop: PlacedProp; from: number; was: { x: number; y: number } } | null = null;
+  private carried: { prop: PlacedProp; from: number; was: PlacedProp } | null = null;
+  private stick = 0; // time until the right stick turns again
+  private wheelAcc = 0;
   private held = 0;
   private pressed = false;
   private pickedUp = false;
@@ -54,6 +62,15 @@ export class Furnish {
     if (this.carried && input.pressed('back')) {
       this.putBack();
       return false;
+    }
+    if (this.carried && input.down('recipes')) {
+      // hold the turn button and push the right stick: a step, then repeating while it's held over
+      const x = input.rightStick().x;
+      if (Math.abs(x) < 0.5) this.stick = 0;
+      else if ((this.stick -= dt) <= 0) {
+        this.stick = TURN_REPEAT;
+        this.turnBy(Math.sign(x) * TURN_STEP);
+      }
     }
     if (input.pressed('interact')) {
       this.pressed = true;
@@ -73,6 +90,20 @@ export class Furnish {
       return false;
     }
     return true;
+  }
+
+  /** The wheel while the turn button is held: a step per notch. */
+  wheel(deltaY: number, fine: boolean): void {
+    this.wheelAcc += deltaY;
+    while (Math.abs(this.wheelAcc) >= WHEEL_NOTCH) {
+      const d = Math.sign(this.wheelAcc);
+      this.wheelAcc -= d * WHEEL_NOTCH;
+      this.turnBy(d * (fine ? 5 : TURN_STEP));
+    }
+  }
+
+  private turnBy(deg: number): void {
+    if (this.carried && !turn(this.carried.prop, deg, this.w.assets)) this.w.say("That doesn't turn");
   }
 
   private movable(p: PlacedProp): boolean {
@@ -97,7 +128,7 @@ export class Furnish {
     });
     if (best < 0) return false;
     const [prop] = l.props.splice(best, 1);
-    this.carried = { prop, from: best, was: { x: prop.x, y: prop.y } };
+    this.carried = { prop, from: best, was: structuredClone(prop) };
     this.w.rebuild();
     return true;
   }
@@ -121,7 +152,7 @@ export class Furnish {
     const c = this.carried;
     if (!c) return;
     const l = this.w.layout();
-    l.props.splice(Math.min(c.from, l.props.length), 0, { ...c.prop, ...c.was });
+    l.props.splice(Math.min(c.from, l.props.length), 0, c.was);
     this.carried = null;
     this.w.rebuild();
   }
@@ -193,9 +224,12 @@ export class Furnish {
     const at = placeProp(p, frame, assets);
     const sortY = p.layer === 'floor' ? -1e9 : p.y;
     const ok = this.fits(p);
+    const b = assets.bounds(frame);
+    const pivot = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
     r.queueDraw(sortY, () => {
-      if (ok) r.sprite(frame, at.x - camX, at.y - camY, 0.85);
-      else r.spriteTinted(frame, at.x - camX, at.y - camY, BAD, 0.85);
+      if (!ok) r.spriteTinted(frame, at.x - camX, at.y - camY, BAD, 0.85, p.rot ?? 0, pivot);
+      else if (p.rot) r.spriteTurned(frame, at.x - camX, at.y - camY, p.rot, pivot, 0.85);
+      else r.sprite(frame, at.x - camX, at.y - camY, 0.85);
     });
   }
 }

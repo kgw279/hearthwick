@@ -235,6 +235,17 @@ def wheat_crop():
 # Town props
 # =====================================================================
 
+def ground_shadow(s, y):
+    """Buildings: light is overhead like every other prop, so the shadow sits straight under the
+    footprint — two rows as wide as the footing (bottom 4 rows), then a row tapered by 3px each side."""
+    row = [x for yy in range(max(0, y - 4), y) for x in range(s.w) if s.px[yy][x] is not None]   # footing, not the step
+    x0, x1 = min(row) - 1, max(row) + 1
+    for dy, inset in ((0, 0), (1, 0), (2, 3)):
+        for x in range(x0 + inset, x1 - inset + 1):
+            if 0 <= x < s.w and y + dy < s.h and s.px[y + dy][x] is None: s.px[y + dy][x] = 'K'
+    return s
+
+
 def _with_shadow(s, cx, cy, rx, ry):
     sh = Sprite(); sh.ellipse(cx, cy, rx, ry, 'K')
     for y in range(32):
@@ -305,15 +316,50 @@ def crate():
     return _with_shadow(s, 16, 28, 9, 1.4)
 
 
-def fence():
-    s = Sprite()
+def _fence_rails(s, x0, x1):
     for y in (17, 23):
-        s.rect(0, y, 31, y + 1, 'B'); s.rect(0, y, 31, y, 't'); s.rect(0, y + 2, 31, y + 2, 'b')
-    for px in (4, 20):
-        s.rect(px, 14, px + 3, 27, 'B'); s.rect(px, 14, px, 27, 't'); s.rect(px + 3, 14, px + 3, 27, 'b')
-        s.rect(px + 1, 13, px + 2, 13, 'B')
+        s.rect(x0, y, x1, y + 1, 'B'); s.rect(x0, y, x1, y, 't'); s.rect(x0, y + 2, x1, y + 2, 'b')
+
+
+def _fence_post(s, px):
+    s.rect(px, 14, px + 3, 27, 'B'); s.rect(px, 14, px, 27, 't'); s.rect(px + 3, 14, px + 3, 27, 'b')
+    s.rect(px + 1, 13, px + 2, 13, 'B')
+
+
+def _fence(rails, posts):
+    s = Sprite()
+    _fence_rails(s, *rails)
+    for px in posts: _fence_post(s, px)
     s.outline()
-    for px in (4, 20): s.rect(px, 28, px + 3, 28, 'K')
+    for px in posts: s.rect(px, 28, px + 3, 28, 'K')
+    return s
+
+
+def fence():
+    """A run of fence, west to east. Its rails run off both edges so runs join seamlessly."""
+    return _fence((0, 31), (4, 20))
+
+
+def fence_end_l():
+    """The west end of a run, and a pen's west corners: an end post with rails going east."""
+    return _fence((14, 31), (14,))
+
+
+def fence_end_r():
+    """The east end of a run, and a pen's east corners: rails coming from the west into an end post."""
+    return _fence((0, 17), (14,))
+
+
+def fence_v():
+    """A north-south run, seen from above: the rails show edge-on as one bar down the middle (in line
+    with the end posts' x), with a post partway down. Segments stack every 32px; the rails run off
+    both edges so segments, and the corners' end posts, join on."""
+    s = Sprite()
+    s.rect(14, 0, 16, 31, 'B'); s.rect(14, 0, 14, 31, 't'); s.rect(16, 0, 16, 31, 'b')
+    _fence_post(s, 14)
+    s.outline()
+    for x in (13, 17):                                          # the post's shadow, either side of the rails
+        if s.px[28][x] is None: s.px[28][x] = 'K'
     return s
 
 
@@ -630,7 +676,7 @@ TILES = [
 
 PROPS = [
     ('house_red', lambda: house('red')), ('house_blue', lambda: house('blue')), ('house_green', lambda: house('green')),
-    ('tree', tree), ('bush', bush), ('barrel', barrel), ('crate', crate), ('fence', fence),
+    ('tree', tree), ('bush', bush), ('barrel', barrel), ('crate', crate), ('fence', fence), ('fence_end_l', fence_end_l), ('fence_end_r', fence_end_r), ('fence_v', fence_v),
     ('lamppost', lamppost), ('well', well), ('signpost', signpost), ('market_stall', market_stall),
 ]
 

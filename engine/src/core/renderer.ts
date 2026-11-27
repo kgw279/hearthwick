@@ -94,8 +94,8 @@ export class Renderer {
   /** Sprites washed with a colour (cached per frame and colour): a piece that can't go where it's held. */
   private readonly tinted = new Map<string, HTMLCanvasElement>();
 
-  /** Draw a sprite washed with `color` (a CSS colour; its alpha is how strong the wash is). */
-  spriteTinted(name: string, x: number, y: number, color: string, alpha = 1): void {
+  /** Draw a sprite washed with `color` (a CSS colour; its alpha is how strong the wash is), turned like spriteTurned. */
+  spriteTinted(name: string, x: number, y: number, color: string, alpha = 1, deg = 0, pivot = { x: 0, y: 0 }): void {
     const key = `${name}|${color}`;
     let c = this.tinted.get(key);
     if (!c) {
@@ -110,9 +110,13 @@ export class Renderer {
       g.fillRect(0, 0, f.w, f.h);
       this.tinted.set(key, c);
     }
-    if (alpha !== 1) this.ctx.globalAlpha = alpha;
-    this.ctx.drawImage(c, this.snap(x), this.snap(y));
-    if (alpha !== 1) this.ctx.globalAlpha = 1;
+    const ctx = this.ctx;
+    ctx.save();
+    if (alpha !== 1) ctx.globalAlpha = alpha;
+    ctx.translate(this.snap(x) + pivot.x, this.snap(y) + pivot.y);
+    if (deg) ctx.rotate((deg * Math.PI) / 180);
+    ctx.drawImage(c, -pivot.x, -pivot.y);
+    ctx.restore();
   }
 
   /** Draw a sprite turned clockwise by deg about `pivot` (sprite-relative), top-left at (x, y) when unturned. */

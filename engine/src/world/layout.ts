@@ -94,6 +94,7 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
     { ch: 's', name: 'Square pavers', sample: 'pavers_v0', fine: true },
     { ch: 'w', name: 'Water', sample: 'water', fine: true },
     { ch: 'r', name: 'Rock wall', sample: 'cliff_face', fine: true },
+    { ch: 'k', name: 'Earth bank', sample: 'cliff_earth', fine: true },
   ],
   room: [
     { ch: 'w', name: 'Wood floor', sample: 'floor_wood_flagstone_00', fine: true },
@@ -107,7 +108,7 @@ export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
 };
 
 /** Characters allowed in each grid. */
-const TILE_CHARS = new Set(['.', 'd', 'f', 'c', 's', 'w', 'r']);
+const TILE_CHARS = new Set(['.', 'd', 'f', 'c', 's', 'w', 'r', 'k']);
 const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'I', 'S', 'J']);
 const FLOOR_CHARS = new Set(['w', 's']);
 

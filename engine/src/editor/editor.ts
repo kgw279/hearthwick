@@ -44,7 +44,7 @@ import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates'
 import { validate, type Issue } from './validate';
 import { History } from './history';
 import { growRoom, trimRoom, type Shift } from './roomfit';
-import { canTurnFreely, normalise, turn } from './turn';
+import { canTurnFreely, normalise, turn } from '../world/turn';
 import { blankRoom, ensureWayBack, isPassage, passageKind, roomNameFor, size } from './passages';
 
 type Tool = 'props' | 'ground';
@@ -845,16 +845,10 @@ export class Editor {
       const sy = Math.floor(cy / k);
       const inside = sx >= 0 && sy >= 0 && sx < g.rows[0].length && sy < g.rows.length;
       if (!inside && (erase || ch === '.')) return;
-      // floor needs room round it for the walls it wraps itself in; a wall needs just its cell; an outer
-      // wall erased becomes floor and needs the same, except past the front or a side of the room, where
-      // nothing beyond it makes a doorway
+      // floor needs room round it for the walls it wraps itself in; a wall needs just its cell
       const w = g.rows[0].length;
       const h = g.rows.length;
-      let need: [number, number, number, number] | null = null;
-      if (!erase) need = size === CELL ? [sx - 1, sy - 2, sx + 1, sy + 1] : [sx, sy, sx, sy];
-      else if (size !== CELL && inside && 'WS'.includes(g.rows[sy][sx])) {
-        need = [sx === 0 ? sx : sx - 1, sy - 2, sx === w - 1 ? sx : sx + 1, sy === h - 1 ? sy : sy + 1];
-      }
+      const need: [number, number, number, number] | null = erase ? null : size === CELL ? [sx - 1, sy - 2, sx + 1, sy + 1] : [sx, sy, sx, sy];
       if (need) {
         const [x0, y0, x1, y1] = need;
         const grow = () => growRoom(this.layout, x0, y0, x1, y1);
@@ -916,17 +910,41 @@ export class Editor {
       return;
     }
     if (erase) {
-      // a wall erased becomes floor, walled in like painted floor (at the room's edge, where there's
-      // nothing beyond, that leaves a doorway)
-      if (!set(ground.rows, cx, cy, ch)) return;
-      if (ch === 'f') ground.rows.splice(0, ground.rows.length, ...wrapWalls(ground.rows, cx, cy, wallNear(ground.rows, cx, cy, this.wallMat)));
-      this.roomChanged('Wall removed');
+      const c = ground.rows[cy][cx];
+      const fl = (dx: number, dy: number) => ground.rows[cy + dy]?.[cx + dx] === 'f';
+      const between = (fl(-1, 0) && fl(1, 0)) || (fl(0, -1) && fl(0, 1));
+      if (c === 'I' || c === 'J' || between) {
+        // an interior wall, or a wall with floor on both sides of it (a pillar, or a wall between two
+        // rooms): it comes away, leaving floor
+        if (set(ground.rows, cx, cy, 'f')) this.roomChanged('Wall removed');
+        return;
+      }
+      // an outer wall: the room shrinks, as if the floor it walls in were erased (walls follow the floor)
+      const f = this.flooredBy(ground.rows, cx, cy);
+      if (!f) {
+        if (set(ground.rows, cx, cy, '.')) this.roomChanged('Wall removed');
+        return;
+      }
+      if (!set(ground.rows, f.x, f.y, '.')) return;
+      ground.rows.splice(0, ground.rows.length, ...unwrapWalls(ground.rows, f.x, f.y, wallNear(ground.rows, f.x, f.y, this.wallMat)));
+      this.roomChanged('Room made smaller');
       return;
     }
     // painting floor walls itself in with the material of the last wall brush (plain, outer)
     if ('WI'.includes(ch)) this.wallMat = 'W';
     if ('SJ'.includes(ch)) this.wallMat = 'S';
     if (set(ground.rows, cx, cy, ch)) this.roomChanged();
+  }
+
+  /**
+   * The floor an outer wall walls in: the nearest floor cell it stands beside, looking into the room
+   * first (below it, then below its face for a cap), then to its sides, then above.
+   */
+  private flooredBy(rows: string[], x: number, y: number): { x: number; y: number } | null {
+    for (const [dx, dy] of [[0, 1], [0, 2], [-1, 0], [1, 0], [0, -1], [-1, 1], [1, 1], [-1, 2], [1, 2], [-1, -1], [1, -1]]) {
+      if (rows[y + dy]?.[x + dx] === 'f') return { x: x + dx, y: y + dy };
+    }
+    return null;
   }
 
   /** After an interior's walls or floor changed: fit the room to what's built, then rebuild. */

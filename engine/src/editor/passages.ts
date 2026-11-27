@@ -7,6 +7,7 @@
  */
 import type { Assets } from '../core/assets';
 import type { Layout, LayoutGround, PlacedProp } from '../world/layout';
+import { PASSAGE_ART } from '../world/turn';
 
 /** The art of each passage, the kind of link it makes, and the art of the way back. */
 const PASSAGES: Record<string, { kind: 'stairs' | 'door'; back: string; name: string }> = {
@@ -16,7 +17,7 @@ const PASSAGES: Record<string, { kind: 'stairs' | 'door'; back: string; name: st
 };
 
 export function isPassage(p: PlacedProp): boolean {
-  return typeof p.sprite === 'string' && p.sprite in PASSAGES;
+  return PASSAGE_ART.has(String(p.sprite));
 }
 
 export function passageKind(p: PlacedProp): 'stairs' | 'door' {

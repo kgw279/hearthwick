@@ -135,7 +135,7 @@
           "w": 32,
           "h": 32
         },
-        "cliff_top": {
+        "cliff_earth": {
           "x": 160,
           "y": 64,
           "w": 32,
@@ -1153,63 +1153,81 @@
           "w": 32,
           "h": 32
         },
-        "lamppost": {
+        "fence_end_l": {
           "x": 160,
           "y": 0,
           "w": 32,
           "h": 32
         },
-        "well": {
+        "fence_end_r": {
           "x": 192,
           "y": 0,
           "w": 32,
           "h": 32
         },
-        "signpost": {
+        "fence_v": {
           "x": 224,
           "y": 0,
           "w": 32,
           "h": 32
         },
-        "market_stall": {
+        "lamppost": {
           "x": 0,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "water_wheel_f0": {
+        "well": {
           "x": 32,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "water_wheel_f1": {
+        "signpost": {
           "x": 64,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "water_wheel_f2": {
+        "market_stall": {
           "x": 96,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "water_wheel_f3": {
+        "water_wheel_f0": {
           "x": 128,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "bridge_rail_n": {
+        "water_wheel_f1": {
           "x": 160,
           "y": 32,
           "w": 32,
           "h": 32
         },
-        "bridge_rail_s": {
+        "water_wheel_f2": {
           "x": 192,
           "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "water_wheel_f3": {
+          "x": 224,
+          "y": 32,
+          "w": 32,
+          "h": 32
+        },
+        "bridge_rail_n": {
+          "x": 0,
+          "y": 64,
+          "w": 32,
+          "h": 32
+        },
+        "bridge_rail_s": {
+          "x": 32,
+          "y": 64,
           "w": 32,
           "h": 32
         }

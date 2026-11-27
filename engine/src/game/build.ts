@@ -35,7 +35,8 @@ export interface SceneHooks {
  */
 export const COLLIDERS: Record<string, Rect> = {
   tree: { x: 11, y: 23, w: 10, h: 6 }, bush: { x: 6, y: 22, w: 20, h: 6 }, barrel: { x: 9, y: 22, w: 14, h: 6 },
-  crate: { x: 7, y: 22, w: 18, h: 6 }, fence: { x: 0, y: 21, w: 32, h: 6 }, lamppost: { x: 13, y: 24, w: 6, h: 5 },
+  crate: { x: 7, y: 22, w: 18, h: 6 }, fence: { x: 0, y: 21, w: 32, h: 6 },
+  fence_end_l: { x: 14, y: 21, w: 18, h: 6 }, fence_end_r: { x: 0, y: 21, w: 18, h: 6 }, fence_v: { x: 13, y: 0, w: 6, h: 32 }, lamppost: { x: 13, y: 24, w: 6, h: 5 },
   well: { x: 6, y: 20, w: 20, h: 8 }, signpost: { x: 13, y: 24, w: 6, h: 4 }, market_stall: { x: 2, y: 20, w: 28, h: 8 },
   // houses and shops: the lower half of their 64x64 art
   house: { x: 4, y: 30, w: 56, h: 30 }, forage: { x: 9, y: 22, w: 14, h: 6 }, npc: { x: 10, y: 22, w: 12, h: 6 },

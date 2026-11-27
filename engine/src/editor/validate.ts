@@ -40,10 +40,12 @@ export function validate(
   for (const ex of scene.exits) {
     if (!exists(ex.to, ex.spawn)) issues.push({ text: `exit leads nowhere (${ex.to}/${ex.spawn}): link a door or stairs to it`, rects: [ex.area] });
   }
+  const joins = (a: string, b: string) => a.startsWith('fence') && b.startsWith('fence');
   const solids = scene.props.map((p, i) => ({ i, c: p.collider() })).filter((s): s is { i: number; c: Rect } => !!s.c);
 
   for (let a = 0; a < solids.length; a++) {
     for (let b = a + 1; b < solids.length; b++) {
+      if (joins(names[solids[a].i], names[solids[b].i])) continue; // fence pieces are built to join
       if (overlaps(solids[a].c, solids[b].c)) {
         issues.push({ text: `${names[solids[a].i]} overlaps ${names[solids[b].i]}`, rects: [solids[a].c, solids[b].c] });
       }

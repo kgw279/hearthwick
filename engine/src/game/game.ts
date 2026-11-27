@@ -345,6 +345,12 @@ export class Game {
       const p = at(e);
       if (!this.screen.pointer(p.x, p.y, e.button, e.shiftKey)) this.screen = null;
     });
+    // holding R (the turn key), the wheel turns a carried piece
+    canvas.addEventListener('wheel', (e) => {
+      if (this.editor.active || this.screen || !this.furnish.carrying || !this.input.down('recipes')) return;
+      e.preventDefault();
+      this.furnish.wheel(e.deltaY, e.shiftKey);
+    }, { passive: false });
   }
 
   private drawDebug(cx: number, cy: number): void {

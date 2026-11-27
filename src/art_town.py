@@ -2,6 +2,7 @@
 bridge's parapets (the bridge deck itself is cobblestone ground laid across the river)."""
 import math
 from core import Sprite
+from sprites import ground_shadow
 
 
 def chapel():
@@ -38,10 +39,7 @@ def chapel():
     s.rect(11, 58, 22, 59, 'S'); s.rect(12, 60, 21, 60, 'd')                # step
     s.rect(10, 57, 59, 57, 'e')                                              # footing
     s.outline()
-    for y in range(61, 64):
-        for x in range(8, 62):
-            if s.px[y][x] is None and (y < 63 or 11 < x < 58): s.px[y][x] = 'K'
-    return s
+    return ground_shadow(s, 61)
 
 
 def water_wheel(frame):

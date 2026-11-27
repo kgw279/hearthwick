@@ -1,7 +1,7 @@
 """Batch 4: folk guests (4-dir), signature dishes + their ingredients, shop buildings."""
 import random
 from core import Sprite
-from sprites import _with_shadow
+from sprites import _with_shadow, ground_shadow
 from sprites3 import character, LOOKS, _extras, mirror, ball, _bowl, _plate, kid_left, kid, kid_up, _lift_leg, _bob
 
 # =====================================================================
@@ -280,11 +280,7 @@ def _shop(roof, roof_hi, roof_dk, wall, wall_dk, awn_a, awn_b, sign_icon, window
     for px in (32, 49):
         s.rect(px, 54, px + 2, 57, 'r'); s.set(px, 53, 'G'); s.set(px + 1, 52, 'P'); s.set(px + 2, 53, 'G')
     s.outline()
-    sh = Sprite(64, 64); sh.rect(7, 60, 58, 61, 'K'); sh.rect(10, 62, 55, 62, 'K')
-    for y in range(64):
-        for x in range(64):
-            if s.px[y][x] is None and sh.px[y][x]: s.px[y][x] = 'K'
-    return s
+    return ground_shadow(s, 60)
 
 
 BREAD_ICON = [(3, 3, 'O'), (4, 2, 'O'), (5, 2, 'O'), (6, 2, 'O'), (7, 2, 'O'), (8, 3, 'O'),

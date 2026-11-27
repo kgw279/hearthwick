@@ -147,7 +147,7 @@ def write_terrain(out):
     def enc(m):
         return [format(sum(1 << (31 - x) for x in range(32) if row[x]), '08x') for row in m]
     data = {
-        'note': 'Ground compositing data for the engine. Layers bottom to top: grass, dirt (road + paths), farmland, cobble, pavers, water, rock. '
+        'note': 'Ground compositing data for the engine. Layers bottom to top: grass, dirt (road + paths), farmland, cobble, pavers, water, rock wall, earth bank. '
                 'corner[v][index]: natural corner-autotile shapes (index TL*1+TR*2+BL*4+BR*8). corner_paved[index]: '
                 'the clean-edged shapes laid paving uses. path[v][conn]: narrow-path shapes (conn N*1+E*2+S*4+W*8). '
                 'bases: plain textures per variant. edge colours: dirt lip under grass, grass fringe beside dirt and paving, '
@@ -157,7 +157,7 @@ def write_terrain(out):
                   'cobble': [f'cobble_v{v}' for v in range(PAVE_VARIANTS)],
                   'pavers': [f'pavers_v{v}' for v in range(PAVE_VARIANTS)],
                   'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)],
-                  'cliff_face': 'cliff_face', 'cliff_top': 'cliff_top'},
+                  'cliff_face': 'cliff_face', 'cliff_earth': 'cliff_earth'},
         'edges': {'dirt_lip': PAL['B'], 'grass_fringe': PAL['g'], 'bank': PAL['b'], 'bank_low': PAL['B'],
                   'foam': PAL['p'], 'shallows': PAL['c'], 'cobble_kerb': PAL['d'], 'pavers_kerb': PAL['B'],
                   'flagstone_edge': PAL['e'],

@@ -3,14 +3,16 @@
  * terrain blends into every other terrain it touches, whatever the mix.
  *
  *   .  grass   d  dirt (roads, paths)   f  farmland   c  cobblestone   s  town-square pavers   w  water
- *   r  rock (crags and cliff walls)
+ *   r  rock wall (a retaining wall of stone)   k  earth bank (a natural wall of soil and stones)
  *
- * Terrain is layered, bottom to top: grass, dirt, farmland, cobble, pavers, water, rock. Each terrain's shape comes
+ * Terrain is layered, bottom to top: grass, dirt, farmland, cobble, pavers, water, rock, bank. Each terrain's shape comes
  * from its painted cells (see field.ts): one cell is a narrow-path-sized patch, and painting more
  * cells widens it. Each pixel shows its top layer, with edge colours where layers meet (dirt lip,
  * grass fringe, kerbs, earth bank, foam, shallows); textures and colours come from the art pack.
- * Rock stands up out of the ground: its upper edge is its grassy top, the rest of it is rock face, so
- * painting it taller makes a taller cliff; it's outlined, shades the ground at its foot, and blocks.
+ * Rock walls and earth banks stand up out of the ground. Along the upper edge of one is its top: the
+ * ground painted there (grass, dirt, cobbles...), drawn as that ground with no edge, so it runs on
+ * seamlessly from the ground above; below that is its face, so painting it taller makes a taller wall.
+ * The face is outlined at its sides and foot, shades the ground at its foot, and blocks.
  * Water and rock collision is the layer itself, per pixel. Walking speed depends on the surface:
  * slow on grass and farmland, normal on dirt, fast on cobbles and pavers.
  * Painting can update just the changed area.
@@ -35,19 +37,23 @@ const COBBLE = 3;
 const PAVERS = 4;
 const WATER = 5;
 const ROCK = 6;
-/** Rows of a rock pixel's column that show its grassy top before its face begins. */
+const BANK = 7;
+/** Rock walls and earth banks: everything from ROCK up stands up out of the ground. */
+const isWall = (t: number) => t >= ROCK;
+/** Rows of a wall's column that show its top (the ground painted there) before its face begins. */
 const ROCK_TOP = 7;
 /** How dark the shade at the foot of rock is (multiplies the ground's colour). */
 const SHADE = 0.7;
 /** Walking speed on each layer (1 = dirt). */
-const SPEED = [0.8, 1, 0.8, 1.25, 1.25, 1, 1];
+const SPEED = [0.8, 1, 0.8, 1.25, 1.25, 1, 1, 1];
 const LAYERS: Array<{ ch: string; layer: number; wobble: number }> = [
   { ch: 'd', layer: DIRT, wobble: 0.22 },
   { ch: 'f', layer: FARM, wobble: 0.04 },
   { ch: 'c', layer: COBBLE, wobble: 0.04 },
   { ch: 's', layer: PAVERS, wobble: 0.04 },
   { ch: 'w', layer: WATER, wobble: 0.2 },
-  { ch: 'r', layer: ROCK, wobble: 0.08 },
+  { ch: 'r', layer: ROCK, wobble: 0.03 }, // laid stone: near-straight
+  { ch: 'k', layer: BANK, wobble: 0.22 }, // natural: it wanders
 ];
 
 function rgb(hex: string): [number, number, number] {
@@ -59,7 +65,7 @@ function rgb(hex: string): [number, number, number] {
 interface Kit {
   bases: {
     grass: ImageData[]; flowers: ImageData; dirt: ImageData[]; farm: ImageData; cobble: ImageData[]; pavers: ImageData[]; water: ImageData[];
-    cliffFace: ImageData; cliffTop: ImageData;
+    cliffFace: ImageData; cliffEarth: ImageData;
   };
   edges: Record<keyof Assets['terrain']['edges'], [number, number, number]>;
 }
@@ -87,7 +93,7 @@ function kitFor(assets: Assets): Kit {
     bases: {
       grass: t.bases.grass.map(pixels), flowers: pixels('grass_flowers'), dirt: t.bases.dirt.map(pixels), farm: pixels('farmland'),
       cobble: t.bases.cobble.map(pixels), pavers: t.bases.pavers.map(pixels), water: t.bases.water.map(pixels),
-      cliffFace: pixels(t.bases.cliff_face), cliffTop: pixels(t.bases.cliff_top),
+      cliffFace: pixels(t.bases.cliff_face), cliffEarth: pixels(t.bases.cliff_earth),
     },
     edges: Object.fromEntries(Object.entries(t.edges).map(([k, v]) => [k, rgb(v)])) as Kit['edges'],
   };
@@ -104,6 +110,12 @@ export class TileMap implements Ground {
   private readonly img: ImageData;
   /** Top layer at every world pixel (GRASS..WATER); water pixels are also the collision mask. */
   private readonly top: Uint8Array;
+  /** Per pixel: the ground under any wall there (what a wall's top shows). */
+  private readonly under: Uint8Array;
+  /** Per pixel: what shows there (a wall's top shows the ground under it; its face shows the wall). */
+  private readonly surf: Uint8Array;
+  /** Per pixel: how many wall pixels lie straight above (counted up to ROCK_TOP + 1). */
+  private readonly above: Uint8Array;
   /** Map tiles (32px) that are entirely open water: drawn with the animated water frames. */
   private readonly waterTiles = new Set<number>();
   private waterDebug: HTMLCanvasElement | null = null;
@@ -117,6 +129,9 @@ export class TileMap implements Ground {
     });
     this.kit = kitFor(assets);
     this.top = new Uint8Array(this.pixelW * this.pixelH);
+    this.under = new Uint8Array(this.pixelW * this.pixelH);
+    this.surf = new Uint8Array(this.pixelW * this.pixelH);
+    this.above = new Uint8Array(this.pixelW * this.pixelH);
     this.img = new ImageData(this.pixelW, this.pixelH);
     this.canvas = document.createElement('canvas');
     this.canvas.width = this.pixelW;
@@ -148,8 +163,23 @@ export class TileMap implements Ground {
     for (let py = Y0; py < Y1; py++) {
       for (let px = X0; px < X1; px++) {
         let t = GRASS;
-        for (const l of tests) if (inside(l.is, this.w, this.h, px, py, l.wobble)) t = l.layer;
+        let u = GRASS;
+        for (const l of tests) {
+          if (!inside(l.is, this.w, this.h, px, py, l.wobble)) continue;
+          t = l.layer;
+          if (!isWall(l.layer)) u = l.layer;
+        }
         this.top[py * W + px] = t;
+        this.under[py * W + px] = u;
+      }
+    }
+    for (let py = Y0; py < Y1; py++) {
+      for (let px = X0; px < X1; px++) {
+        const i = py * W + px;
+        let n = 0;
+        while (n <= ROCK_TOP && py - n - 1 >= 0 && isWall(this.top[i - (n + 1) * W])) n++;
+        this.above[i] = n;
+        this.surf[i] = isWall(this.top[i]) && n < ROCK_TOP ? this.under[i] : this.top[i];
       }
     }
     const cx0 = Math.max(0, x);
@@ -188,9 +218,12 @@ export class TileMap implements Ground {
     for (let y = y0; y < y1; y++) {
       for (let x = x0; x < x1; x++) {
         const i = y * W + x;
-        const here = top[i];
         // off the map a pixel continues as itself, so no edges are drawn along the map border
-        const at = (px: number, py: number) => (px < 0 || py < 0 || px >= W || py >= H ? here : top[py * W + px]);
+        const raw = (px: number, py: number) => (px < 0 || py < 0 || px >= W || py >= H ? top[i] : top[py * W + px]);
+        // what shows at a pixel: a wall's top is the ground under it, its face is the wall
+        const surf = this.surf;
+        const at = (px: number, py: number) => (px < 0 || py < 0 || px >= W || py >= H ? surf[i] : surf[py * W + px]);
+        const here = surf[i];
         const up = at(x, y - 1);
         const down = at(x, y + 1);
         const left = at(x - 1, y);
@@ -201,15 +234,15 @@ export class TileMap implements Ground {
         const pv = hash2(tx + 3, ty + 11) % kit.bases.cobble.length;
         let src: ImageData | null = null;
         let col: [number, number, number] | null = null;
-        // the ground just below rock is in its shade
-        const shade = here !== ROCK && (up === ROCK || at(x, y - 2) === ROCK || at(x, y - 3) === ROCK);
-        if (here === ROCK) {
-          // its top along its upper edge, rock face below; outlined where it meets anything else
-          let above = 0; // rock pixels straight above, counted as far as the top needs
-          while (above <= ROCK_TOP && at(x, y - above - 1) === ROCK) above++;
-          src = above < ROCK_TOP ? kit.bases.cliffTop : kit.bases.cliffFace;
-          if (up !== ROCK || down !== ROCK || left !== ROCK || right !== ROCK) col = e.rock_outline;
-          else if (above === ROCK_TOP) col = e.rock_ledge; // the row where the top drops away into the face
+        // the ground just below a wall is in its shade
+        const shade = !isWall(here) && (isWall(raw(x, y - 1)) || isWall(raw(x, y - 2)) || isWall(raw(x, y - 3)));
+        if (isWall(here)) {
+          // the face: outlined at its sides and foot (its top runs on from the ground above, unedged), with
+          // a dark ledge where the top drops away into it
+          src = here === ROCK ? kit.bases.cliffFace : kit.bases.cliffEarth;
+          const edge = here === ROCK ? e.rock_outline : e.bank;
+          if (!isWall(raw(x - 1, y)) || !isWall(raw(x + 1, y)) || !isWall(raw(x, y + 1))) col = edge;
+          else if (this.above[i] === ROCK_TOP) col = here === ROCK ? e.rock_ledge : e.dirt_lip;
         } else if (here === WATER) {
           src = kit.bases.water[v];
           if (up !== WATER) col = e.foam;

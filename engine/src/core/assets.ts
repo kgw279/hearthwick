@@ -24,7 +24,7 @@ interface AtlasJson { sheets: Record<string, SheetJson>; ui: Record<string, Shee
 
 /** terrain.json: shapes and edge colours the ground compositor uses (written by the art pipeline). */
 export interface TerrainData {
-  bases: { grass: string[]; dirt: string[]; cobble: string[]; pavers: string[]; water: string[]; cliff_face: string; cliff_top: string };
+  bases: { grass: string[]; dirt: string[]; cobble: string[]; pavers: string[]; water: string[]; cliff_face: string; cliff_earth: string };
   edges: {
     dirt_lip: string; grass_fringe: string; bank: string; bank_low: string; foam: string; shallows: string;
     cobble_kerb: string; pavers_kerb: string; flagstone_edge: string; rock_outline: string; rock_ledge: string; rock_shadow: string;

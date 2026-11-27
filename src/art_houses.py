@@ -2,6 +2,7 @@
 timber-framed plaster walls on a stone footing, two shuttered windows with flower boxes, a door in the
 middle. Three roof colours."""
 from core import Sprite
+from sprites import ground_shadow
 
 ROOFS = {'red': ('R', 'P', 'b'), 'blue': ('U', 'c', 'n'), 'green': ('T', 'L', 'g')}
 
@@ -34,9 +35,7 @@ def house(roof):
     s.rect(27, 40, 36, 57, 'b'); s.rect(28, 41, 35, 57, 'B'); s.rect(29, 42, 34, 46, 'b')
     s.rect(31, 41, 32, 57, 'b'); s.set(34, 50, 'y'); s.rect(26, 58, 37, 58, 'd')
     s.outline()
-    for x in range(10, 54):                                        # ground shadow
-        if s.px[60][x] is None: s.px[60][x] = 'K'
-    return s
+    return ground_shadow(s, 60)
 
 
 HOUSES = [(f'house_{r}', (lambda r=r: house(r))) for r in ROOFS]
