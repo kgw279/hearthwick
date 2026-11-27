@@ -20,13 +20,29 @@ const SOLID: Record<string, Rect> = {
 /** Placement options: pixel nudges from the tile position plus any other prop settings. */
 type PutOpts = Omit<Partial<PropSpec>, 'x' | 'y' | 'frames' | 'solid'> & { dx?: number; dy?: number };
 
+/** How far a piece of furniture standing against the back wall reaches into the room (its footprint depth). */
+const WALL_DEPTH = 14;
+
 function placer(assets: Assets) {
   const props: Prop[] = [];
   const put = (frames: string | string[], tx: number, ty: number, solid?: keyof typeof SOLID | null, opts: PutOpts = {}) => {
     const { dx = 0, dy = 0, ...rest } = opts;
     props.push(new Prop(assets, { frames, x: t(tx) + dx, y: t(ty) + dy, solid: solid ? SOLID[solid] : undefined, ...rest }));
   };
-  return { props, put };
+  /**
+   * Stand furniture against the back wall whose face ends at the top of row ty: the art's base sits WALL_DEPTH
+   * below the wall line, so its back is flush with the wall and anything taller rises up over the wall face.
+   * The collider is the footprint (art width x WALL_DEPTH), measured from the art rather than the tile.
+   */
+  const wall = (frames: string | string[], tx: number, ty: number, opts: PutOpts & { depth?: number } = {}) => {
+    const { dx = 0, dy = 0, depth = WALL_DEPTH, ...rest } = opts;
+    const first = typeof frames === 'string' ? frames : frames[0];
+    const b = assets.bounds(first);
+    const bottom = b.y + b.h; // art's base, relative to the sprite's top
+    const y = t(ty) + depth - bottom + dy;
+    props.push(new Prop(assets, { frames, x: t(tx) + dx, y, solid: { x: b.x, y: bottom - depth, w: b.w, h: depth }, ...rest }));
+  };
+  return { props, put, wall };
 }
 
 export function buildInnGround(assets: Assets, hooks: TownHooks): Scene {
@@ -56,21 +72,21 @@ export function buildInnGround(assets: Assets, hooks: TownHooks): Scene {
       ['cap_wood_B', 1, 9], ['cap_wood_B', 2, 9], ['cap_wood_B_end_L', 3, 9], ['cap_wood_B_end_R', 5, 9],
       ['cap_wood_B', 6, 9], ['cap_wood_B', 7, 9], ['cap_wood_B', 8, 9],
       ['cap_B_wood_to_stone', 9, 9], ['cap_stone_B', 10, 9], ['cap_stone_B', 11, 9], ['cap_stone_B', 12, 9], ['cap_stone_BR', 13, 9],
-      ['deco_painting', 3, 1], ['deco_sconce', 1, 1], ['deco_menu_board', 8, 1], ['deco_banner', 6, 1], ['deco_sconce', 12, 3],
+      ['deco_painting', 3, 1], ['deco_menu_board', 8, 1], ['deco_banner', 6, 1], ['deco_sconce', 12, 3],
     ],
   }, assets);
 
-  const { props, put } = placer(assets);
+  const { props, put, wall } = placer(assets);
   const floorDeco = { sortOffset: 0 };
   put('doormat', 4, 8, null, { dy: 6, ...floorDeco });
   for (const [x, part] of [[1, 'left'], [2, 'middle'], [3, 'middle'], [4, 'middle'], [5, 'middle'], [6, 'right']] as const) {
     put(`runner_${part}`, x, 7, null, floorDeco);
   }
   put('stairs_up', 5, 1, null, { sortOffset: 0 });
-  put('bookshelf', 1, 2, 'block');
-  put(assets.animation('fireplace'), 3, 2, 'block', { fps: 6 });
+  wall('bookshelf', 1, 2);
+  wall(assets.animation('fireplace'), 3, 2, { fps: 6 });
   put('armchair', 3, 3, 'small', { dy: 4 });
-  put('barrel_stack', 7, 2, 'block');
+  wall('barrel_stack', 7, 2);
   put('floor_lamp', 8, 3, 'small');
   for (const [x, part] of [[2, 'left'], [3, 'middle'], [4, 'middle'], [5, 'right']] as const) {
     put(`bench_${part}`, x, 4, 'bench', { dy: 4 });
@@ -81,10 +97,10 @@ export function buildInnGround(assets: Assets, hooks: TownHooks): Scene {
   put('bread_loaf', 4, 5, null, { dy: -5, sortOffset: 40 });
 
   // kitchen (stone floor)
-  put('cupboard', 9, 4, 'block');
-  put(assets.animation('stove'), 10, 4, 'block', { fps: 6 });
-  put(assets.animation('oven'), 11, 4, 'block', { fps: 6 });
-  put('cutting_board', 12, 4, 'block');
+  wall('cupboard', 9, 4);
+  wall(assets.animation('stove'), 10, 4, { fps: 6 });
+  wall(assets.animation('oven'), 11, 4, { fps: 6 });
+  wall('cutting_board', 12, 4);
   put(assets.animation('cauldron'), 12, 6, 'block', { fps: 6 });
   put('mixing_table', 10, 7, 'block');
   put('brewing_cask', 12, 8, 'block', { dy: -4 });
@@ -136,15 +152,15 @@ export function buildInnUpstairs(assets: Assets, hooks: TownHooks): Scene {
     ],
   }, assets);
 
-  const { props, put } = placer(assets);
+  const { props, put, wall } = placer(assets);
   for (const [x, part] of [[1, 'left'], [2, 'middle'], [3, 'middle'], [4, 'right']] as const) put(`runner_${part}`, x, 4, null, { sortOffset: 0 });
   put('stairs_down', 6, 4, null, { sortOffset: 0 });
-  put('bed', 1, 2, 'bed');
-  put('nightstand', 2, 2, 'block');
-  put('bed', 3, 2, 'bed');
-  put('wardrobe', 4, 2, 'block');
+  wall('bed', 1, 2, { depth: 26 });
+  wall('nightstand', 2, 2);
+  wall('bed', 3, 2, { depth: 26 });
+  wall('wardrobe', 4, 2);
   put('floor_lamp', 7, 2, 'small');
-  put('armchair', 8, 2, 'small');
+  wall('armchair', 8, 2);
   put('chest', 8, 5, 'small', { dy: -6 });
   put('potted_plant', 1, 5, 'small', { dy: -8 });
   put('frog_right_idle', 2, 4, 'npc', { dy: -4, interaction: { label: 'Talk', use: () => hooks.say('Ribbit! The beds here are wonderfully soft.', 'Frog traveler') } });

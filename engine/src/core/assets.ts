@@ -3,6 +3,8 @@
  * loads every sheet image once, and lets the rest of the engine ask for sprites and animations by name.
  */
 
+import type { Rect } from './geom';
+
 export type Slice = [left: number, top: number, right: number, bottom: number];
 
 export interface Frame {
@@ -40,6 +42,7 @@ function toSlice(s: number | number[] | undefined): Slice | undefined {
 export class Assets {
   private readonly frames = new Map<string, Frame>();
   private readonly anims = new Map<string, string[]>();
+  private readonly boundsCache = new Map<string, Rect>();
   /** Names defined in more than one sheet; the unqualified name resolves to the first sheet. */
   readonly duplicates: string[] = [];
 
@@ -69,6 +72,32 @@ export class Assets {
       }
     }
     return assets;
+  }
+
+  /** The opaque part of a frame (relative to its top-left), so placement can follow the art, not the cell. */
+  bounds(name: string): Rect {
+    const hit = this.boundsCache.get(name);
+    if (hit) return hit;
+    const f = this.frame(name);
+    const c = document.createElement('canvas');
+    c.width = f.w;
+    c.height = f.h;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(f.img, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+    const d = ctx.getImageData(0, 0, f.w, f.h).data;
+    let x0 = f.w, y0 = f.h, x1 = -1, y1 = -1;
+    for (let y = 0; y < f.h; y++) {
+      for (let x = 0; x < f.w; x++) {
+        if (d[(y * f.w + x) * 4 + 3] === 0) continue;
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+    const b = x1 < 0 ? { x: 0, y: 0, w: f.w, h: f.h } : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+    this.boundsCache.set(name, b);
+    return b;
   }
 
   has(name: string): boolean {
