@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Hearthwick Inn</title>
+  <link rel="icon" href="data:," />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { margin: 0; height: 100%; background: #1b1520; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+    canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+    #boot { position: fixed; color: #eec39a; font: 16px monospace; }
+  </style>
+</head>
+<body>
+  <div id="boot">Loading Hearthwick...</div>
+  <canvas id="game"></canvas>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
