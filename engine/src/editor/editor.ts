@@ -10,7 +10,7 @@
  * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, holding R the wheel turns
  * the piece in hand or under the pointer (Shift for finer steps), Ctrl+Z / Ctrl+Y undo and redo, WASD or the
  * arrows pan, middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, undo, snap, new
- * map, open, rename, Door to), F2 leaves the editor.
+ * map, open, rename, Door to, Copy for chat: this map's file to the clipboard), F2 leaves the editor.
  * Controller: the left stick moves the cursor like a mouse, the D-pad nudges it a pixel at a time,
  * A places, X deletes, holding Y the right stick turns, LB/RB pick a slot, LT/RT a tab, Y tapped shows/hides the palette,
  * View undoes, right stick click zooms, Menu opens the menu (redo and snap are there), B cancels a move.
@@ -932,17 +932,13 @@ export class Editor {
   }
 
   /**
-   * Put this map, and any other maps changed since the last save, on the clipboard as their map files,
-   * ready to paste into a chat (each under its src/maps path, so they can be dropped straight in).
+   * Put the map being edited (one room or area at a time) on the clipboard as its map file, ready to paste
+   * into a chat, under its src/maps path so it can be dropped straight in.
    */
   private async copyForChat(): Promise<void> {
     if (this.held) this.cancelHeld();
     const here = this.layout.id;
-    const ids = [here, ...[...this.unsaved].filter((id) => id !== here).sort()];
-    const text = [
-      `Hearthwick map${ids.length > 1 ? 's' : ''} from the editor (${ids.length}):`,
-      ...ids.map((id) => `\n=== engine/src/maps/${id}.json ===\n${formatLayout(this.game.layouts.get(id)!)}`),
-    ].join('\n');
+    const text = `Hearthwick map from the editor:\n\n=== engine/src/maps/${here}.json ===\n${formatLayout(this.layout)}`;
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -957,7 +953,7 @@ export class Editor {
       box.remove();
       if (!ok) return this.say("Couldn't copy: the browser blocked the clipboard");
     }
-    this.say(`Copied ${ids.length === 1 ? here : `${ids.length} maps`}: paste it into the chat`);
+    this.say(`Copied ${here}: paste it into the chat`);
   }
 
   /** Write every changed map (dev server), or download them (anywhere else). */
@@ -1001,11 +997,7 @@ export class Editor {
       title: `Map: ${here}`,
       items: [
         { label: 'Save', note: this.unsaved.size ? `${this.unsaved.size} changed` : 'saved', run: () => void this.saveAll() },
-        {
-          label: 'Copy for chat',
-          note: this.unsaved.size > 1 || (this.unsaved.size === 1 && !this.unsaved.has(here)) ? `this + ${[...this.unsaved].filter((id) => id !== here).length} changed` : 'this map',
-          run: () => void this.copyForChat(),
-        },
+        { label: 'Copy for chat', note: here, run: () => void this.copyForChat() },
         { label: 'Undo', disabled: !this.history.canUndo, run: () => this.undo() },
         { label: 'Redo', disabled: !this.history.canRedo, run: () => this.redo() },
         { label: 'Snap', note: snapName(this.snap), run: () => this.cycleSnap() },
