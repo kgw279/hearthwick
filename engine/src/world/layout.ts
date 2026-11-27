@@ -41,11 +41,8 @@ export interface PlacedProp {
   behavior?: Behavior;
 }
 
-export type WallPiece = [sprite: string, x: number, y: number];
-
-export type LayoutGround =
-  | { type: 'tiles'; rows: string[] }
-  | { type: 'room'; rows: string[]; walls: WallPiece[] };
+/** Outdoor ground (terrain characters) or an interior (floors and autotiled walls, see world/room.ts). */
+export type LayoutGround = { type: 'tiles'; rows: string[] } | { type: 'room'; rows: string[] };
 
 export interface LayoutSpawn { x: number; y: number; facing: Facing }
 
@@ -72,9 +69,13 @@ export const GROUND_CHARS: Record<LayoutGround['type'], Array<{ ch: string; name
     { ch: 'w', name: 'Water', sample: 'water' },
   ],
   room: [
-    { ch: 'w', name: 'Wood floor', sample: 'wood_floor' },
+    { ch: 'w', name: 'Wood floor', sample: 'floor_wood_flagstone_00' },
     { ch: 's', name: 'Stone floor', sample: 'floor_wood_flagstone_15' },
-    { ch: '.', name: 'No floor', sample: '' },
+    { ch: 'W', name: 'Plaster wall', sample: 'face_plaster_plain' },
+    { ch: 'N', name: 'Plaster wall, window', sample: 'face_plaster_window' },
+    { ch: 'S', name: 'Stone wall', sample: 'face_stone_plain' },
+    { ch: 'M', name: 'Stone wall, window', sample: 'face_stone_window' },
+    { ch: '.', name: 'Clear', sample: '' },
   ],
 };
 
@@ -107,15 +108,7 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
     if (typeof row !== 'string' || row.length !== g.rows[0].length) fail(`ground.rows[${i}]`, `must be ${g.rows[0].length} characters`);
     for (const ch of row) if (!allowed.has(ch)) fail(`ground.rows[${i}]`, `has unknown ground "${ch}"`);
   });
-  if (g.type === 'room') {
-    if (!Array.isArray(g.walls)) fail('ground.walls', 'must be a list');
-    g.walls.forEach((w, i) => {
-      if (!Array.isArray(w) || w.length !== 3) fail(`ground.walls[${i}]`, 'must be [sprite, x, y]');
-      str(w[0], `ground.walls[${i}][0]`);
-      num(w[1], `ground.walls[${i}][1]`);
-      num(w[2], `ground.walls[${i}][2]`);
-    });
-  }
+  for (const k of Object.keys(g)) if (k !== 'type' && k !== 'rows') fail(`ground.${k}`, 'is not a ground field');
 
   if (!l.spawns || typeof l.spawns !== 'object' || Object.keys(l.spawns).length === 0) fail('spawns', 'needs at least one spawn');
   for (const [k, s] of Object.entries(l.spawns)) {
@@ -176,10 +169,7 @@ export function formatLayout(l: Layout): string {
   const g = l.ground;
   out.push('  "ground": {', `    "type": ${j(g.type)},`);
   const rows = g.rows.map((r) => `      ${j(r)}`).join(',\n');
-  if (g.type === 'room') {
-    out.push(`    "rows": [\n${rows}\n    ],`);
-    out.push(`    "walls": [\n${g.walls.map((w) => `      ${j(w)}`).join(',\n')}\n    ]`);
-  } else out.push(`    "rows": [\n${rows}\n    ]`);
+  out.push(`    "rows": [\n${rows}\n    ]`);
   out.push('  },');
   out.push(`  "spawns": ${j(l.spawns)},`);
   out.push(`  "exits": [\n${l.exits.map((e) => `    ${j(e)}`).join(',\n')}\n  ],`);

@@ -40,7 +40,7 @@ export const COLLIDERS: Record<string, Rect> = {
 export const FOOTPRINT_DEPTH = 14;
 
 export function buildGround(g: LayoutGround, assets: Assets): Ground {
-  return g.type === 'tiles' ? new TileMap(g.rows, assets) : new RoomMap({ floor: g.rows, walls: g.walls }, assets);
+  return g.type === 'tiles' ? new TileMap(g.rows, assets) : new RoomMap(g.rows, assets);
 }
 
 /** A behavior resolved for one prop: the frames it supplies (if any) and how it reacts to the player. */

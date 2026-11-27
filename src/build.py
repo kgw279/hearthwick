@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(__file__))
 from core import PAL  # noqa: E402
 from art_ground import GROUND_TILES, VARIANTS as PAVE_VARIANTS  # noqa: E402
+from art_town import TOWN_BUILDINGS, TOWN_PROPS, TOWN_ANIMATIONS  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -46,8 +47,8 @@ def build_groups(data):
         'terrain_grass_water': ([(f'grass_water_{i:02d}_v{v}', AUTOTILES['grass_water'][v][i]) for v in range(VARIANTS) for i in range(16)], 32, 32, 16, None),
         'terrain_path': ([(f'path_{i:02d}_v{v}', PATHS[v][i]) for v in range(PATH_VARIANTS) for i in range(16)]
                          + [(f'{n}_v{v}', CONNECTOR_TILES[(n, v)]) for v in range(PATH_VARIANTS) for n, _, _ in CONNECTORS], 32, 32, 16, None),
-        'buildings': ([(n, f()) for n, f in BUILDINGS + SHOPS], 64, 64, 4, 'grass'),
-        'props': ([(n, f()) for n, f in PROPS], 32, 32, 8, 'grass'),
+        'buildings': ([(n, f()) for n, f in BUILDINGS + SHOPS + TOWN_BUILDINGS], 64, 64, 4, 'grass'),
+        'props': ([(n, f()) for n, f in PROPS + TOWN_PROPS], 32, 32, 8, 'grass'),
         'forage': ([(f'{n}_{st}', f(st == 'ready')) for n, f, _ in FORAGE for st in ('ready', 'harvested')], 32, 32, 8, 'grass'),
         'walls': ([(n, f()) for n, f in WALL_KIT], 32, 32, 10, 'floor'),
         'interior_walls': ([(n, f()) for n, f in WALL_KIT2], 32, 32, 18, 'void'),
@@ -858,6 +859,7 @@ def main():
     atlas['sheets']['wagons_ns']['note'] = '32x64 north/south views. down = heading south (horse at the bottom, nearest the viewer); up = heading north (horse at the top).'
     atlas['sheets']['wagons']['animations'] = {f'wagon_roll_{v}': [f'wagon_{v}_f{i}' for i in range(3)] for v in ('left', 'right')}
     atlas['sheets']['wagons']['note'] = '64x32 east/west views; the horse is hitched in the rolling frames (~6 fps). wagon_parked_* has no horse. North/south views are in wagons_ns.'
+    atlas['sheets']['props']['animations'] = dict(TOWN_ANIMATIONS)
     atlas['sheets']['ambient']['animations'] = {'bees': [f'bees_f{i}' for i in range(4)], 'jumping_trout': [f'jumping_trout_f{i}' for i in range(4)]}
     atlas['sheets']['ambient']['note'] = 'overlays: bees over a beehive (~8 fps), jumping trout over a fishing spot (~4 fps, then pause)'
     atlas['sheets']['animated']['note'] = 'fire, candle and cask loops ~6 fps; water ~3 fps (ping-pong highlights, stays seamless)'

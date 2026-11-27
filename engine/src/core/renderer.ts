@@ -1,6 +1,8 @@
 /**
- * Renderer. The game thinks in a 480x270 logical screen at the art's native pixel size, but draws
- * straight onto the full-resolution canvas through a whole-number scale (4x on 1080p). Positions are
+ * Renderer. The game thinks in a logical screen at the art's native pixel size (at least 480x270)
+ * and draws straight onto a full-window canvas through a whole-number scale (4x on 1080p). The scale
+ * is the largest whole number that still fits 480x270; the logical screen then grows to fill the rest
+ * of the window, so there are no borders and the art stays crisp (VIEW_W / VIEW_H change on resize). Positions are
  * snapped to *screen* pixels (1/scale of an art pixel), not art pixels, so the camera and moving
  * characters glide smoothly instead of stepping 4 screen pixels at a time, while every sprite stays
  * crisp (nearest-neighbour, integer scale, edges always on screen-pixel boundaries).
@@ -8,8 +10,12 @@
  */
 import type { Assets, Frame } from './assets';
 
-export const VIEW_W = 480;
-export const VIEW_H = 270;
+/** The smallest logical screen the game is designed for. */
+export const MIN_VIEW_W = 480;
+export const MIN_VIEW_H = 270;
+/** Current logical screen size (live bindings: they change when the window does). */
+export let VIEW_W = MIN_VIEW_W;
+export let VIEW_H = MIN_VIEW_H;
 
 interface Queued { sortY: number; order: number; draw: () => void }
 
@@ -28,9 +34,17 @@ export class Renderer {
   }
 
   resize(): void {
-    this.scale = Math.max(1, Math.floor(Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H)));
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.round(window.innerWidth * dpr);
+    const h = Math.round(window.innerHeight * dpr);
+    this.scale = Math.max(1, Math.floor(Math.min(w / MIN_VIEW_W, h / MIN_VIEW_H)));
+    VIEW_W = Math.floor(w / this.scale);
+    VIEW_H = Math.floor(h / this.scale);
     this.canvas.width = VIEW_W * this.scale;
     this.canvas.height = VIEW_H * this.scale;
+    this.canvas.style.width = `${this.canvas.width / dpr}px`;
+    this.canvas.style.height = `${this.canvas.height / dpr}px`;
+    this.ctx.imageSmoothingEnabled = false;
   }
 
   /** Screen pixels per logical pixel at the current zoom. */

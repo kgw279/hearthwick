@@ -12,7 +12,7 @@ export interface Category { name: string; items: PaletteItem[] }
 type Template = Omit<PlacedProp, 'x' | 'y' | 'sprite'>;
 
 /** Art that lies on the floor (no collider, drawn under everything). */
-const FLAT = /rug|runner|mat\b|doormat|carpet|stairs/;
+const FLAT = /rug|runner|mat\b|doormat|carpet|stairs|^deco_/;
 
 /** Groups: which atlas sheets they draw from and how their items are placed by default. */
 const GROUPS: Array<{ name: string; sheets: string[]; template: Template; people?: boolean }> = [
@@ -50,7 +50,7 @@ export function buildPalette(assets: Assets, content: Content): Category[] {
     items: Object.keys(content.forageNodes).map((n) => ({ name: n, prop: { x: 0, y: 0, collider: 'forage', behavior: { type: 'forage', node: n } } })),
   });
   out.push({
-    name: 'Shop counters',
+    name: 'Counters',
     items: Object.keys(content.shops).map((id) => ({
       name: `${id} counter`,
       prop: { sprite: 'bar_counter', x: 0, y: 0, behavior: { type: 'shop', shop: id } },

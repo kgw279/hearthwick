@@ -3,17 +3,20 @@
  * rebuilds the scene through the same code the game uses, and is checked for overlaps and for places
  * the player can no longer walk to.
  *
- * Props tool: props are placed freely, by the pixel. A ghost of the chosen palette item follows the
- * cursor; place it, or pick up the prop under the cursor to move it and place it again; delete removes
- * it. Snap cycles free / 8px / 16px / tile. Except on tile snap, a prop dragged near a wall or the
- * water's edge pulls in flush against it (and is pushed back out if dragged into it).
- * Ground tool: paint grass, road, path and water (town) or wood, stone and no-floor (interiors); the
- * ground re-blends around every painted cell.
- * Zoom steps out to 1/2 and 1/4 to see and edit a whole town.
- * Menu (Tab / Menu button): save, new map (interior or outdoor, named), open another map, rename this
- * map, and "Door to": make the building under the cursor the way into an interior map, which wires the
- * door both ways (the building's Enter, an exit into the building, a spawn outside it, and the
- * interior's way back out).
+ * The palette works like the bag: tabs along the top (one per group of pieces, plus Ground for painting
+ * terrain, floors and walls, plus the Snap setting), and a row of slots below.
+ *
+ * Mouse and keyboard: left click places (or picks up the piece under the pointer to move it), right
+ * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, WASD or the arrows pan,
+ * middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, new map, open, rename,
+ * Door to), F2 leaves the editor.
+ * Controller: the left stick moves the cursor like a mouse, the D-pad nudges it a pixel at a time,
+ * A places, X deletes, LB/RB pick a slot, LT/RT a tab, Y shows/hides the palette, View changes snap,
+ * right stick click zooms, Menu opens the menu, B cancels a move.
+ *
+ * Props are placed freely; snap rounds where they land (free / 8px / 16px / tile). Except on tile snap, a
+ * piece brought near a wall or the water's edge pulls in flush against it. Painting floor indoors wraps
+ * walls around it automatically (in the last wall material chosen).
  * Save writes every changed map to src/maps/<id>.json when running the dev server, and downloads the
  * files anywhere else.
  */
@@ -25,6 +28,8 @@ import { placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { TILE } from '../world/tilemap';
+import { wrapWalls } from '../world/room';
+import { drawSlot } from '../ui/items';
 import { Menu, type MenuPage } from './menu';
 import { buildPalette, type Category } from './palette';
 import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates';
@@ -44,13 +49,21 @@ const EDGE = 24; // screen px: keys or stick pushing the cursor this close to an
 const REPEAT_FIRST = 0.22;
 const REPEAT_NEXT = 0.06;
 const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
-const SLOT = 32;
+const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
-const PANEL_H = 80;
+const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
+const PANEL_H = 100;
 const HUD_H = 22;
-const HINTS: Array<[Action[], string]> = [
-  [['interact'], 'Place'], [['cook'], 'Del'], [['tab_prev', 'tab_next'], 'Item'], [['cat_prev', 'cat_next'], 'Group'],
-  [['recipes'], 'Tool'], [['map'], 'Snap'], [['zoom'], 'Zoom'], [['menu'], 'Menu'], [['back'], 'Exit'],
+const TAB_Y = 4;
+const TAB_H = 16;
+/** Hints per device: glyph frames (or actions, resolved to the pad's glyphs) and what they do. */
+const MOUSE_HINTS: Array<[string[], string]> = [
+  [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'],
+  [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'], [['key_tab'], 'Palette'], [['key_esc'], 'Menu'],
+];
+const PAD_HINTS: Array<[Action[], string]> = [
+  [['interact'], 'Place'], [['cook'], 'Delete'], [['tab_prev', 'tab_next'], 'Pick'], [['cat_prev', 'cat_next'], 'Tab'],
+  [['recipes'], 'Palette'], [['map'], 'Snap'], [['zoom'], 'Zoom'], [['menu'], 'Menu'],
 ];
 
 export class Editor {
@@ -65,6 +78,12 @@ export class Editor {
   private cat = 0;
   readonly itemIndex: number[];
   private brush = 0;
+  /** Material that painting floor wraps walls in (the last wall brush used). */
+  private wallMat = 'W';
+  /** The palette panel is showing. */
+  private panel = true;
+  private readonly tabs: Array<{ x: number; w: number; index: number }> = [];
+  private snapButton = { x: 0, w: 0 };
   private held: Held | null = null;
   private checkIn = -1;
   private readonly unsaved = new Set<string>();
@@ -101,9 +120,22 @@ export class Editor {
     this.cursor.x = f.x + f.w / 2;
     this.cursor.y = f.y + f.h;
     this.view = { ...this.cursor };
-    this.game.camera.setInset(HUD_H, PANEL_H);
-    this.clampView();
+    this.applyInset();
     this.check();
+  }
+
+  private get panelH(): number {
+    return this.panel ? PANEL_H : 0;
+  }
+
+  private applyInset(): void {
+    this.game.camera.setInset(HUD_H, this.panelH);
+    this.clampView();
+  }
+
+  private togglePanel(): void {
+    this.panel = !this.panel;
+    this.applyInset();
   }
 
   private close(): void {
@@ -138,38 +170,36 @@ export class Editor {
       this.menu.update(input);
       return;
     }
+    const pad = input.device === 'gamepad';
     this.moveCursor(dt);
 
-    if (input.pressed('recipes')) {
-      this.cancelHeld();
-      this.tool = this.tool === 'props' ? 'ground' : 'props';
-      if (this.tool === 'ground') this.centreOnTile();
+    // keyboard: only Tab (palette) and Esc (menu) - everything else is the mouse
+    if (pad) {
+      if (input.pressed('recipes')) this.togglePanel();
+      if (input.pressed('tab_prev')) this.stepItem(-1);
+      if (input.pressed('tab_next')) this.stepItem(1);
+      if (input.pressed('cat_prev')) this.stepTab(-1);
+      if (input.pressed('cat_next')) this.stepTab(1);
+      if (input.pressed('map')) this.cycleSnap();
+      if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
+    } else if (input.pressed('menu')) {
+      this.togglePanel();
     }
-    if (input.pressed('tab_prev')) this.stepItem(-1);
-    if (input.pressed('tab_next')) this.stepItem(1);
-    if (input.pressed('cat_prev')) this.stepCategory(-1);
-    if (input.pressed('cat_next')) this.stepCategory(1);
-    if (input.pressed('map') && this.tool === 'props') {
-      this.snap = SNAPS[(SNAPS.indexOf(this.snap) + 1) % SNAPS.length];
-      this.say(`Snap: ${snapName(this.snap)}`);
-    }
-    if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
-    if (input.pressed('menu')) {
+    if ((pad && input.pressed('menu')) || (!pad && input.pressed('back') && !this.held)) {
       this.cancelHeld();
       this.menu.show(this.mainMenu());
       return;
     }
-    if (input.pressed('back')) {
-      if (this.held) this.cancelHeld();
-      else return this.close();
-    }
+    if (input.pressed('back') && this.held) this.cancelHeld();
 
-    if (this.tool === 'ground') {
-      if (input.pressed('interact')) this.lastPainted = '';
-      if (input.down('interact')) this.paint();
-    } else {
-      if (input.pressed('interact')) this.primary();
-      if (input.pressed('cook')) this.remove();
+    if (pad) {
+      if (this.tool === 'ground') {
+        if (input.pressed('interact')) this.lastPainted = '';
+        if (input.down('interact')) this.paint();
+      } else {
+        if (input.pressed('interact')) this.primary();
+        if (input.pressed('cook')) this.remove();
+      }
     }
 
     if (this.checkIn > 0 && (this.checkIn -= dt) <= 0) this.check();
@@ -192,6 +222,17 @@ export class Editor {
       return;
     }
     const { x: dx, y: dy } = input.digital();
+    if (input.device !== 'gamepad') {
+      // keyboard: WASD / arrows pan the view; the cursor stays under the mouse
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy);
+        this.view.x += (dx / len) * (PAN_SPEED / this.zoom) * dt;
+        this.view.y += (dy / len) * (PAN_SPEED / this.zoom) * dt;
+        this.clampView();
+        if (this.mouse) this.setCursor(this.cam.x + this.mouse.x / this.zoom, this.cam.y + this.mouse.y / this.zoom);
+      }
+      return;
+    }
     if (!dx && !dy) {
       this.repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
       return;
@@ -225,7 +266,7 @@ export class Editor {
     this.setCursor(this.cursor.x + dx, this.cursor.y + dy);
     const z = this.zoom;
     const hw = VIEW_W / z / 2 - EDGE / z;
-    const hh = (VIEW_H - HUD_H - PANEL_H) / z / 2 - EDGE / z;
+    const hh = (VIEW_H - HUD_H - this.panelH) / z / 2 - EDGE / z;
     this.view.x = Math.max(this.cursor.x - hw, Math.min(this.cursor.x + hw, this.view.x));
     this.view.y = Math.max(this.cursor.y - hh, Math.min(this.cursor.y + hh, this.view.y));
     this.clampView();
@@ -236,7 +277,7 @@ export class Editor {
     const g = this.game.scene.ground;
     const z = this.zoom;
     const hw = VIEW_W / z / 2;
-    const hh = (VIEW_H - HUD_H - PANEL_H) / z / 2;
+    const hh = (VIEW_H - HUD_H - this.panelH) / z / 2;
     this.view.x = g.pixelW <= hw * 2 ? g.pixelW / 2 : Math.max(hw, Math.min(g.pixelW - hw, this.view.x));
     this.view.y = g.pixelH <= hh * 2 ? g.pixelH / 2 : Math.max(hh, Math.min(g.pixelH - hh, this.view.y));
   }
@@ -254,6 +295,30 @@ export class Editor {
     return Math.floor(this.cursor.y / TILE);
   }
 
+  /** Tabs: one per palette group, then Ground. */
+  private get tabCount(): number {
+    return this.palette.length + 1;
+  }
+
+  private get tab(): number {
+    return this.tool === 'ground' ? this.palette.length : this.cat;
+  }
+
+  private selectTab(t: number): void {
+    if (this.held) return; // moving a prop: finish or cancel first
+    if (t === this.palette.length) {
+      if (this.tool !== 'ground') this.centreOnTile();
+      this.tool = 'ground';
+    } else {
+      this.tool = 'props';
+      this.cat = t;
+    }
+  }
+
+  private stepTab(d: number): void {
+    this.selectTab((this.tab + d + this.tabCount) % this.tabCount);
+  }
+
   private stepItem(d: number): void {
     if (this.tool === 'ground') {
       const n = GROUND_CHARS[this.layout.ground.type].length;
@@ -265,9 +330,9 @@ export class Editor {
     this.itemIndex[this.cat] = (this.itemIndex[this.cat] + d + n) % n;
   }
 
-  private stepCategory(d: number): void {
-    if (this.tool !== 'props' || this.held) return;
-    this.cat = (this.cat + d + this.palette.length) % this.palette.length;
+  private cycleSnap(): void {
+    this.snap = SNAPS[(SNAPS.indexOf(this.snap) + 1) % SNAPS.length];
+    this.say(`Snap: ${snapName(this.snap)}`);
   }
 
   // ------------------------------------------------------------------ props
@@ -276,8 +341,15 @@ export class Editor {
   private ghost(): PlacedProp {
     const base = this.held
       ? { ...this.held.prop, x: this.cursor.x + this.held.grab.x, y: this.cursor.y + this.held.grab.y }
-      : { ...structuredClone(this.palette[this.cat].items[this.itemIndex[this.cat]].prop), x: this.cursor.x, y: this.cursor.y };
+      : this.stamp();
     return this.position(base);
+  }
+
+  /** The palette item centred on the cursor (so the same spot picks it up or deletes it again). */
+  private stamp(): PlacedProp {
+    const p = structuredClone(this.palette[this.cat].items[this.itemIndex[this.cat]].prop);
+    const b = this.game.assets.bounds(propFrames(p, this.game.assets, this.game.content)[0]);
+    return { ...p, x: this.cursor.x, y: this.cursor.y + Math.round(b.h / 2) };
   }
 
   /** Apply the snap mode, then pull the prop flush against nearby walls or shore. */
@@ -412,9 +484,12 @@ export class Editor {
     this.lastPainted = key;
     const g = this.layout.ground;
     const ch = GROUND_CHARS[g.type][this.brush].ch;
+    if ('WNSM'.includes(ch) && g.type === 'room') this.wallMat = ch === 'S' || ch === 'M' ? 'S' : 'W';
     const row = g.rows[ty];
     if (row[tx] === ch) return;
     g.rows[ty] = row.slice(0, tx) + ch + row.slice(tx + 1);
+    // indoors, new floor gets walls wrapped around it
+    if (g.type === 'room' && (ch === 'w' || ch === 's')) g.rows.splice(0, g.rows.length, ...wrapWalls(g.rows, tx, ty, this.wallMat));
     this.changed();
   }
 
@@ -613,7 +688,7 @@ export class Editor {
     // spawnAt puts the feet 13px into a cell: pick the first row whose feet clear the doorstep
     here.spawns[outside] = { x: Math.floor(p.x / TILE), y: Math.ceil((front - 13) / TILE), facing: 'down' };
     here.exits = here.exits.filter((e) => e.to !== interiorId);
-    here.exits.push({ area: { x: Math.round(p.x) - 10, y: Math.round(front) - 2, w: 20, h: 8 }, to: interiorId, spawn: entry, dir: 'up' });
+    here.exits.push({ area: { x: Math.round(p.x) - 14, y: Math.round(front) - 2, w: 28, h: 8 }, to: interiorId, spawn: entry, dir: 'up' });
     let back = 0;
     for (const ex of inside.exits) {
       if (ex.to === UNLINKED || ex.to === here.id) {
@@ -669,11 +744,7 @@ export class Editor {
       if (!this.active) return;
       this.mouse = toView(e);
       if (this.menu.pointer(this.mouse.x, this.mouse.y, e.button === 0)) return;
-      const slot = this.paletteSlot(this.mouse);
-      if (slot !== null) {
-        if (slot >= 0) this.pick(slot);
-        return;
-      }
+      if (this.panelClick(this.mouse)) return;
       if (e.button === 1) {
         e.preventDefault();
         this.pan = this.mouse;
@@ -704,21 +775,29 @@ export class Editor {
         if (e.ctrlKey || e.altKey) {
           const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(this.zoom) + d));
           this.setZoom(ZOOMS[i]);
-        } else if (e.shiftKey) this.stepCategory(d);
+        } else if (e.shiftKey) this.stepTab(d);
         else this.stepItem(d);
       }
     }, { passive: false });
   }
 
   private overUi(m: { x: number; y: number }): boolean {
-    return m.y >= VIEW_H - PANEL_H || m.y < HUD_H;
+    return m.y >= VIEW_H - this.panelH || m.y < HUD_H;
   }
 
-  /** Palette slot under a screen point: its index, -1 for the panel's empty space, null if not over the panel. */
-  private paletteSlot(m: { x: number; y: number }): number | null {
-    if (m.y < VIEW_H - PANEL_H) return null;
+  /** A click on the palette panel: a tab, the snap button or a slot. True if the click was on the panel. */
+  private panelClick(m: { x: number; y: number }): boolean {
+    if (!this.panel || m.y < VIEW_H - PANEL_H) return false;
+    const y0 = VIEW_H - PANEL_H;
+    if (m.y >= y0 + TAB_Y && m.y < y0 + TAB_Y + TAB_H) {
+      const t = this.tabs.find((t) => m.x >= t.x && m.x < t.x + t.w);
+      if (t) this.selectTab(t.index);
+      else if (m.x >= this.snapButton.x && m.x < this.snapButton.x + this.snapButton.w) this.cycleSnap();
+      return true;
+    }
     const s = this.slots.find((s) => m.x >= s.x && m.x < s.x + SLOT && m.y >= s.y && m.y < s.y + SLOT);
-    return s ? s.index : -1;
+    if (s) this.pick(s.index);
+    return true;
   }
 
   private pick(index: number): void {
@@ -834,66 +913,103 @@ export class Editor {
     drawText(r, assets, clipped, VIEW_W - w + 4, 7);
   }
 
+  /** The palette, styled like the bag: tabs, a row of slots, the selected piece's name, control hints. */
   private drawPalette(): void {
     const r = this.game.renderer;
     const assets = this.game.assets;
-    const input = this.game.input;
+    if (!this.panel) {
+      this.drawHints(4, VIEW_H - 20);
+      return;
+    }
     const y0 = VIEW_H - PANEL_H;
     r.nine('panel_dark', 0, y0, VIEW_W, PANEL_H);
 
-    let hx = 5;
-    for (const [actions, text] of HINTS) {
-      for (const a of actions) {
-        const g = assets.frame(input.glyph(a));
-        r.sprite(g, hx, y0 + 5);
-        hx += g.w;
+    // tabs: groups, then Ground; the snap button on the right
+    const names = [...this.palette.map((c) => c.name), 'Ground'];
+    const snapLabel = `Snap: ${snapName(this.snap)}`;
+    this.snapButton = { x: VIEW_W - measure(snapLabel) - 18, w: measure(snapLabel) + 12 };
+    this.tabs.length = 0;
+    // the strip scrolls so the current tab is always on screen
+    const widths = names.map((n) => measure(n) + 10);
+    const room = this.snapButton.x - 10;
+    let firstTab = 0;
+    const span = (a: number, b: number) => widths.slice(a, b + 1).reduce((t, w) => t + w + 2, 0);
+    while (firstTab < this.tab && span(firstTab, this.tab) > room) firstTab++;
+    let tx = 6;
+    if (firstTab > 0) drawText(r, assets, '<', 0, y0 + TAB_Y + 4);
+    for (let i = firstTab; i < names.length; i++) {
+      const w = widths[i];
+      if (tx + w > room + 6) {
+        drawText(r, assets, '>', tx, y0 + TAB_Y + 4);
+        break;
       }
-      drawText(r, assets, text, hx + 1, y0 + 9);
-      hx += measure(text) + 3;
+      this.tabs.push({ x: tx, w, index: i });
+      r.nine(i === this.tab ? 'tab_active' : 'tab_inactive', tx, y0 + TAB_Y, w, TAB_H);
+      drawText(r, assets, names[i], tx + 5, y0 + TAB_Y + 4);
+      tx += w + 2;
     }
+    r.nine('tab_inactive', this.snapButton.x, y0 + TAB_Y, this.snapButton.w, TAB_H);
+    drawText(r, assets, snapLabel, this.snapButton.x + 6, y0 + TAB_Y + 4);
 
-    let title: string;
+    // slots
     let entries: Array<{ draw: (x: number, y: number) => void; name: string }>;
     let selected: number;
     if (this.tool === 'ground') {
-      const chars = GROUND_CHARS[this.layout.ground.type];
-      title = 'Ground';
       selected = this.brush;
-      entries = chars.map((c) => ({
+      entries = GROUND_CHARS[this.layout.ground.type].map((c) => ({
         name: c.name,
-        draw: (x, y) => (c.sample ? r.sprite(c.sample, x, y) : r.rect(x, y, 32, 32, '#120e18', true)),
+        draw: (x, y) => (c.sample ? r.sprite(c.sample, x + 1, y + 1) : r.rect(x + 1, y + 1, 32, 32, '#120e18', true)),
       }));
     } else if (this.held) {
       const held = this.held.prop;
-      title = 'Moving';
       selected = 0;
-      entries = [{ name: label(held), draw: (x, y) => this.thumb(held, x, y) }];
+      entries = [{ name: `Moving ${label(held)}`, draw: (x, y) => this.thumb(held, x, y) }];
     } else {
       const cat = this.palette[this.cat];
-      title = cat.name;
       selected = this.itemIndex[this.cat];
       entries = cat.items.map((it) => ({ name: it.name, draw: (x, y) => this.thumb(it.prop, x, y) }));
     }
-    const rowY = y0 + 25;
-    drawText(r, assets, title, 6, rowY + 4);
-    const visible = Math.floor((VIEW_W - 70) / (SLOT + 2));
+    const rowY = y0 + TAB_Y + TAB_H + 4;
+    const visible = Math.max(1, Math.floor((VIEW_W - 12) / (SLOT + 2)));
     const first = Math.max(0, Math.min(entries.length - visible, selected - Math.floor(visible / 2)));
     this.slots.length = 0;
     const ctx = r.ctx;
     for (let i = first; i < Math.min(entries.length, first + visible); i++) {
-      const x = 64 + (i - first) * (SLOT + 2);
+      const x = 6 + (i - first) * (SLOT + 2);
       this.slots.push({ x, y: rowY, index: i });
-      r.rect(x, rowY, SLOT, SLOT, '#2a2235', true);
+      drawSlot(r, x, rowY, i === selected);
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x, rowY, SLOT, SLOT);
+      ctx.rect(x + 2, rowY + 2, SLOT - 4, SLOT - 4);
       ctx.clip();
       entries[i].draw(x, rowY);
       ctx.restore();
-      if (i === selected) r.rect(x - 1, rowY - 1, SLOT + 2, SLOT + 2, '#fbf236');
     }
     const sel = entries[selected];
-    if (sel) drawText(r, assets, `${sel.name}  (${selected + 1}/${entries.length})`, 6, rowY + SLOT + 4);
+    if (sel) drawText(r, assets, `${sel.name}  ${selected + 1}/${entries.length}`, 8, rowY + SLOT + 4);
+    this.drawHints(6, rowY + SLOT + 16);
+  }
+
+  private hintList(): Array<[string[], string]> {
+    const input = this.game.input;
+    return input.device === 'gamepad'
+      ? PAD_HINTS.map(([acts, text]) => [acts.map((a) => input.glyph(a)), text])
+      : MOUSE_HINTS;
+  }
+
+  private drawHints(x: number, y: number): void {
+    const r = this.game.renderer;
+    const assets = this.game.assets;
+    let hx = x;
+    for (const [glyphs, text] of this.hintList()) {
+      for (const n of glyphs) {
+        const g = assets.frame(n);
+        r.sprite(g, hx, y);
+        hx += g.w;
+      }
+      drawText(r, assets, text, hx + 1, y + 4);
+      hx += measure(text) + 6;
+    }
   }
 
   /** A prop's art fitted into a palette slot (big art drawn at half size). */

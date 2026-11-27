@@ -30,8 +30,13 @@ export class ShopScreen implements Screen {
   private readonly nav = new Nav();
   private message = { text: '', until: 0 };
   private time = 0;
-  private readonly x = Math.round((VIEW_W - W) / 2);
-  private readonly y = Math.round((VIEW_H - H) / 2);
+  private get x(): number {
+    return Math.round((VIEW_W - W) / 2);
+  }
+
+  private get y(): number {
+    return Math.round((VIEW_H - H) / 2);
+  }
 
   constructor(
     private readonly shopId: string,

@@ -19,8 +19,13 @@ const H = 196;
 export class BagScreen implements Screen {
   private sel = 0;
   private readonly nav = new Nav();
-  private readonly x = Math.round((VIEW_W - W) / 2);
-  private readonly y = Math.round((VIEW_H - H) / 2);
+  private get x(): number {
+    return Math.round((VIEW_W - W) / 2);
+  }
+
+  private get y(): number {
+    return Math.round((VIEW_H - H) / 2);
+  }
 
   constructor(private readonly bag: Bag, private readonly content: Content, private readonly assets: Assets) {}
 
