@@ -1,0 +1,40 @@
+{
+  "id": "inn_ground_upstairs",
+  "backdrop": "#221c2c",
+  "ground": {
+    "type": "room",
+    "rows": [
+      "WWWWWWWWWW",
+      "WWWWWWWWWW",
+      "WffffffffW",
+      "WffffffffW",
+      "WffffffffW",
+      "WffffffffW",
+      "WffffffffW",
+      "WWWWWWWWWW"
+    ],
+    "floor": [
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww"
+    ]
+  },
+  "spawns": {},
+  "exits": [],
+  "props": [
+    {"sprite": "stairs_down", "x": 176, "y": 95, "layer": "floor", "behavior": {"type": "stairs", "to": "inn_ground"}}
+  ]
+}

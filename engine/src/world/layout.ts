@@ -218,8 +218,9 @@ export function formatLayout(l: Layout): string {
   } else out.push(`    "rows": [\n${rows}\n    ]`);
   out.push('  },');
   out.push(`  "spawns": ${j(l.spawns)},`);
-  out.push(`  "exits": [\n${l.exits.map((e) => `    ${j(e)}`).join(',\n')}\n  ],`);
-  out.push(`  "props": [\n${l.props.map((p) => `    ${j(p)}`).join(',\n')}\n  ]`);
+  const list = (items: unknown[]) => (items.length ? `[\n${items.map((x) => `    ${j(x)}`).join(',\n')}\n  ]` : '[]');
+  out.push(`  "exits": ${list(l.exits)},`);
+  out.push(`  "props": ${list(l.props)}`);
   out.push('}');
   return out.join('\n') + '\n';
 }
