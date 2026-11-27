@@ -17,6 +17,7 @@
  *
  * Pieces are layered: floor pieces (rugs, stairs) under everything, wall pieces (pictures, windows,
  * shelves) on the wall faces, standing pieces in the room. Placing stairs makes the room they lead to.
+ * Picking up, deleting and turning act on the layer of the piece in hand (shown in the top bar).
  *
  * Props are placed freely; snap rounds where they land (free / 8px / 16px / tile). Except on tile snap, a
  * piece brought near a wall or the water's edge pulls in flush against it. Painting floor indoors wraps
@@ -516,14 +517,20 @@ export class Editor {
     if (!c) return;
     const blocked = (dx: number, dy: number) => g.blocks({ x: c.x + dx, y: c.y + dy, w: c.w, h: c.h });
     if (blocked(0, 0)) {
-      // pushed into something: find the nearest free spot within reach (down first: back walls are above)
-      for (let k = 1; k <= MAGNET * 2; k++) {
-        for (const [dx, dy] of [[0, k], [k, 0], [-k, 0], [0, -k]]) {
+      // pushed into something: back out to the nearest free spot, down or sideways first (walls are
+      // above what stands against them) and as far as a whole wall cell, so pushing deep into a wall
+      // keeps the piece flush in front of it instead of hopping over to the far side
+      for (let k = 1; k <= TILE; k++) {
+        for (const [dx, dy] of [[0, k], [k, 0], [-k, 0]]) {
           if (!blocked(dx, dy)) {
             p.x += dx;
             p.y += dy;
             return;
           }
+        }
+        if (k <= MAGNET && !blocked(0, -k)) {
+          p.y -= k;
+          return;
         }
       }
       return;
@@ -712,13 +719,24 @@ export class Editor {
     return artRect(p, propFrames(p, assets, content)[0], assets);
   }
 
-  /** The front-most prop whose art covers the cursor. */
+  /**
+   * The layer being worked on: the layer of the piece in hand. Picking up, deleting and turning act only
+   * on pieces in this layer, so a hearth can be pushed up over a picture on the wall without grabbing the
+   * picture (pick a Decor piece to work on pictures, rugs and stairs).
+   */
+  private get activeLayer(): PlacedProp['layer'] {
+    return (this.held?.prop ?? this.palette[this.cat].items[this.itemIndex[this.cat]].prop).layer;
+  }
+
+  /** The front-most prop in the active layer whose art covers the cursor. */
   private propAtCursor(): number {
     const { x, y } = this.cursor;
     const scene = this.game.scene;
+    const layer = this.activeLayer;
     let best = -1;
     let bestY = -Infinity;
     this.layout.props.forEach((p, i) => {
+      if (p.layer !== layer) return;
       const r = this.artRect(p);
       if (x < r.x || y < r.y || x >= r.x + r.w || y >= r.y + r.h) return;
       const sy = scene.props[i]?.sortY ?? r.y + r.h;
@@ -1267,7 +1285,9 @@ export class Editor {
     const r = this.game.renderer;
     const assets = this.game.assets;
     const l = this.layout;
-    const mode = this.tool === 'props' ? `Props  snap ${snapName(this.snap)}` : this.groundTab.name;
+    const layer = this.activeLayer;
+    const layerName = layer === 'floor' ? 'Floor layer' : layer === 'wall' ? 'Wall layer' : 'Standing';
+    const mode = this.tool === 'props' ? `${layerName}  snap ${snapName(this.snap)}` : this.groundTab.name;
     const zoom = this.zoom === 1 ? '' : `  1/${1 / this.zoom}`;
     const top = `EDIT ${l.id}${this.unsaved.has(l.id) ? '*' : ''}  ${mode}${zoom}  ${Math.round(this.cursor.x)},${Math.round(this.cursor.y)}`;
     r.nine('panel_dark', 2, 2, measure(top) + 12, 19);
