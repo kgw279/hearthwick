@@ -5,8 +5,7 @@ import type { Input } from '../core/input';
 import type { Rect } from '../core/geom';
 import type { Renderer } from '../core/renderer';
 import { Entity } from '../world/entity';
-
-export type Facing = 'down' | 'up' | 'left' | 'right';
+import type { Facing, Spawn } from '../world/scene';
 
 const SPEED = 72; // px per second
 // Feet collider relative to the 32x32 sprite's top-left.
@@ -53,6 +52,15 @@ export class Player extends Entity {
 
   get center(): { x: number; y: number } {
     return { x: this.x + 16, y: this.y + 18 };
+  }
+
+  /** Put the player at a spawn point (no interpolation from the old position). */
+  place(spawn: Spawn): void {
+    this.x = this.prevX = spawn.x;
+    this.y = this.prevY = spawn.y;
+    this.facing = spawn.facing;
+    this.moving = false;
+    this.anim.play(`${this.look}_idle_${this.facing}`);
   }
 
   /** Where to draw the player this frame, blended between the last two game steps. */

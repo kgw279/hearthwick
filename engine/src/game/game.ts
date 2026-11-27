@@ -1,31 +1,43 @@
 /**
- * The game: owns the world, the player and the UI, and runs one fixed update + one render per frame.
- * Milestone 1 is the town: walk around, bump into things, and use whatever you're facing.
+ * The game: owns the scenes, the player and the UI, and runs one fixed update + one render per frame.
+ * Scenes (the town, the inn's floors) are built on first visit and kept, so changes like harvested
+ * forage persist while you come and go. Moving between scenes fades out, swaps, and fades back in.
  */
 import type { Assets } from '../core/assets';
 import { Camera } from '../core/camera';
 import { overlaps, type Rect } from '../core/geom';
 import { Input } from '../core/input';
 import type { LoopStats } from '../core/loop';
-import { Renderer, VIEW_W } from '../core/renderer';
+import { Renderer, VIEW_W, VIEW_H } from '../core/renderer';
 import type { Entity } from '../world/entity';
-import { TileMap } from '../world/tilemap';
+import type { Scene } from '../world/scene';
 import { drawText } from '../ui/text';
 import { DialogBox, drawPrompt, Emotes, FloatTexts } from '../ui/widgets';
 import { Content } from './data';
+import { buildInnGround, buildInnUpstairs } from './inn';
 import { Player } from './player';
-import { buildTown, SPAWN, TOWN_MAP } from './town';
+import { buildTownScene, type TownHooks } from './town';
+
+const FADE = 0.22; // seconds for each half of a scene transition
+
+type Builder = (hooks: TownHooks) => Scene;
+
+interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
 
 export class Game {
   readonly input = new Input();
   private readonly content: Content;
-  private readonly map: TileMap;
-  private readonly entities: Entity[];
+  private readonly builders: Record<string, Builder>;
+  private readonly scenes = new Map<string, Scene>();
+  private scene!: Scene;
+  private entities: Entity[] = [];
   private readonly player: Player;
   private readonly camera: Camera;
+  private readonly hooks: TownHooks;
   private readonly dialog = new DialogBox();
   private readonly emotes = new Emotes();
   private readonly floats = new FloatTexts();
+  private transition: Transition | null = null;
   private target: Entity | null = null;
   private time = 0;
   private debug = false;
@@ -33,20 +45,55 @@ export class Game {
 
   constructor(private readonly assets: Assets, private readonly renderer: Renderer) {
     this.content = new Content(assets.data);
-    this.map = new TileMap(TOWN_MAP, assets);
-    this.player = new Player(assets, SPAWN.x, SPAWN.y);
-    const hooks = {
-      say: (text: string, speaker = '') => this.dialog.show(text, speaker, this.time),
-      emote: (name: string) => this.emotes.pop(name, this.player.center.x, this.player.y, this.time),
-      float: (text: string) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
+    this.player = new Player(assets, 0, 0);
+    this.camera = new Camera(VIEW_W, VIEW_H);
+    this.hooks = {
+      say: (text, speaker = '') => this.dialog.show(text, speaker, this.time),
+      emote: (name) => this.emotes.pop(name, this.player.center.x, this.player.y, this.time),
+      float: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
+      go: (to, spawn) => this.goTo(to, spawn),
     };
-    this.entities = [...buildTown(assets, this.content, hooks), this.player];
-    this.camera = new Camera(this.map.pixelW, this.map.pixelH);
+    this.builders = {
+      town: (h) => buildTownScene(assets, this.content, h),
+      inn_ground: (h) => buildInnGround(assets, h),
+      inn_upstairs: (h) => buildInnUpstairs(assets, h),
+    };
+    this.enter('town', 'start');
+  }
+
+  private getScene(id: string): Scene {
+    let s = this.scenes.get(id);
+    if (!s) {
+      const build = this.builders[id];
+      if (!build) throw new Error(`Unknown scene "${id}"`);
+      s = build(this.hooks);
+      this.scenes.set(id, s);
+    }
+    return s;
+  }
+
+  /** Switch scenes immediately (used under the fade). */
+  private enter(id: string, spawnId: string): void {
+    const scene = this.getScene(id);
+    const spawn = scene.spawns[spawnId];
+    if (!spawn) throw new Error(`Scene "${id}" has no spawn "${spawnId}"`);
+    this.scene = scene;
+    this.entities = [...scene.props, this.player];
+    this.player.place(spawn);
+    this.camera.setWorld(scene.ground.pixelW, scene.ground.pixelH);
     this.camera.centerOn(this.player.center.x, this.player.center.y);
+    this.target = null;
+  }
+
+  /** Fade out, change scene, fade in. Ignored while a transition is already running. */
+  goTo(id: string, spawnId: string): void {
+    if (this.transition) return;
+    this.getScene(id); // fail fast on a bad id
+    this.transition = { phase: 'out', t: 0, to: id, spawn: spawnId };
   }
 
   private blocked = (r: Rect): boolean => {
-    if (this.map.blocks(r)) return true;
+    if (this.scene.ground.blocks(r)) return true;
     for (const e of this.entities) {
       if (e === this.player) continue;
       const c = e.collider();
@@ -74,21 +121,46 @@ export class Game {
     return best;
   }
 
+  /** An exit the player is walking into, if any. */
+  private exitHit(): { to: string; spawn: string } | null {
+    if (!this.player.moving) return null;
+    const feet = this.player.feet();
+    for (const ex of this.scene.exits) {
+      if (ex.dir && ex.dir !== this.player.facing) continue;
+      if (overlaps(feet, ex.area)) return ex;
+    }
+    return null;
+  }
+
   update(dt: number): void {
     this.time += dt;
     this.input.update();
     if (this.input.pressed('debug')) this.debug = !this.debug;
 
-    if (this.dialog.open) {
+    if (this.transition) {
+      const tr = this.transition;
+      tr.t += dt;
+      if (tr.phase === 'out' && tr.t >= FADE) {
+        this.enter(tr.to, tr.spawn);
+        this.transition = { ...tr, phase: 'in', t: 0 };
+      } else if (tr.phase === 'in' && tr.t >= FADE) {
+        this.transition = null;
+      }
+    } else if (this.dialog.open) {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
       this.player.move(dt, this.input, this.blocked);
-      this.target = this.findTarget();
-      const action = this.target?.interaction();
-      if (action && this.input.pressed('interact')) {
-        action.use();
-        this.target = this.findTarget(); // using something can change or remove its action
+      const exit = this.exitHit();
+      if (exit) {
+        this.goTo(exit.to, exit.spawn);
+      } else {
+        this.target = this.findTarget();
+        const action = this.target?.interaction();
+        if (action && this.input.pressed('interact')) {
+          action.use();
+          this.target = this.findTarget(); // using something can change or remove its action
+        }
       }
     }
     for (const e of this.entities) e.update(dt);
@@ -101,16 +173,16 @@ export class Game {
     const cam = this.camera.at(alpha);
     const cx = r.snap(cam.x);
     const cy = r.snap(cam.y);
-    r.begin();
-    this.map.draw(r, cx, cy, this.time);
-    if (this.debug) this.map.drawWaterMask(r, cx, cy);
+    r.begin(this.scene.backdrop);
+    this.scene.ground.draw(r, cx, cy, this.time);
+    if (this.debug) this.scene.ground.drawDebug?.(r, cx, cy);
     for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time, alpha));
     r.flush();
     this.emotes.draw(r, cx, cy, this.time);
     this.floats.draw(r, this.assets, cx, cy, this.time);
 
     const action = this.target?.interaction();
-    if (this.target && action && !this.dialog.open) {
+    if (this.target && action && !this.dialog.open && !this.transition) {
       const p = this.player.at(alpha);
       drawPrompt(r, this.assets, this.input, 'interact', action.label, Math.round(p.x + 16 - cx), Math.round(p.y - cy - 24), this.time);
       const a = this.target.useArea();
@@ -118,6 +190,13 @@ export class Game {
     }
     this.dialog.draw(r, this.assets, this.input, this.time);
     if (this.debug) this.drawDebug(cx, cy);
+
+    if (this.transition) {
+      const k = Math.min(1, this.transition.t / FADE);
+      r.ctx.globalAlpha = this.transition.phase === 'out' ? k : 1 - k;
+      r.rect(0, 0, VIEW_W, VIEW_H, '#120e18', true);
+      r.ctx.globalAlpha = 1;
+    }
   }
 
   private drawDebug(cx: number, cy: number): void {
@@ -126,10 +205,12 @@ export class Game {
       const c = e === this.player ? this.player.feet() : e.collider();
       if (c) r.rect(c.x - cx, c.y - cy, c.w, c.h, e === this.player ? '#6abe30' : '#d95763');
     }
+    for (const ex of this.scene.exits) r.rect(ex.area.x - cx, ex.area.y - cy, ex.area.w, ex.area.h, '#fbf236');
     const p = this.player.probe();
     r.rect(p.x - cx - 1, p.y - cy - 1, 3, 3, '#5fcde4', true);
-    r.nine('panel_dark', VIEW_W - 92, 4, 88, 34);
+    r.nine('panel_dark', VIEW_W - 92, 4, 88, 47);
     drawText(r, this.assets, `FPS ${this.stats.fps}`, VIEW_W - 86, 9);
     drawText(r, this.assets, this.input.device === 'gamepad' ? 'Pad' : 'Keys', VIEW_W - 86, 22);
+    drawText(r, this.assets, this.scene.id, VIEW_W - 86, 35);
   }
 }

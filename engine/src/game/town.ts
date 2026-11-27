@@ -6,7 +6,8 @@
 import type { Assets } from '../core/assets';
 import type { Rect } from '../core/geom';
 import { Prop, type PropSpec } from '../world/entity';
-import { TILE } from '../world/tilemap';
+import { spawnAt, type Scene } from '../world/scene';
+import { TileMap, TILE } from '../world/tilemap';
 import type { Content } from './data';
 
 export const TOWN_MAP = [
@@ -36,13 +37,26 @@ export const TOWN_MAP = [
   '....................d...................',
 ];
 
-export const SPAWN = { x: 4 * TILE, y: 7 * TILE };
 
-/** Hooks the town uses to talk back to the game (dialog, emotes, floating text). */
+/** Hooks scenes use to talk back to the game (dialog, emotes, floating text, changing scene). */
 export interface TownHooks {
   say(text: string, speaker?: string): void;
   emote(name: string): void;
   float(text: string): void;
+  go(scene: string, spawn: string): void;
+}
+
+// The inn's door is in column 4; you enter by walking up into it (or pressing interact on it).
+const INN_DOOR_COL = 4;
+
+export function buildTownScene(assets: Assets, content: Content, hooks: TownHooks): Scene {
+  return {
+    id: 'town',
+    ground: new TileMap(TOWN_MAP, assets),
+    props: buildTown(assets, content, hooks),
+    spawns: { start: spawnAt(INN_DOOR_COL, 7, 'down'), inn_door: spawnAt(INN_DOOR_COL, 7, 'down') },
+    exits: [{ area: { x: t(INN_DOOR_COL) + 6, y: t(7) - 6, w: 20, h: 8 }, to: 'inn_ground', spawn: 'front', dir: 'up' }],
+  };
 }
 
 // Colliders for props, relative to the 32x32 sprite.
@@ -62,7 +76,7 @@ const SHOP_DOORS: Array<[string | null, number]> = [
 
 const t = (n: number) => n * TILE;
 
-export function buildTown(assets: Assets, content: Content, hooks: TownHooks): Prop[] {
+function buildTown(assets: Assets, content: Content, hooks: TownHooks): Prop[] {
   const props: Prop[] = [];
   const add = (spec: PropSpec) => props.push(new Prop(assets, spec));
   const deco = (frames: string | string[], tx: number, ty: number, solid?: keyof typeof SOLID, extra: Partial<PropSpec> = {}) =>
@@ -78,7 +92,7 @@ export function buildTown(assets: Assets, content: Content, hooks: TownHooks): P
       interaction: {
         label: shopId ? 'Shop' : 'Enter',
         use: () => {
-          if (!shopId) return hooks.say('Warm light spills from the windows. Your inn: soon there will be guests to feed.', name);
+          if (!shopId) return hooks.go('inn_ground', 'front');
           const stock = content.shop(shopId).stock.map((s) => `${content.itemName(s.item)} ${s.price}`).join(', ');
           hooks.say(`Today's stock: ${stock}.`, name);
         },

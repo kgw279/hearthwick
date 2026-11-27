@@ -36,9 +36,10 @@ export class Camera {
     this.clamp();
   }
 
+  /** Keep the view inside the world; a world smaller than the screen is centred instead. */
   private clamp(): void {
-    this.x = Math.max(0, Math.min(this.x, Math.max(0, this.worldW - VIEW_W)));
-    this.y = Math.max(0, Math.min(this.y, Math.max(0, this.worldH - VIEW_H)));
+    this.x = this.worldW <= VIEW_W ? (this.worldW - VIEW_W) / 2 : Math.max(0, Math.min(this.x, this.worldW - VIEW_W));
+    this.y = this.worldH <= VIEW_H ? (this.worldH - VIEW_H) / 2 : Math.max(0, Math.min(this.y, this.worldH - VIEW_H));
   }
 
   /** Position for drawing, blended between the last two game steps (alpha 0..1). */

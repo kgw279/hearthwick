@@ -15,6 +15,7 @@ import type { Renderer } from '../core/renderer';
 import { VIEW_W, VIEW_H } from '../core/renderer';
 import { hash2, type Rect } from '../core/geom';
 import { loopFrame } from '../core/anim';
+import type { Ground } from './ground';
 
 export const TILE = 32;
 
@@ -22,7 +23,7 @@ type Corner = 0 | 1 | 2; // grass, dirt, water
 const CONNECTOR: Record<number, string> = { 12: 'below', 3: 'above', 10: 'right', 5: 'left' };
 const WATER_FRAMES = ['water_f0', 'water_f1', 'water_f2', 'water_f3'];
 
-export class TileMap {
+export class TileMap implements Ground {
   readonly w: number;
   readonly h: number;
   private readonly cells: string[];
@@ -194,7 +195,7 @@ export class TileMap {
   }
 
   /** Debug view (F3): water collision shaded over the map. */
-  drawWaterMask(r: Renderer, camX: number, camY: number): void {
+  drawDebug(r: Renderer, camX: number, camY: number): void {
     if (!this.waterDebug) {
       const c = document.createElement('canvas');
       c.width = this.pixelW;
