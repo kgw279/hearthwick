@@ -2,6 +2,7 @@
  * Layout checks the editor runs after every change:
  *   overlap      two props' colliders overlap, or a collider sits on ground you can't stand on
  *   unreachable  a spawn, exit or usable prop the player can't walk to from the scene's first spawn
+ *   dead end     an exit whose destination map or spawn doesn't exist
  * Reachability walks the player's own feet box over the map in 4px steps, using the same ground and
  * collider tests the game uses, so "reachable" here means reachable in play.
  */
@@ -13,8 +14,12 @@ export interface Issue { text: string; rects: Rect[] }
 
 const STEP = 4;
 
-export function validate(scene: Scene, names: string[]): Issue[] {
+/** exists(map, spawn): whether a door or exit's destination is real. */
+export function validate(scene: Scene, names: string[], exists: (map: string, spawn: string) => boolean): Issue[] {
   const issues: Issue[] = [];
+  for (const ex of scene.exits) {
+    if (!exists(ex.to, ex.spawn)) issues.push({ text: `exit leads nowhere (${ex.to}/${ex.spawn}): link a door to this map`, rects: [ex.area] });
+  }
   const solids = scene.props.map((p, i) => ({ i, c: p.collider() })).filter((s): s is { i: number; c: Rect } => !!s.c);
 
   for (let a = 0; a < solids.length; a++) {

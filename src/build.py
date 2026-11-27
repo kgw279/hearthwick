@@ -6,6 +6,7 @@ import json, os, random, sys
 from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(__file__))
 from core import PAL  # noqa: E402
+from art_ground import GROUND_TILES, VARIANTS as PAVE_VARIANTS  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -40,7 +41,7 @@ def food_entries(data):
 def build_groups(data):
     """name -> (list of (key, Sprite), cell_w, cell_h, cols, preview background)"""
     return {
-        'tiles': ([(n, f()) for n, f in TILES] + [(n, f()) for n, f in TILE_VARIANTS], 32, 32, 8, None),
+        'tiles': ([(n, f()) for n, f in TILES] + [(n, f()) for n, f in TILE_VARIANTS] + GROUND_TILES, 32, 32, 8, None),
         'terrain_grass_dirt': ([(f'grass_dirt_{i:02d}_v{v}', AUTOTILES['grass_dirt'][v][i]) for v in range(VARIANTS) for i in range(16)], 32, 32, 16, None),
         'terrain_grass_water': ([(f'grass_water_{i:02d}_v{v}', AUTOTILES['grass_water'][v][i]) for v in range(VARIANTS) for i in range(16)], 32, 32, 16, None),
         'terrain_path': ([(f'path_{i:02d}_v{v}', PATHS[v][i]) for v in range(PATH_VARIANTS) for i in range(16)]
@@ -135,15 +136,20 @@ def write_terrain(out):
     def enc(m):
         return [format(sum(1 << (31 - x) for x in range(32) if row[x]), '08x') for row in m]
     data = {
-        'note': 'Ground compositing data for the engine. corner[v][index]: corner-autotile shapes (index TL*1+TR*2+BL*4+BR*8). '
-                'path[v][conn]: narrow-path shapes (conn N*1+E*2+S*4+W*8). bases: plain textures per variant. '
-                'edge colours: dirt lip under grass, grass fringe beside dirt, earth bank above water (2 rows), foam and shallows.',
+        'note': 'Ground compositing data for the engine. Layers bottom to top: grass, dirt (road + paths), cobble, pavers, water. '
+                'corner[v][index]: natural corner-autotile shapes (index TL*1+TR*2+BL*4+BR*8). corner_paved[index]: '
+                'the clean-edged shapes laid paving uses. path[v][conn]: narrow-path shapes (conn N*1+E*2+S*4+W*8). '
+                'bases: plain textures per variant. edge colours: dirt lip under grass, grass fringe beside dirt and paving, '
+                'kerb along cobble and paver edges, earth bank above water (2 rows), foam and shallows.',
         'bases': {'grass': [f'grass_dirt_00_v{v}' for v in range(VARIANTS)],
                   'dirt': [f'grass_dirt_15_v{v}' for v in range(VARIANTS)],
+                  'cobble': [f'cobble_v{v}' for v in range(PAVE_VARIANTS)],
+                  'pavers': [f'pavers_v{v}' for v in range(PAVE_VARIANTS)],
                   'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)]},
         'edges': {'dirt_lip': PAL['B'], 'grass_fringe': PAL['g'], 'bank': PAL['b'], 'bank_low': PAL['B'],
-                  'foam': PAL['p'], 'shallows': PAL['c']},
+                  'foam': PAL['p'], 'shallows': PAL['c'], 'cobble_kerb': PAL['d'], 'pavers_kerb': PAL['B']},
         'corner': [[enc(corner_mask(i, v)) for i in range(16)] for v in range(VARIANTS)],
+        'corner_paved': [enc(corner_mask(i, 0, amp=0.0)) for i in range(16)],
         'path': [[enc(path_mask(c, v)) for c in range(16)] for v in range(PATH_VARIANTS)],
     }
     with open(os.path.join(out, 'terrain.json'), 'w') as f:

@@ -3,13 +3,14 @@
  * every other terrain it touches, whatever the mix.
  *
  *   .  grass        d  road (wide)        p  narrow path        D  narrow path opening north into a door
- *   w  water
+ *   c  cobblestone street                 s  town-square pavers                    w  water
  *
- * Terrain is layered: grass at the bottom, then road and paths (one dirt layer), then water on top.
- * Road and water use corner shapes (a map corner is road/water if any of the four cells around it is),
- * paths use edge shapes that reach toward neighbouring paths, roads, doors and water. Shapes come from
- * terrain.json (the art pipeline's own masks), so edges match the drawn art exactly; edge colours
- * (dirt lip, grass fringe, earth bank, foam, shallows) follow the same rules the pipeline draws with.
+ * Terrain is layered, bottom to top: grass, dirt (road and paths), cobble, pavers, water. Each layer has a
+ * shape per cell: road, paving and water use corner shapes (a map corner belongs to a layer if any of
+ * the four cells around it does; paving uses clean-edged shapes, ground uses natural wobbly ones), paths
+ * use edge shapes that reach toward neighbouring paths, roads, paving, doors and water. Each pixel shows
+ * its top layer, with edge colours where layers meet (dirt lip, grass fringe, kerbs, earth bank, foam,
+ * shallows). Shapes and colours come from terrain.json, written by the art pipeline.
  * Water collision is the water layer itself, per pixel.
  */
 import type { Assets } from '../core/assets';
@@ -21,6 +22,13 @@ import type { Ground } from './ground';
 export const TILE = 32;
 
 const WATER_FRAMES = ['water_f0', 'water_f1', 'water_f2', 'water_f3'];
+
+/** Layer numbers, bottom to top. */
+const GRASS = 0;
+const DIRT = 1;
+const COBBLE = 2;
+const PAVERS = 3;
+const WATER = 4;
 
 /** Decode a 32x32 shape from terrain.json (32 rows of 8 hex digits). */
 function decodeMask(rows: string[]): Uint8Array {
@@ -40,8 +48,9 @@ function rgb(hex: string): [number, number, number] {
 /** Decoded shapes and base textures, built once per Assets and shared by every map. */
 interface Kit {
   corner: Uint8Array[][];
+  paved: Uint8Array[];
   path: Uint8Array[][];
-  bases: { grass: ImageData[]; flowers: ImageData; dirt: ImageData[]; water: ImageData[] };
+  bases: { grass: ImageData[]; flowers: ImageData; dirt: ImageData[]; cobble: ImageData[]; pavers: ImageData[]; water: ImageData[] };
   edges: Record<keyof Assets['terrain']['edges'], [number, number, number]>;
 }
 const kits = new WeakMap<Assets, Kit>();
@@ -62,8 +71,12 @@ function kitFor(assets: Assets): Kit {
   };
   const kit: Kit = {
     corner: t.corner.map((v) => v.map(decodeMask)),
+    paved: t.corner_paved.map(decodeMask),
     path: t.path.map((v) => v.map(decodeMask)),
-    bases: { grass: t.bases.grass.map(pixels), flowers: pixels('grass_flowers'), dirt: t.bases.dirt.map(pixels), water: t.bases.water.map(pixels) },
+    bases: {
+      grass: t.bases.grass.map(pixels), flowers: pixels('grass_flowers'), dirt: t.bases.dirt.map(pixels),
+      cobble: t.bases.cobble.map(pixels), pavers: t.bases.pavers.map(pixels), water: t.bases.water.map(pixels),
+    },
     edges: Object.fromEntries(Object.entries(t.edges).map(([k, v]) => [k, rgb(v)])) as Kit['edges'],
   };
   kits.set(assets, kit);
@@ -77,10 +90,8 @@ export class TileMap implements Ground {
   private readonly ground: HTMLCanvasElement;
   /** Cells that are entirely open water: drawn with the animated water frames. */
   private readonly waterCells: Array<{ x: number; y: number }> = [];
-  /** 1 byte per world pixel: 1 = water (also the collision mask). */
-  private readonly water: Uint8Array;
-  /** 1 byte per world pixel: 1 = road or path dirt. */
-  private readonly dirt: Uint8Array;
+  /** Top layer at every world pixel (GRASS..WATER); water pixels are also the collision mask. */
+  private readonly top: Uint8Array;
   private waterDebug: HTMLCanvasElement | null = null;
 
   constructor(rows: string[], assets: Assets) {
@@ -91,8 +102,7 @@ export class TileMap implements Ground {
     });
     this.cells = rows;
     const kit = kitFor(assets);
-    this.water = new Uint8Array(this.pixelW * this.pixelH);
-    this.dirt = new Uint8Array(this.pixelW * this.pixelH);
+    this.top = new Uint8Array(this.pixelW * this.pixelH);
     this.stampShapes(kit);
     this.ground = this.paint(kit);
   }
@@ -122,9 +132,9 @@ export class TileMap implements Ground {
     return (at(x, y) ? 1 : 0) | (at(x + 1, y) ? 2 : 0) | (at(x, y + 1) ? 4 : 0) | (at(x + 1, y + 1) ? 8 : 0);
   }
 
-  /** Which ways a narrow path reaches: other paths, the road, water, and (for D) the door to the north. */
+  /** Which ways a narrow path reaches: other paths, road, paving, water, and (for D) the door to the north. */
   private pathConn(x: number, y: number): number {
-    const joins = (cx: number, cy: number) => this.isPath(cx, cy) || this.cell(cx, cy) === 'd' || this.cell(cx, cy) === 'w';
+    const joins = (cx: number, cy: number) => this.isPath(cx, cy) || 'dcsw'.includes(this.cell(cx, cy));
     let conn = 0;
     if (joins(x, y - 1) || this.cell(x, y) === 'D') conn |= 1;
     if (joins(x + 1, y)) conn |= 2;
@@ -133,11 +143,13 @@ export class TileMap implements Ground {
     return conn;
   }
 
+  /** Raise each pixel to the highest layer whose shape covers it. */
   private stampShapes(kit: Kit): void {
-    const stamp = (layer: Uint8Array, shape: Uint8Array, cx: number, cy: number) => {
+    const top = this.top;
+    const stamp = (layer: number, shape: Uint8Array, cx: number, cy: number) => {
       for (let py = 0; py < TILE; py++) {
         const row = (cy * TILE + py) * this.pixelW + cx * TILE;
-        for (let px = 0; px < TILE; px++) if (shape[py * TILE + px]) layer[row + px] = 1;
+        for (let px = 0; px < TILE; px++) if (shape[py * TILE + px] && top[row + px] < layer) top[row + px] = layer;
       }
     };
     const variants = kit.corner.length;
@@ -145,10 +157,14 @@ export class TileMap implements Ground {
       for (let x = 0; x < this.w; x++) {
         const v = hash2(x, y) % variants;
         const road = this.cornerIndex(x, y, 'd');
-        if (road) stamp(this.dirt, kit.corner[v][road], x, y);
-        if (this.isPath(x, y)) stamp(this.dirt, kit.path[hash2(x, y) % kit.path.length][this.pathConn(x, y)], x, y);
+        if (road) stamp(DIRT, kit.corner[v][road], x, y);
+        if (this.isPath(x, y)) stamp(DIRT, kit.path[hash2(x, y) % kit.path.length][this.pathConn(x, y)], x, y);
+        const cobble = this.cornerIndex(x, y, 'c');
+        if (cobble) stamp(COBBLE, kit.paved[cobble], x, y);
+        const pavers = this.cornerIndex(x, y, 's');
+        if (pavers) stamp(PAVERS, kit.paved[pavers], x, y);
         const water = this.cornerIndex(x, y, 'w');
-        if (water) stamp(this.water, kit.corner[v][water], x, y);
+        if (water) stamp(WATER, kit.corner[v][water], x, y);
         if (water === 15) this.waterCells.push({ x, y });
       }
     }
@@ -160,38 +176,50 @@ export class TileMap implements Ground {
     const H = this.pixelH;
     const img = new ImageData(W, H);
     const out = img.data;
-    const { water, dirt } = this;
-    // Off the map, a pixel continues whatever is at the edge (no edges drawn along the map border).
-    const at = (layer: Uint8Array, px: number, py: number, fallback: number) =>
-      px < 0 || py < 0 || px >= W || py >= H ? fallback : layer[py * W + px];
+    const top = this.top;
     const e = kit.edges;
     const variants = kit.corner.length;
     for (let cy = 0; cy < this.h; cy++) {
       for (let cx = 0; cx < this.w; cx++) {
         const v = hash2(cx, cy) % variants;
+        const pv = hash2(cx + 3, cy + 11) % kit.bases.cobble.length;
         const grass = hash2(cx + 7, cy + 3) % 19 === 0 ? kit.bases.flowers : kit.bases.grass[v];
         for (let ty = 0; ty < TILE; ty++) {
           for (let tx = 0; tx < TILE; tx++) {
             const x = cx * TILE + tx;
             const y = cy * TILE + ty;
             const i = y * W + x;
-            const t = (ty * TILE + tx) * 4;
+            const here = top[i];
+            // off the map a pixel continues as itself, so no edges are drawn along the map border
+            const at = (px: number, py: number) => (px < 0 || py < 0 || px >= W || py >= H ? here : top[py * W + px]);
+            const up = at(x, y - 1);
+            const down = at(x, y + 1);
+            const left = at(x - 1, y);
+            const right = at(x + 1, y);
             let src: ImageData | null = null;
             let col: [number, number, number] | null = null;
-            if (water[i]) {
+            if (here === WATER) {
               src = kit.bases.water[v];
-              if (!at(water, x, y - 1, 1)) col = e.foam;
-              else if (!at(water, x - 1, y, 1) || !at(water, x + 1, y, 1) || !at(water, x, y - 2, 1)) col = e.shallows;
-            } else if (at(water, x, y + 1, 0)) col = e.bank;
-            else if (at(water, x, y + 2, 0)) col = e.bank_low;
-            else if (dirt[i]) {
+              if (up !== WATER) col = e.foam;
+              else if (left !== WATER || right !== WATER || at(x, y - 2) !== WATER) col = e.shallows;
+            } else if (down === WATER) col = e.bank;
+            else if (at(x, y + 2) === WATER) col = e.bank_low;
+            else if (here === PAVERS) {
+              src = kit.bases.pavers[pv];
+              if (up < PAVERS || down < PAVERS || left < PAVERS || right < PAVERS) col = e.pavers_kerb;
+            } else if (here === COBBLE) {
+              src = kit.bases.cobble[pv];
+              if (up < COBBLE || down < COBBLE || left < COBBLE || right < COBBLE) col = e.cobble_kerb;
+            } else if (here === DIRT) {
               src = kit.bases.dirt[v];
-              if (!at(dirt, x, y - 1, 1)) col = e.dirt_lip;
+              if (up === GRASS) col = e.dirt_lip;
             } else {
               src = grass;
-              if (at(dirt, x, y + 1, 0) || at(dirt, x - 1, y, 0) || at(dirt, x + 1, y, 0)) col = e.grass_fringe;
+              const near = (t: number) => t !== GRASS && t !== WATER;
+              if (near(down) || near(left) || near(right)) col = e.grass_fringe;
             }
             const o = i * 4;
+            const t = (ty * TILE + tx) * 4;
             if (col) {
               out[o] = col[0];
               out[o + 1] = col[1];
@@ -232,7 +260,7 @@ export class TileMap implements Ground {
     const y1 = Math.ceil(rect.y + rect.h) - 1;
     for (let y = y0; y <= y1; y++) {
       const row = y * this.pixelW;
-      for (let x = x0; x <= x1; x++) if (this.water[row + x]) return true;
+      for (let x = x0; x <= x1; x++) if (this.top[row + x] === WATER) return true;
     }
     return false;
   }
@@ -245,8 +273,8 @@ export class TileMap implements Ground {
       c.height = this.pixelH;
       const ctx = c.getContext('2d')!;
       const img = ctx.createImageData(this.pixelW, this.pixelH);
-      for (let i = 0; i < this.water.length; i++) {
-        if (!this.water[i]) continue;
+      for (let i = 0; i < this.top.length; i++) {
+        if (this.top[i] !== WATER) continue;
         img.data.set([95, 205, 228, 110], i * 4);
       }
       ctx.putImageData(img, 0, 0);

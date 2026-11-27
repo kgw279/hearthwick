@@ -112,8 +112,9 @@ def terrain_mask(maskfn):
     return m
 
 
-def corner_mask(idx, variant=0):
-    return terrain_mask(lambda x, y: _mask(idx, x, y, variant))
+def corner_mask(idx, variant=0, amp=0.34):
+    """Corner-autotile shape. amp = how much the edge wobbles (0.34 natural ground; small for laid paving)."""
+    return terrain_mask(lambda x, y: 1 if corner_value(idx, x, y, variant, amp) > 0.5 else 0)
 
 
 def render_terrain(maskfn, other, variant=0):

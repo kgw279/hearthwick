@@ -67,6 +67,8 @@ export const GROUND_CHARS: Record<LayoutGround['type'], Array<{ ch: string; name
     { ch: 'd', name: 'Road', sample: 'dirt_path' },
     { ch: 'p', name: 'Path', sample: 'path_00_v0' },
     { ch: 'D', name: 'Path to door', sample: 'path_00_v0' },
+    { ch: 'c', name: 'Cobblestone', sample: 'cobble_v0' },
+    { ch: 's', name: 'Square pavers', sample: 'pavers_v0' },
     { ch: 'w', name: 'Water', sample: 'water' },
   ],
   room: [

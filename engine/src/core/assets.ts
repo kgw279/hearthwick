@@ -24,10 +24,14 @@ interface AtlasJson { sheets: Record<string, SheetJson>; ui: Record<string, Shee
 
 /** terrain.json: shapes and edge colours the ground compositor uses (written by the art pipeline). */
 export interface TerrainData {
-  bases: { grass: string[]; dirt: string[]; water: string[] };
-  edges: { dirt_lip: string; grass_fringe: string; bank: string; bank_low: string; foam: string; shallows: string };
-  /** corner[variant][index] and path[variant][conn]: 32 rows of 8 hex digits, bit 31 = leftmost pixel. */
+  bases: { grass: string[]; dirt: string[]; cobble: string[]; pavers: string[]; water: string[] };
+  edges: {
+    dirt_lip: string; grass_fringe: string; bank: string; bank_low: string; foam: string; shallows: string;
+    cobble_kerb: string; pavers_kerb: string;
+  };
+  /** corner[variant][index], corner_paved[index] and path[variant][conn]: 32 rows of 8 hex digits, bit 31 = leftmost pixel. */
   corner: string[][][];
+  corner_paved: string[][];
   path: string[][][];
 }
 

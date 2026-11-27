@@ -10,7 +10,12 @@
  * Ground tool: paint grass, road, path and water (town) or wood, stone and no-floor (interiors); the
  * ground re-blends around every painted cell.
  * Zoom steps out to 1/2 and 1/4 to see and edit a whole town.
- * Save writes src/maps/<id>.json when running the dev server, and downloads the file anywhere else.
+ * Menu (Tab / Menu button): save, new map (interior or outdoor, named), open another map, rename this
+ * map, and "Door to": make the building under the cursor the way into an interior map, which wires the
+ * door both ways (the building's Enter, an exit into the building, a spawn outside it, and the
+ * interior's way back out).
+ * Save writes every changed map to src/maps/<id>.json when running the dev server, and downloads the
+ * files anywhere else.
  */
 import type { Action } from '../core/input';
 import { overlaps, type Rect } from '../core/geom';
@@ -20,7 +25,9 @@ import { placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { TILE } from '../world/tilemap';
+import { Menu, type MenuPage } from './menu';
 import { buildPalette, type Category } from './palette';
+import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates';
 import { validate, type Issue } from './validate';
 
 type Tool = 'props' | 'ground';
@@ -38,11 +45,12 @@ const REPEAT_FIRST = 0.22;
 const REPEAT_NEXT = 0.06;
 const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
 const SLOT = 32;
+const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
 const PANEL_H = 80;
 const HUD_H = 22;
 const HINTS: Array<[Action[], string]> = [
   [['interact'], 'Place'], [['cook'], 'Del'], [['tab_prev', 'tab_next'], 'Item'], [['cat_prev', 'cat_next'], 'Group'],
-  [['recipes'], 'Tool'], [['map'], 'Snap'], [['zoom'], 'Zoom'], [['menu'], 'Save'], [['back'], 'Exit'],
+  [['recipes'], 'Tool'], [['map'], 'Snap'], [['zoom'], 'Zoom'], [['menu'], 'Menu'], [['back'], 'Exit'],
 ];
 
 export class Editor {
@@ -60,6 +68,10 @@ export class Editor {
   private held: Held | null = null;
   private checkIn = -1;
   private readonly unsaved = new Set<string>();
+  /** Maps renamed since the last save: their old files are removed when saving. */
+  private readonly renamedFrom = new Set<string>();
+  readonly menu = new Menu();
+  private wheel = 0;
   private status = { text: '', until: 0 };
   private time = 0;
   private repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
@@ -95,6 +107,7 @@ export class Editor {
   }
 
   private close(): void {
+    this.menu.close();
     this.cancelHeld();
     this.active = false;
     this.zoom = 1;
@@ -121,6 +134,10 @@ export class Editor {
   update(dt: number): void {
     this.time += dt;
     const input = this.game.input;
+    if (this.menu.open) {
+      this.menu.update(input);
+      return;
+    }
     this.moveCursor(dt);
 
     if (input.pressed('recipes')) {
@@ -137,7 +154,11 @@ export class Editor {
       this.say(`Snap: ${snapName(this.snap)}`);
     }
     if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
-    if (input.pressed('menu')) void this.save();
+    if (input.pressed('menu')) {
+      this.cancelHeld();
+      this.menu.show(this.mainMenu());
+      return;
+    }
     if (input.pressed('back')) {
       if (this.held) this.cancelHeld();
       else return this.close();
@@ -408,32 +429,203 @@ export class Editor {
 
   private check(): void {
     const names = this.layout.props.map((p) => label(p));
-    this.issues = validate(this.game.scene, names);
+    const layouts = this.game.layouts;
+    this.issues = validate(this.game.scene, names, (map, spawn) => !!layouts.get(map)?.spawns[spawn]);
     this.checkIn = -1;
   }
 
-  private async save(): Promise<void> {
+  /** Write every changed map (dev server), or download them (anywhere else). */
+  private async saveAll(): Promise<void> {
     if (this.held) this.cancelHeld();
-    const l = this.layout;
-    const text = formatLayout(l);
+    const ids = [...this.unsaved];
+    if (!ids.length) return this.say('Nothing to save');
     if (import.meta.env.DEV) {
       try {
-        const res = await fetch(`/__maps/${encodeURIComponent(l.id)}`, { method: 'POST', body: text });
-        if (!res.ok) throw new Error(await res.text());
-        this.unsaved.delete(l.id);
-        this.say(`Saved maps/${l.id}.json`);
+        for (const id of ids) {
+          const res = await fetch(`/__maps/${encodeURIComponent(id)}`, { method: 'POST', body: formatLayout(this.game.layouts.get(id)!) });
+          if (!res.ok) throw new Error(await res.text());
+          this.unsaved.delete(id);
+        }
+        for (const old of this.renamedFrom) await fetch(`/__maps/${encodeURIComponent(old)}`, { method: 'DELETE' });
+        this.renamedFrom.clear();
+        this.say(`Saved ${ids.map((i) => `${i}.json`).join(', ')}`);
       } catch (err) {
         this.say(`Save failed: ${(err as Error).message}`);
       }
       return;
     }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-    a.download = `${l.id}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    this.unsaved.delete(l.id);
-    this.say(`Downloaded ${l.id}.json`);
+    for (const id of ids) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([formatLayout(this.game.layouts.get(id)!)], { type: 'application/json' }));
+      a.download = `${id}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      this.unsaved.delete(id);
+    }
+    this.say(`Downloaded ${ids.length} map${ids.length > 1 ? 's' : ''}`);
+  }
+
+  // ------------------------------------------------------------------ menu: maps
+
+  private mainMenu(): MenuPage {
+    const here = this.layout.id;
+    const hit = this.tool === 'props' ? this.propAtCursor() : -1;
+    const interiors = [...this.game.layouts.values()].filter((l) => l.ground.type === 'room' && l.id !== here).sort((a, b) => a.id.localeCompare(b.id));
+    return {
+      title: `Map: ${here}`,
+      items: [
+        { label: 'Save', note: this.unsaved.size ? `${this.unsaved.size} changed` : 'saved', run: () => void this.saveAll() },
+        { label: 'New map', run: () => this.newMapMenu() },
+        { label: 'Open map', run: () => this.openMenu() },
+        { label: 'Rename this map', run: () => this.renamePrompt() },
+        {
+          label: 'Door to...',
+          note: hit >= 0 ? label(this.layout.props[hit]) : 'point at a building',
+          disabled: hit < 0 || !interiors.length,
+          run: () => ({
+            title: `${label(this.layout.props[hit])} leads into`,
+            items: interiors.map((l) => ({ label: l.id, run: () => this.linkDoor(hit, l.id) })),
+          }),
+        },
+        { label: 'Close editor', run: () => this.close() },
+      ],
+    };
+  }
+
+  private newMapMenu(): MenuPage {
+    const sized = (kind: 'interior' | 'outdoor'): MenuPage => ({
+      title: kind === 'interior' ? 'New interior' : 'New outdoor map',
+      items: SIZES[kind].map((sz) => ({
+        label: sz.name,
+        note: `${sz.w}x${sz.h}`,
+        run: () => this.menu.ask({
+          title: 'Name the map',
+          value: this.freeId(kind === 'interior' ? 'room' : 'area'),
+          allowed: /[a-z0-9_]/,
+          done: (name) => this.createMap(kind, name, sz.w, sz.h),
+        }),
+      })),
+    });
+    return {
+      title: 'New map',
+      items: [
+        { label: 'Interior', note: 'walled room + door', run: () => sized('interior') },
+        { label: 'Outdoor', note: 'grass', run: () => sized('outdoor') },
+      ],
+    };
+  }
+
+  private openMenu(): MenuPage {
+    return {
+      title: 'Open map',
+      items: [...this.game.layouts.keys()].sort().map((id) => ({
+        label: id,
+        note: (this.unsaved.has(id) ? '* ' : '') + (this.game.layouts.get(id)!.ground.type === 'room' ? 'interior' : 'outdoor'),
+        disabled: id === this.layout.id,
+        run: () => this.openMap(id),
+      })),
+    };
+  }
+
+  private renamePrompt(): void {
+    this.menu.ask({ title: `Rename ${this.layout.id} to`, value: this.layout.id, allowed: /[a-z0-9_]/, done: (n) => this.rename(n) });
+  }
+
+  private freeId(base: string): string {
+    let i = 1;
+    while (this.game.layouts.has(`${base}_${i}`)) i++;
+    return `${base}_${i}`;
+  }
+
+  private validId(id: string): boolean {
+    if (!/^[a-z0-9_]+$/.test(id)) return this.fail('Names use a-z, 0-9 and _ only');
+    if (this.game.layouts.has(id)) return this.fail(`There is already a map called ${id}`);
+    return true;
+  }
+
+  private fail(text: string): false {
+    this.say(text);
+    return false;
+  }
+
+  private createMap(kind: 'interior' | 'outdoor', id: string, w: number, h: number): void {
+    if (!this.validId(id)) return;
+    const l = kind === 'interior' ? interiorTemplate(id, w, h) : outdoorTemplate(id, w, h);
+    this.game.layouts.set(id, l);
+    this.unsaved.add(id);
+    this.openMap(id);
+    this.say(`Made ${id}${kind === 'interior' ? ': link a building to it with Door to' : ''}`);
+  }
+
+  private openMap(id: string): void {
+    this.cancelHeld();
+    const l = this.game.layouts.get(id)!;
+    this.game.enter(id, Object.keys(l.spawns)[0]);
+    const f = this.game.player.feet();
+    this.cursor.x = f.x + f.w / 2;
+    this.cursor.y = f.y + f.h;
+    this.view = { ...this.cursor };
+    this.clampView();
+    this.check();
+  }
+
+  /** Rename the current map, updating every door and exit that leads to it. */
+  private rename(to: string): void {
+    const from = this.layout.id;
+    if (to === from || !this.validId(to)) return;
+    const l = this.layout;
+    l.id = to;
+    this.game.layouts.delete(from);
+    this.game.layouts.set(to, l);
+    for (const other of this.game.layouts.values()) {
+      let touched = other === l;
+      for (const ex of other.exits) if (ex.to === from) (ex.to = to), (touched = true);
+      for (const p of other.props) if (p.behavior?.type === 'enter' && p.behavior.to === from) (p.behavior.to = to), (touched = true);
+      if (touched) {
+        this.unsaved.add(other.id);
+        this.game.forgetScene(other.id);
+      }
+    }
+    this.unsaved.delete(from);
+    this.renamedFrom.add(from);
+    this.game.forgetScene(from);
+    this.openMap(to);
+    this.say(`Renamed to ${to} (save to write it)`);
+  }
+
+  /**
+   * Make the prop (a building) the door into an interior: Enter on it goes in, walking up into its door
+   * goes in, a spawn just outside it is where you come back out, and the interior's unlinked exits lead
+   * back to that spawn.
+   */
+  private linkDoor(index: number, interiorId: string): void {
+    const here = this.layout;
+    const inside = this.game.layouts.get(interiorId)!;
+    const p = here.props[index];
+    const { assets, content } = this.game;
+    if (p.sprite === undefined) p.sprite = propFrames(p, assets, content)[0]; // keep its look once its shop behavior goes
+    const entry = Object.keys(inside.spawns)[0];
+    p.behavior = { type: 'enter', to: interiorId, spawn: entry };
+    // the doorstep: just below what the building blocks (or its base, if it blocks nothing)
+    const step = this.solidOf(p);
+    const front = step ? step.y + step.h : p.y;
+    const outside = `from_${interiorId}`;
+    // spawnAt puts the feet 13px into a cell: pick the first row whose feet clear the doorstep
+    here.spawns[outside] = { x: Math.floor(p.x / TILE), y: Math.ceil((front - 13) / TILE), facing: 'down' };
+    here.exits = here.exits.filter((e) => e.to !== interiorId);
+    here.exits.push({ area: { x: Math.round(p.x) - 10, y: Math.round(front) - 2, w: 20, h: 8 }, to: interiorId, spawn: entry, dir: 'up' });
+    let back = 0;
+    for (const ex of inside.exits) {
+      if (ex.to === UNLINKED || ex.to === here.id) {
+        ex.to = here.id;
+        ex.spawn = outside;
+        back++;
+      }
+    }
+    this.unsaved.add(here.id);
+    this.unsaved.add(interiorId);
+    this.game.forgetScene(interiorId);
+    this.changed(back ? `${label(p)} now leads into ${interiorId}` : `${label(p)} leads into ${interiorId} (it has no way back out yet)`);
   }
 
   private say(text: string): void {
@@ -454,6 +646,7 @@ export class Editor {
     canvas.addEventListener('mousemove', (e) => {
       if (!this.active) return;
       const m = toView(e);
+      if (this.menu.pointer(m.x, m.y, false)) return;
       if (this.pan) {
         this.view.x -= (m.x - this.pan.x) / this.zoom;
         this.view.y -= (m.y - this.pan.y) / this.zoom;
@@ -475,6 +668,7 @@ export class Editor {
     canvas.addEventListener('mousedown', (e) => {
       if (!this.active) return;
       this.mouse = toView(e);
+      if (this.menu.pointer(this.mouse.x, this.mouse.y, e.button === 0)) return;
       const slot = this.paletteSlot(this.mouse);
       if (slot !== null) {
         if (slot >= 0) this.pick(slot);
@@ -499,12 +693,20 @@ export class Editor {
     canvas.addEventListener('wheel', (e) => {
       if (!this.active) return;
       e.preventDefault();
-      const d = Math.sign(e.deltaY);
-      if (e.ctrlKey || e.altKey) {
-        const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(this.zoom) + d));
-        this.setZoom(ZOOMS[i]);
-      } else if (e.shiftKey) this.stepCategory(d);
-      else this.stepItem(d);
+      if (this.menu.open) return;
+      // one step per wheel notch, however many events the mouse or trackpad sends for it
+      const px = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 300 : 1);
+      if (Math.sign(px) !== Math.sign(this.wheel)) this.wheel = 0;
+      this.wheel += px;
+      while (Math.abs(this.wheel) >= WHEEL_NOTCH) {
+        const d = Math.sign(this.wheel);
+        this.wheel -= d * WHEEL_NOTCH;
+        if (e.ctrlKey || e.altKey) {
+          const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(this.zoom) + d));
+          this.setZoom(ZOOMS[i]);
+        } else if (e.shiftKey) this.stepCategory(d);
+        else this.stepItem(d);
+      }
     }, { passive: false });
   }
 
@@ -610,6 +812,7 @@ export class Editor {
     }
     this.drawHud();
     this.drawPalette();
+    this.menu.draw(r, assets, this.game.input, this.time);
   }
 
   private drawHud(): void {

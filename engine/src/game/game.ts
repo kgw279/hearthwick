@@ -59,6 +59,11 @@ export class Game {
     this.enter('town', 'start');
   }
 
+  /** Forget a scene so it's rebuilt from its layout on the next visit (after the editor changes it). */
+  forgetScene(id: string): void {
+    this.scenes.delete(id);
+  }
+
   private getScene(id: string): Scene {
     let s = this.scenes.get(id);
     if (!s) {
@@ -70,8 +75,8 @@ export class Game {
     return s;
   }
 
-  /** Switch scenes immediately (used under the fade). */
-  private enter(id: string, spawnId: string): void {
+  /** Switch scenes immediately (used under the fade, and by the editor to open a map). */
+  enter(id: string, spawnId: string): void {
     const scene = this.getScene(id);
     const spawn = scene.spawns[spawnId];
     if (!spawn) throw new Error(`Scene "${id}" has no spawn "${spawnId}"`);

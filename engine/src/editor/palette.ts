@@ -50,6 +50,13 @@ export function buildPalette(assets: Assets, content: Content): Category[] {
     items: Object.keys(content.forageNodes).map((n) => ({ name: n, prop: { x: 0, y: 0, collider: 'forage', behavior: { type: 'forage', node: n } } })),
   });
   out.push({
+    name: 'Shop counters',
+    items: Object.keys(content.shops).map((id) => ({
+      name: `${id} counter`,
+      prop: { sprite: 'bar_counter', x: 0, y: 0, behavior: { type: 'shop', shop: id } },
+    })),
+  });
+  out.push({
     name: 'Shops',
     items: Object.keys(content.shops).filter((id) => content.shops[id].building).map((id) => ({
       name: id,

@@ -53,9 +53,8 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
       return { interaction: () => ({ label: 'Enter', use: () => hooks.go(b.to, b.spawn) }) };
     case 'shop': {
       const shop = content.shop(b.shop);
-      if (!shop.building) throw new Error(`Shop "${b.shop}" has no building sprite in gamedata`);
       return {
-        frames: [shop.building],
+        frames: shop.building ? [shop.building] : undefined, // a shop prop without a sprite is its building
         interaction: () => ({
           label: 'Shop',
           use: () => hooks.say(`Today's stock: ${shop.stock.map((s) => `${content.itemName(s.item)} ${s.price}`).join(', ')}.`, shop.name),

@@ -35,7 +35,7 @@ function onlyGameAssets(): Plugin {
 
 /**
  * Dev server only: lets the layout editor save maps. POST /__maps/<id> with the file's text writes
- * src/maps/<id>.json. Maps are also kept out of hot reload, so saving doesn't restart the game you're editing
+ * src/maps/<id>.json; DELETE /__maps/<id> removes it (when a map is renamed). Maps are also kept out of hot reload, so saving doesn't restart the game you're editing
  * (edit a JSON file by hand and refresh the page to see it).
  */
 function mapSaving(): Plugin {
@@ -46,6 +46,16 @@ function mapSaving(): Plugin {
     configureServer(server) {
       server.middlewares.use('/__maps/', (req, res) => {
         const id = decodeURIComponent((req.url ?? '').replace(/^\//, ''));
+        if (req.method === 'DELETE' && /^[a-z0-9_]+$/.test(id)) {
+          try {
+            rmSync(join(dir, `${id}.json`));
+            res.end('ok');
+          } catch (err) {
+            res.statusCode = 404;
+            res.end((err as Error).message);
+          }
+          return;
+        }
         if (req.method !== 'POST' || !/^[a-z0-9_]+$/.test(id)) {
           res.statusCode = 400;
           res.end('Bad map id');
