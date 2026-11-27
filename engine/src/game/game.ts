@@ -95,26 +95,29 @@ export class Game {
     this.camera.follow(this.player.center.x, this.player.center.y, dt);
   }
 
-  render(): void {
+  render(alpha: number): void {
     const r = this.renderer;
-    const cx = this.camera.ix;
-    const cy = this.camera.iy;
+    // Snap the camera to whole screen pixels once, so everything in the world moves together.
+    const cam = this.camera.at(alpha);
+    const cx = r.snap(cam.x);
+    const cy = r.snap(cam.y);
     r.begin();
     this.map.draw(r, cx, cy, this.time);
-    for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time));
+    if (this.debug) this.map.drawWaterMask(r, cx, cy);
+    for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time, alpha));
     r.flush();
     this.emotes.draw(r, cx, cy, this.time);
     this.floats.draw(r, this.assets, cx, cy, this.time);
 
     const action = this.target?.interaction();
     if (this.target && action && !this.dialog.open) {
-      drawPrompt(r, this.assets, this.input, 'interact', action.label, this.player.center.x - cx, this.player.y - cy - 24, this.time);
+      const p = this.player.at(alpha);
+      drawPrompt(r, this.assets, this.input, 'interact', action.label, Math.round(p.x + 16 - cx), Math.round(p.y - cy - 24), this.time);
       const a = this.target.useArea();
       if (this.debug && a) r.rect(a.x - cx, a.y - cy, a.w, a.h, '#fbf236');
     }
     this.dialog.draw(r, this.assets, this.input, this.time);
     if (this.debug) this.drawDebug(cx, cy);
-    r.present();
   }
 
   private drawDebug(cx: number, cy: number): void {

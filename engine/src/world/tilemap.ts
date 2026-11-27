@@ -6,6 +6,9 @@
  *
  * Wide terrain uses corner autotiles: a map corner is dirt (or water) if any of the four cells around it
  * is, so a 'd' cell is solid dirt and its neighbours get the soft edges. Full water cells animate.
+ *
+ * Water collision is per pixel and comes from the art itself: every pixel of a shoreline tile drawn in a
+ * water colour is water, so the player stops exactly where the drawn shoreline is.
  */
 import type { Assets } from '../core/assets';
 import type { Renderer } from '../core/renderer';
@@ -26,6 +29,9 @@ export class TileMap {
   private readonly corners: Corner[][];
   private readonly ground: HTMLCanvasElement;
   private readonly waterCells: Array<{ x: number; y: number }> = [];
+  /** 1 byte per world pixel: 1 = water. */
+  private readonly water: Uint8Array;
+  private waterDebug: HTMLCanvasElement | null = null;
 
   constructor(rows: string[], private readonly assets: Assets) {
     this.h = rows.length;
@@ -36,6 +42,7 @@ export class TileMap {
     this.cells = rows;
     this.corners = this.buildCorners();
     this.ground = this.renderGround();
+    this.water = this.buildWaterMask();
   }
 
   get pixelW(): number {
@@ -120,8 +127,50 @@ export class TileMap {
     return c;
   }
 
+  /** Every RGB colour used by the animated water frames. */
+  private waterColours(): Set<number> {
+    const c = document.createElement('canvas');
+    c.width = TILE;
+    c.height = TILE;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    const set = new Set<number>();
+    for (const name of WATER_FRAMES) {
+      const f = this.assets.frame(name);
+      ctx.clearRect(0, 0, TILE, TILE);
+      ctx.drawImage(f.img, f.x, f.y, f.w, f.h, 0, 0, TILE, TILE);
+      const d = ctx.getImageData(0, 0, TILE, TILE).data;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0) set.add((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
+    }
+    return set;
+  }
+
+  private buildWaterMask(): Uint8Array {
+    const mask = new Uint8Array(this.pixelW * this.pixelH);
+    const colours = this.waterColours();
+    const ctx = this.ground.getContext('2d', { willReadFrequently: true })!;
+    for (let y = 0; y < this.h; y++) {
+      for (let x = 0; x < this.w; x++) {
+        const { kind, index } = this.cornerTile(x, y);
+        if (kind !== 2 || this.isPath(x, y)) continue;
+        const full = index === 15;
+        const d = full ? null : ctx.getImageData(x * TILE, y * TILE, TILE, TILE).data;
+        for (let py = 0; py < TILE; py++) {
+          for (let px = 0; px < TILE; px++) {
+            let wet = full;
+            if (d) {
+              const i = (py * TILE + px) * 4;
+              wet = colours.has((d[i] << 16) | (d[i + 1] << 8) | d[i + 2]);
+            }
+            if (wet) mask[(y * TILE + py) * this.pixelW + x * TILE + px] = 1;
+          }
+        }
+      }
+    }
+    return mask;
+  }
+
   draw(r: Renderer, camX: number, camY: number, time: number): void {
-    r.blit(this.ground, camX, camY, VIEW_W, VIEW_H, 0, 0);
+    r.image(this.ground, -camX, -camY);
     for (const { x, y } of this.waterCells) {
       const sx = x * TILE - camX;
       const sy = y * TILE - camY;
@@ -130,14 +179,35 @@ export class TileMap {
     }
   }
 
-  /** True if a world-space rectangle touches deep water or leaves the map. */
+  /** True if a world-space rectangle touches any water pixel or leaves the map. */
   blocks(rect: Rect): boolean {
     if (rect.x < 0 || rect.y < 0 || rect.x + rect.w > this.pixelW || rect.y + rect.h > this.pixelH) return true;
-    const x0 = Math.floor(rect.x / TILE);
-    const x1 = Math.floor((rect.x + rect.w - 1) / TILE);
-    const y0 = Math.floor(rect.y / TILE);
-    const y1 = Math.floor((rect.y + rect.h - 1) / TILE);
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (this.cell(x, y) === 'w') return true;
+    const x0 = Math.floor(rect.x);
+    const x1 = Math.ceil(rect.x + rect.w) - 1;
+    const y0 = Math.floor(rect.y);
+    const y1 = Math.ceil(rect.y + rect.h) - 1;
+    for (let y = y0; y <= y1; y++) {
+      const row = y * this.pixelW;
+      for (let x = x0; x <= x1; x++) if (this.water[row + x]) return true;
+    }
     return false;
+  }
+
+  /** Debug view (F3): water collision shaded over the map. */
+  drawWaterMask(r: Renderer, camX: number, camY: number): void {
+    if (!this.waterDebug) {
+      const c = document.createElement('canvas');
+      c.width = this.pixelW;
+      c.height = this.pixelH;
+      const ctx = c.getContext('2d')!;
+      const img = ctx.createImageData(this.pixelW, this.pixelH);
+      for (let i = 0; i < this.water.length; i++) {
+        if (!this.water[i]) continue;
+        img.data.set([95, 205, 228, 110], i * 4);
+      }
+      ctx.putImageData(img, 0, 0);
+      this.waterDebug = c;
+    }
+    r.image(this.waterDebug, -camX, -camY);
   }
 }

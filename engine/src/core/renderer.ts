@@ -1,6 +1,9 @@
 /**
- * Pixel-perfect renderer. Everything is drawn at the art's native size into a small virtual screen,
- * which is then scaled up by a whole number to fill the window (crisp pixels, never blurry).
+ * Renderer. The game thinks in a 480x270 logical screen at the art's native pixel size, but draws
+ * straight onto the full-resolution canvas through a whole-number scale (4x on 1080p). Positions are
+ * snapped to *screen* pixels (1/scale of an art pixel), not art pixels, so the camera and moving
+ * characters glide smoothly instead of stepping 4 screen pixels at a time, while every sprite stays
+ * crisp (nearest-neighbour, integer scale, edges always on screen-pixel boundaries).
  * World sprites are queued with a depth key (their feet) and drawn back to front.
  */
 import type { Assets, Frame } from './assets';
@@ -11,19 +14,13 @@ export const VIEW_H = 270;
 interface Queued { sortY: number; order: number; draw: () => void }
 
 export class Renderer {
-  readonly buf: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
-  private readonly screen: CanvasRenderingContext2D;
   private queue: Queued[] = [];
   private order = 0;
   scale = 1;
 
   constructor(private readonly canvas: HTMLCanvasElement, private readonly assets: Assets) {
-    this.buf = document.createElement('canvas');
-    this.buf.width = VIEW_W;
-    this.buf.height = VIEW_H;
-    this.ctx = this.buf.getContext('2d')!;
-    this.screen = canvas.getContext('2d')!;
+    this.ctx = canvas.getContext('2d', { alpha: false })!;
     window.addEventListener('resize', () => this.resize());
     this.resize();
   }
@@ -34,19 +31,31 @@ export class Renderer {
     this.canvas.height = VIEW_H * this.scale;
   }
 
-  begin(clear = '#1b1520'): void {
-    this.ctx.imageSmoothingEnabled = false;
-    this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = clear;
-    this.ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  /** Round a logical coordinate to the nearest screen pixel. */
+  snap(v: number): number {
+    return Math.round(v * this.scale) / this.scale;
   }
 
-  /** Draw a sprite now, top-left at (x, y) in virtual-screen pixels. */
+  begin(clear = '#1b1520'): void {
+    const c = this.ctx;
+    c.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+    c.imageSmoothingEnabled = false;
+    c.globalAlpha = 1;
+    c.fillStyle = clear;
+    c.fillRect(0, 0, VIEW_W, VIEW_H);
+  }
+
+  /** Draw a sprite now, top-left at (x, y) in logical screen pixels (fractions allowed). */
   sprite(name: string | Frame, x: number, y: number, alpha = 1): void {
     const f = typeof name === 'string' ? this.assets.frame(name) : name;
     if (alpha !== 1) this.ctx.globalAlpha = alpha;
-    this.ctx.drawImage(f.img, f.x, f.y, f.w, f.h, Math.round(x), Math.round(y), f.w, f.h);
+    this.ctx.drawImage(f.img, f.x, f.y, f.w, f.h, this.snap(x), this.snap(y), f.w, f.h);
     if (alpha !== 1) this.ctx.globalAlpha = 1;
+  }
+
+  /** Draw a whole pre-rendered image (e.g. the static ground) with its top-left at (x, y). */
+  image(src: CanvasImageSource & { width: number; height: number }, x: number, y: number): void {
+    this.ctx.drawImage(src, this.snap(x), this.snap(y));
   }
 
   /** Queue a world draw; queued draws run back-to-front by sortY when flush() is called. */
@@ -95,21 +104,12 @@ export class Renderer {
   rect(x: number, y: number, w: number, h: number, color: string, fill = false): void {
     if (fill) {
       this.ctx.fillStyle = color;
-      this.ctx.fillRect(Math.round(x), Math.round(y), w, h);
+      this.ctx.fillRect(this.snap(x), this.snap(y), w, h);
     } else {
+      const px = 1 / this.scale;
       this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(Math.round(x) + 0.5, Math.round(y) + 0.5, w - 1, h - 1);
+      this.ctx.lineWidth = px;
+      this.ctx.strokeRect(this.snap(x) + px / 2, this.snap(y) + px / 2, w - px, h - px);
     }
-  }
-
-  /** Copy part of a pre-rendered canvas (e.g. the static ground) onto the screen. */
-  blit(src: CanvasImageSource, sx: number, sy: number, w: number, h: number, dx: number, dy: number): void {
-    this.ctx.drawImage(src, sx, sy, w, h, dx, dy, w, h);
-  }
-
-  present(): void {
-    this.screen.imageSmoothingEnabled = false;
-    this.screen.drawImage(this.buf, 0, 0, VIEW_W * this.scale, VIEW_H * this.scale);
   }
 }

@@ -24,7 +24,7 @@ export const TOWN_MAP = [
   '........p...........d......p............',
   '........p...........d......p............',
   '.....ppppppp........d......p............',
-  '....................d......p............',
+  '....................d...................',
   '....................d....wwwwww.........',
   '....................d....wwwwww.........',
   '....................d....wwwwww.........',
@@ -154,6 +154,7 @@ export function buildTown(assets: Assets, content: Content, hooks: TownHooks): P
 
   // ---- pond
   deco('fishing_spot_ready', 27, 15, undefined, {
+    use: { x: 0, y: -28, w: 32, h: 30 }, // reachable from the bank above
     interaction: { label: 'Fish', use: () => { hooks.emote('emote_exclaim'); hooks.float(`+ ${content.itemName('trout')}`); } },
   });
   deco(assets.animation('jumping_trout'), 29, 17, undefined, { fps: 3, sortOffset: 40 });

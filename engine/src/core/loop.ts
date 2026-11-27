@@ -1,6 +1,8 @@
 /**
  * Fixed-timestep game loop: the game updates exactly STEP seconds at a time (so movement and animation
- * behave the same on every machine) and renders once per display frame.
+ * behave the same on every machine) and renders once per display frame. render() receives alpha, how
+ * far we are between the last game step and the next (0..1), so moving things can be drawn
+ * interpolated; that keeps motion smooth on 120/144 Hz monitors instead of stuttering.
  */
 
 export const STEP = 1 / 60;
@@ -8,7 +10,7 @@ const MAX_STEPS = 5; // after a long stall, drop time rather than spiral
 
 export interface LoopStats { fps: number }
 
-export function startLoop(update: (dt: number) => void, render: () => void): LoopStats {
+export function startLoop(update: (dt: number) => void, render: (alpha: number) => void): LoopStats {
   const stats: LoopStats = { fps: 0 };
   let acc = 0;
   let last = performance.now();
@@ -26,7 +28,7 @@ export function startLoop(update: (dt: number) => void, render: () => void): Loo
       steps++;
     }
     if (steps === MAX_STEPS) acc = 0;
-    render();
+    render(acc / STEP);
 
     fpsTime += elapsed;
     fpsFrames++;

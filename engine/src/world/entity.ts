@@ -44,7 +44,8 @@ export abstract class Entity {
     return c ? { x: c.x - 6, y: c.y - 6, w: c.w + 12, h: c.h + 12 } : null;
   }
   update(_dt: number): void {}
-  abstract draw(r: Renderer, camX: number, camY: number, time: number): void;
+  /** alpha: how far between the last two game steps (for interpolating moving things). */
+  abstract draw(r: Renderer, camX: number, camY: number, time: number, alpha: number): void;
 }
 
 export class Prop extends Entity {

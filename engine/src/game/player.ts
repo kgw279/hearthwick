@@ -16,9 +16,14 @@ export class Player extends Entity {
   facing: Facing = 'down';
   moving = false;
   private readonly anim: Animator;
+  /** Position at the previous game step, for drawing interpolated between steps. */
+  private prevX: number;
+  private prevY: number;
 
   constructor(assets: Assets, x: number, y: number, readonly look = 'kid') {
     super(x, y);
+    this.prevX = x;
+    this.prevY = y;
     this.anim = new Animator(assets, 8);
     this.anim.play(`${look}_idle_down`);
   }
@@ -50,7 +55,14 @@ export class Player extends Entity {
     return { x: this.x + 16, y: this.y + 18 };
   }
 
+  /** Where to draw the player this frame, blended between the last two game steps. */
+  at(alpha: number): { x: number; y: number } {
+    return { x: this.prevX + (this.x - this.prevX) * alpha, y: this.prevY + (this.y - this.prevY) * alpha };
+  }
+
   move(dt: number, input: Input, blocked: (r: Rect) => boolean): void {
+    this.prevX = this.x;
+    this.prevY = this.y;
     const m = input.move();
     this.moving = m.x !== 0 || m.y !== 0;
     if (this.moving) {
@@ -66,7 +78,8 @@ export class Player extends Entity {
     this.anim.update(dt);
   }
 
-  draw(r: Renderer, camX: number, camY: number): void {
-    r.sprite(this.anim.frame, Math.round(this.x) - camX, Math.round(this.y) - camY);
+  draw(r: Renderer, camX: number, camY: number, _time: number, alpha: number): void {
+    const p = this.at(alpha);
+    r.sprite(this.anim.frame, p.x - camX, p.y - camY);
   }
 }

@@ -10,7 +10,7 @@ async function boot(): Promise<void> {
     const canvas = document.getElementById('game') as HTMLCanvasElement;
     const game = new Game(assets, new Renderer(canvas, assets));
     boot.remove();
-    game.stats = startLoop((dt) => game.update(dt), () => game.render());
+    game.stats = startLoop((dt) => game.update(dt), (alpha) => game.render(alpha));
     (window as unknown as { game: Game }).game = game; // handy in the browser console
   } catch (err) {
     boot.textContent = `Could not start: ${(err as Error).message}`;
