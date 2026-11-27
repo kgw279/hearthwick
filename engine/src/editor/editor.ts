@@ -931,6 +931,35 @@ export class Editor {
     this.checkIn = -1;
   }
 
+  /**
+   * Put this map, and any other maps changed since the last save, on the clipboard as their map files,
+   * ready to paste into a chat (each under its src/maps path, so they can be dropped straight in).
+   */
+  private async copyForChat(): Promise<void> {
+    if (this.held) this.cancelHeld();
+    const here = this.layout.id;
+    const ids = [here, ...[...this.unsaved].filter((id) => id !== here).sort()];
+    const text = [
+      `Hearthwick map${ids.length > 1 ? 's' : ''} from the editor (${ids.length}):`,
+      ...ids.map((id) => `\n=== engine/src/maps/${id}.json ===\n${formatLayout(this.game.layouts.get(id)!)}`),
+    ].join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // no clipboard permission (or not a secure page): the old way, through a hidden text box
+      const box = document.createElement('textarea');
+      box.value = text;
+      box.style.position = 'fixed';
+      box.style.opacity = '0';
+      document.body.appendChild(box);
+      box.select();
+      const ok = document.execCommand('copy');
+      box.remove();
+      if (!ok) return this.say("Couldn't copy: the browser blocked the clipboard");
+    }
+    this.say(`Copied ${ids.length === 1 ? here : `${ids.length} maps`}: paste it into the chat`);
+  }
+
   /** Write every changed map (dev server), or download them (anywhere else). */
   private async saveAll(): Promise<void> {
     if (this.held) this.cancelHeld();
@@ -972,6 +1001,11 @@ export class Editor {
       title: `Map: ${here}`,
       items: [
         { label: 'Save', note: this.unsaved.size ? `${this.unsaved.size} changed` : 'saved', run: () => void this.saveAll() },
+        {
+          label: 'Copy for chat',
+          note: this.unsaved.size > 1 || (this.unsaved.size === 1 && !this.unsaved.has(here)) ? `this + ${[...this.unsaved].filter((id) => id !== here).length} changed` : 'this map',
+          run: () => void this.copyForChat(),
+        },
         { label: 'Undo', disabled: !this.history.canUndo, run: () => this.undo() },
         { label: 'Redo', disabled: !this.history.canRedo, run: () => this.redo() },
         { label: 'Snap', note: snapName(this.snap), run: () => this.cycleSnap() },
@@ -1353,23 +1387,27 @@ export class Editor {
     const z = this.zoom;
     const toScreen = (x: number, y: number) => ({ x: (x - cx) * z, y: (y - cy) * z });
 
-    if (z === 1) {
-      for (const ex of scene.exits) {
-        const s = toScreen(ex.area.x, ex.area.y);
-        drawText(r, assets, `>${ex.to}`, s.x, s.y - 10);
+    // names only for what's under the cursor: an exit, a spawn, or the piece it would pick up
+    const { x: mx, y: my } = this.cursor;
+    const inside = (r: { x: number; y: number; w: number; h: number }, pad = 0) =>
+      mx >= r.x - pad && my >= r.y - pad && mx < r.x + r.w + pad && my < r.y + r.h + pad;
+    const tags: Array<{ text: string; x: number; y: number }> = [];
+    for (const ex of scene.exits) if (inside(ex.area, 2)) tags.push({ text: `> ${ex.to}`, x: ex.area.x, y: ex.area.y - 12 / z });
+    for (const [name, sp] of Object.entries(scene.spawns)) {
+      if (inside({ x: sp.x + 10, y: sp.y + 22, w: 12, h: 6 }, 4)) tags.push({ text: `spawn ${name}`, x: sp.x, y: sp.y + 32 });
+    }
+    if (this.tool === 'props' && !this.held) {
+      const hit = this.propAtCursor();
+      if (hit >= 0) {
+        const a = this.artRect(this.layout.props[hit]);
+        tags.push({ text: label(this.layout.props[hit]), x: a.x, y: a.y + a.h + 2 });
       }
-      for (const [name, sp] of Object.entries(scene.spawns)) {
-        const s = toScreen(sp.x, sp.y + 30);
-        drawText(r, assets, name, s.x, s.y);
-      }
-      if (this.tool === 'props' && !this.held) {
-        const hit = this.propAtCursor();
-        if (hit >= 0) {
-          const a = this.artRect(this.layout.props[hit]);
-          const s = toScreen(a.x, a.y + a.h + 2);
-          drawText(r, assets, label(this.layout.props[hit]), s.x, s.y);
-        }
-      }
+    }
+    for (const t of tags) {
+      const s = toScreen(t.x, t.y);
+      const w = measure(t.text) + 8;
+      r.nine('panel_dark', s.x - 4, s.y - 4, w, 17);
+      drawText(r, assets, t.text, s.x, s.y);
     }
     this.drawHud();
     this.drawPalette();

@@ -10,6 +10,7 @@ from art_ground import GROUND_TILES, VARIANTS as PAVE_VARIANTS  # noqa: E402
 from art_town import TOWN_BUILDINGS, TOWN_PROPS, TOWN_ANIMATIONS  # noqa: E402
 from art_iwalls import IWALLS  # noqa: E402
 from art_walldecor import WALL_DECOR  # noqa: E402
+from art_kitchen import KITCHEN, BAR  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -57,7 +58,7 @@ def build_groups(data):
         'floor_transitions': ([(n, f()) for n, f in FLOOR_TRANSITIONS], 32, 32, 16, None),
         'furniture': ([(n, f()) for n, f in FURNITURE + STAIRS_SMALL + WALL_DECOR], 32, 32, 8, 'floor'),
         'stairs': ([(n, f()) for n, f in STAIRS], 32, 64, 4, 'floor'),
-        'stations': ([(n, f()) for n, f, _ in STATIONS], 32, 32, 8, 'floor'),
+        'stations': ([(n, f()) for n, f, _ in STATIONS] + [(n, f()) for n, f in KITCHEN], 32, 32, 8, 'floor'),
         'tableware': ([(n, f()) for n, f in TABLEWARE], 32, 32, 6, 'floor'),
         'actions': ([(n, f()) for n, f in ACTIONS], 32, 32, 12, 'floor'),
         'animated': ([(n, f()) for n, f in ANIMATED], 32, 32, 12, 'floor'),
@@ -67,7 +68,7 @@ def build_groups(data):
         'carts': ([(n, f()) for n, f in CARTS], 32, 32, 4, 'grass'),
         'wagons': ([(n, f()) for n, f in WAGONS], 64, 32, 3, 'grass'),
         'wagons_ns': ([(n, f()) for n, f in WAGONS_NS], 32, 64, 4, 'grass'),
-        'interior': ([(n, f()) for n, f in INTERIOR], 32, 32, 8, 'floor'),
+        'interior': ([(n, f()) for n, f in INTERIOR if n != 'bar_counter'] + [(n, f()) for n, f in BAR], 32, 32, 8, 'floor'),
         'characters': ([(n, f()) for n, f in CHARACTERS], 32, 32, 12, 'grass'),
         'guests': ([(n, f()) for n, f in FOLK], 32, 32, 12, 'grass'),
         'food': (food_entries(data), 32, 32, 16, 'cream'),
