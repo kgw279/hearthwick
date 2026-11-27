@@ -15,15 +15,10 @@ type Template = Omit<PlacedProp, 'x' | 'y' | 'sprite'>;
 const FLOOR = /rug|runner|mat\b|doormat|carpet|^stairs_/;
 /** Art that hangs on a wall (no collider, drawn over the wall). */
 const WALL = /^deco_|^wall_|^shelf_jars$/;
-/** Furniture built to stand against a wall: a shallow footprint, so it sits right up against the wall face. */
-const BACKED = /fireplace|oven|bookshelf|cupboard|wardrobe/;
-const BACKED_DEPTH = 6;
-
-/** How an item from the art is placed by default: its layer, or a shallow footprint for wall-backed furniture. */
+/** How an item from the art is placed by default: its layer (standing pieces stand on a shallow footprint). */
 function placement(name: string): Partial<PlacedProp> {
   if (FLOOR.test(name)) return { layer: 'floor' };
   if (WALL.test(name)) return { layer: 'wall' };
-  if (BACKED.test(name)) return { depth: BACKED_DEPTH };
   return {};
 }
 

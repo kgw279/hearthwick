@@ -7,16 +7,17 @@
  * per group of pieces), and a grid of slots below; the Snap setting sits in the bottom bar.
  *
  * Mouse and keyboard: left click places (or picks up the piece under the pointer to move it), right
- * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, R / Shift+R turn the piece
- * in hand or under the pointer (Alt+wheel turns it finely), Ctrl+Z / Ctrl+Y undo and redo, WASD or the
+ * click deletes, the wheel picks a slot (Shift+wheel a tab), Ctrl+wheel zooms, holding R the wheel turns
+ * the piece in hand or under the pointer (Shift for finer steps), Ctrl+Z / Ctrl+Y undo and redo, WASD or the
  * arrows pan, middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, undo, snap, new
  * map, open, rename, Door to), F2 leaves the editor.
  * Controller: the left stick moves the cursor like a mouse, the D-pad nudges it a pixel at a time,
- * A places, X deletes, the right stick turns, LB/RB pick a slot, LT/RT a tab, Y shows/hides the palette,
+ * A places, X deletes, holding Y the right stick turns, LB/RB pick a slot, LT/RT a tab, Y tapped shows/hides the palette,
  * View undoes, right stick click zooms, Menu opens the menu (redo and snap are there), B cancels a move.
  *
  * Pieces are layered: floor pieces (rugs, stairs) under everything, wall pieces (pictures, windows,
- * shelves) on the wall faces, standing pieces in the room. Placing stairs makes the room they lead to.
+ * shelves, doors) on the wall faces, standing pieces in the room. Placing stairs or a door makes the room
+ * it leads to.
  * Picking up, deleting and turning act on the layer of the piece in hand (shown in the top bar).
  *
  * Props are placed freely; snap rounds where they land (free / 8px / 16px / tile). Except on tile snap, a
@@ -42,8 +43,9 @@ import { buildPalette, type Category } from './palette';
 import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates';
 import { validate, type Issue } from './validate';
 import { History } from './history';
+import { growRoom, trimRoom, type Shift } from './roomfit';
 import { canTurnFreely, normalise, turn } from './turn';
-import { blankRoom, ensureStairsBack, isStairs, size, stairsIn } from './stairs';
+import { blankRoom, ensureWayBack, isPassage, passageKind, roomNameFor, size } from './passages';
 
 type Tool = 'props' | 'ground';
 type Snap = 1 | 8 | 16 | 'tile';
@@ -63,10 +65,12 @@ const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
 /** Structure cells that are walls (what erasing in the Walls tab turns back into floor). */
 const WALL_CHARS = new Set(['W', 'S', 'I', 'J']);
+/** How far (px) past an interior's walls the cursor and view reach, so a room can be built out in any direction. */
+const ROOM_REACH = 6 * 32;
 const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
-const TURN_STEP = 15; // degrees per R press
-const TURN_FINE = 5; // degrees per Alt+wheel notch
-const TURN_SPEED = 120; // degrees per second at full right-stick tilt
+const TURN_STEP = 15; // degrees per wheel notch (R held) or right-stick step (Y held)
+const TURN_FINE = 5; // degrees per notch with Shift too
+const TURN_REPEAT = 0.18; // seconds between turning steps while the right stick is held over
 /** The strip along the bottom: the piece in hand, snap, and control hints. */
 const BAR_H = 46;
 /** The piece picker window: slots per row and rows visible. */
@@ -75,13 +79,13 @@ const HUD_H = 22;
 const TAB_H = 16;
 /** Hints per device: glyph frames (or actions, resolved to the pad's glyphs) and what they do. */
 const MOUSE_HINTS: Array<[string[], string]> = [
-  [['key_tab'], 'Pieces'], [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['key_r'], 'Turn'],
+  [['key_tab'], 'Pieces'], [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['key_r', 'mouse_scroll'], 'Turn'],
   [['key_ctrl', 'key_z'], 'Undo'], [['key_esc'], 'Menu'], [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'],
   [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'],
 ];
 /** Actions (shown with the pad's glyph for them), or a glyph frame for a control that isn't an action. */
 const PAD_HINTS: Array<[Array<Action | 'xb_rs_move'>, string]> = [
-  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['xb_rs_move'], 'Turn'], [['map'], 'Undo'],
+  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['recipes', 'xb_rs_move'], 'Turn'], [['map'], 'Undo'],
   [['menu'], 'Menu'], [['tab_prev', 'tab_next'], 'Pick'], [['zoom'], 'Zoom'],
 ];
 
@@ -131,10 +135,10 @@ export class Editor {
   private readonly history: History;
   /** How far each palette piece will be turned when placed (degrees), by "tab:slot". */
   private readonly turns = new Map<string, number>();
-  /** The right stick is turning a placed piece (recorded for undo once, when it starts). */
-  private stickTurning = false;
-  /** The right stick was pushed past the step threshold (for pieces that turn a facing at a time). */
-  private stickStepped = false;
+  /** R is held: the wheel turns instead of picking. */
+  private rHeld = false;
+  /** Y on the pad: held (with the right stick turning) or tapped (opens the Pieces window when let go). */
+  private yHold = { down: false, turned: false, next: 0 };
 
   constructor(private readonly game: Game) {
     this.palette = buildPalette(game.assets, game.content);
@@ -273,6 +277,15 @@ export class Editor {
     this.zoom = 1;
     this.game.camera.setZoom(1);
     this.game.camera.setInset(0, 0);
+    const g = this.game.scene.ground;
+    this.game.camera.setWorld(g.pixelW, g.pixelH);
+  }
+
+  /** The area the editor works in: the map, and for an interior room to build past its walls. */
+  get canvas(): { x0: number; y0: number; x1: number; y1: number } {
+    const g = this.game.scene.ground;
+    const r = this.layout.ground.type === 'room' ? ROOM_REACH : 0;
+    return { x0: -r, y0: -r, x1: g.pixelW + r, y1: g.pixelH + r };
   }
 
   /**
@@ -307,13 +320,12 @@ export class Editor {
 
     // keyboard: only Tab (palette) and Esc (menu) - everything else is the mouse
     if (pad) {
-      if (input.pressed('recipes')) this.togglePicker();
+      this.padTurn(input.down('recipes'), input.rightStick().x, dt);
       if (input.pressed('tab_prev')) this.stepItem(-1);
       if (input.pressed('tab_next')) this.stepItem(1);
       if (input.pressed('cat_prev')) this.stepTab(-1);
       if (input.pressed('cat_next')) this.stepTab(1);
       if (input.pressed('map')) this.undo();
-      this.stickTurn(input.rightStick().x, dt);
       if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
     } else if (input.pressed('menu')) {
       this.togglePicker();
@@ -327,7 +339,7 @@ export class Editor {
 
     if (pad) {
       if (this.tool === 'ground') {
-        if (input.pressed('interact') || input.pressed('cook')) this.lastPainted = '';
+        if (input.pressed('interact') || input.pressed('cook')) this.startStroke();
         if (input.down('interact')) this.paint();
         else if (input.down('cook')) this.paint(true);
       } else {
@@ -390,9 +402,9 @@ export class Editor {
   }
 
   private setCursor(x: number, y: number): void {
-    const g = this.game.scene.ground;
-    this.cursor.x = Math.max(0, Math.min(g.pixelW - 1, x));
-    this.cursor.y = Math.max(0, Math.min(g.pixelH - 1, y));
+    const c = this.canvas;
+    this.cursor.x = Math.max(c.x0, Math.min(c.x1 - 1, x));
+    this.cursor.y = Math.max(c.y0, Math.min(c.y1 - 1, y));
   }
 
   /** Move the cursor like a pointer; the view only scrolls when the cursor pushes against its edge. */
@@ -408,12 +420,14 @@ export class Editor {
 
   /** Keep the aim point where the camera can actually go, so reversing direction scrolls back at once. */
   private clampView(): void {
-    const g = this.game.scene.ground;
+    const c = this.canvas;
     const z = this.zoom;
     const hw = VIEW_W / z / 2;
     const hh = (VIEW_H - HUD_H - this.panelH) / z / 2;
-    this.view.x = g.pixelW <= hw * 2 ? g.pixelW / 2 : Math.max(hw, Math.min(g.pixelW - hw, this.view.x));
-    this.view.y = g.pixelH <= hh * 2 ? g.pixelH / 2 : Math.max(hh, Math.min(g.pixelH - hh, this.view.y));
+    const w = c.x1 - c.x0;
+    const h = c.y1 - c.y0;
+    this.view.x = w <= hw * 2 ? c.x0 + w / 2 : Math.max(c.x0 + hw, Math.min(c.x1 - hw, this.view.x));
+    this.view.y = h <= hh * 2 ? c.y0 + h / 2 : Math.max(c.y0 + hh, Math.min(c.y1 - hh, this.view.y));
   }
 
   private centreOnTile(): void {
@@ -496,7 +510,8 @@ export class Editor {
     }
     p.x = Math.round(p.x / this.snap) * this.snap;
     p.y = Math.round(p.y / this.snap) * this.snap;
-    if (!p.layer) this.magnet(p); // floor and wall pieces go exactly where they're put
+    if (!p.layer) this.magnet(p); // floor and wall pieces go exactly where they're put...
+    else if (p.layer === 'wall' && isPassage(p)) p.y = Math.ceil(p.y / TILE) * TILE; // ...but a door stands on the floor
     return p;
   }
 
@@ -568,7 +583,7 @@ export class Editor {
     }
     const p = this.ghost();
     this.layout.props.push(p);
-    if (isStairs(p) && !p.behavior) return this.stairsToNewRoom(p);
+    if (isPassage(p) && !p.behavior) return this.passageToNewRoom(p);
     this.changed('Placed');
   }
 
@@ -589,31 +604,32 @@ export class Editor {
     return `${this.cat}:${this.itemIndex[this.cat]}`;
   }
 
-  /** New stairs: make the room they lead to (blank, this room's size) with stairs back already in it. */
-  private stairsToNewRoom(p: PlacedProp): void {
+  /** A new stairs or door: make the room it leads to (blank, this room's size) with the way back already in it. */
+  private passageToNewRoom(p: PlacedProp): void {
     const here = this.layout;
-    const base = `${here.id}_${p.sprite === 'stairs_up' ? 'upstairs' : 'downstairs'}`;
+    const base = roomNameFor(p, here.id);
     const id = this.game.layouts.has(base) ? this.freeId(base) : base;
     const { w, h } = size(here);
-    const room = blankRoom(id, w, Math.max(h, 5));
-    room.props.push(stairsIn(room, p.sprite === 'stairs_up' ? 'stairs_down' : 'stairs_up', here.id));
+    const room = blankRoom(id, Math.max(w, 5), Math.max(h, 5));
+    ensureWayBack(room, here.id, p.sprite as string, this.game.assets);
     this.game.layouts.set(id, room);
-    p.behavior = { type: 'stairs', to: id };
+    p.behavior = { type: passageKind(p), to: id };
     this.unsaved.add(id);
-    this.changed(`Stairs lead to ${id} (new room: Open map to build it)`);
+    this.changed(`${passageKind(p) === 'door' ? 'Door' : 'Stairs'} lead to ${id} (new room: Open map to build it)`);
   }
 
-  /** Point stairs at another room, adding stairs back there if it has none. */
-  private linkStairs(index: number, roomId: string): void {
+  /** Point stairs or a door at another room, adding the way back there if it has none. */
+  private linkPassage(index: number, roomId: string): void {
     this.history.record();
     const here = this.layout;
     const p = here.props[index];
     const room = this.game.layouts.get(roomId)!;
-    p.behavior = { type: 'stairs', to: roomId };
-    const added = ensureStairsBack(room, here.id, p.sprite as string);
+    p.behavior = { type: passageKind(p), to: roomId };
+    const back = ensureWayBack(room, here.id, p.sprite as string, this.game.assets);
     this.unsaved.add(roomId);
     this.game.forgetScene(roomId);
-    this.changed(`Stairs lead to ${roomId}${added ? ' (stairs back added there)' : ''}`);
+    const what = passageKind(p) === 'door' ? 'Door' : 'Stairs';
+    this.changed(`${what} lead to ${roomId}${back === 'added' ? ' (way back added there)' : back === 'no room' ? ': no spot there for the way back' : ''}`);
   }
 
   // ------------------------------------------------------------------ undo, turning
@@ -673,22 +689,27 @@ export class Editor {
     if (i >= 0) this.itemIndex[this.cat] = i;
   }
 
-  /** Right stick: floor and wall pieces turn smoothly with the tilt; pieces with facings step once per push. */
-  private stickTurn(x: number, dt: number): void {
-    if (Math.abs(x) < 0.3) {
-      this.stickTurning = false;
-      this.stickStepped = false;
+  /**
+   * Y on the pad: hold it and push the right stick to turn (a step, then repeating while held over);
+   * tapped without turning, it opens the Pieces window when let go.
+   */
+  private padTurn(yDown: boolean, x: number, dt: number): void {
+    const h = this.yHold;
+    if (!yDown) {
+      if (h.down && !h.turned) this.togglePicker();
+      this.yHold = { down: false, turned: false, next: 0 };
       return;
     }
-    const target = this.held?.prop ?? this.layout.props[this.propAtCursor()] ?? this.palette[this.cat].items[this.itemIndex[this.cat]].prop;
-    if (canTurnFreely(target)) {
-      const first = !this.stickTurning;
-      this.stickTurning = true;
-      this.turnBy(x * TURN_SPEED * dt, first);
-    } else if (!this.stickStepped && Math.abs(x) > 0.6) {
-      this.stickStepped = true;
-      this.turnBy(Math.sign(x) * 90);
+    if (!h.down) this.yHold = { down: true, turned: false, next: 0 };
+    if (Math.abs(x) < 0.5) {
+      this.yHold.next = 0;
+      return;
     }
+    this.yHold.next -= dt;
+    if (this.yHold.next > 0) return;
+    this.yHold.next = TURN_REPEAT;
+    this.yHold.turned = true;
+    this.turnBy(Math.sign(x) * TURN_STEP);
   }
 
   private listenKeys(): void {
@@ -702,8 +723,12 @@ export class Editor {
         e.preventDefault();
         return this.redo();
       }
-      if (e.code === 'KeyR' && !e.ctrlKey && !e.metaKey && !e.repeat) this.turnBy(e.shiftKey ? -TURN_STEP : TURN_STEP);
+      if (e.code === 'KeyR') this.rHeld = true;
     });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyR') this.rHeld = false;
+    });
+    window.addEventListener('blur', () => (this.rHeld = false));
   }
 
   private cancelHeld(): void {
@@ -761,65 +786,121 @@ export class Editor {
    * grass outdoors, wood floor indoors - and turns a wall back into floor (an outer wall erased this way
    * becomes a doorway; the Clear brush removes walls altogether).
    */
+  /** A new paint or erase stroke begins: everything it changes is one undo step. */
+  private startStroke(): void {
+    this.lastPainted = '';
+    this.strokeRecorded = false;
+  }
+
+  private recordStroke(): void {
+    if (this.strokeRecorded) return;
+    this.history.record();
+    this.strokeRecorded = true;
+  }
+
+  /** The room's grids grew or shrank at the top or left: keep the cursor, view and player on the same spot. */
+  private shifted(s: Shift): void {
+    if (!s.dx && !s.dy) return;
+    const px = s.dx * TILE;
+    const py = s.dy * TILE;
+    this.cursor.x += px;
+    this.cursor.y += py;
+    this.view.x += px;
+    this.view.y += py;
+    const pl = this.game.player;
+    pl.place({ x: pl.x + px, y: pl.y + py, facing: pl.facing });
+    this.lastPainted = '';
+  }
+
   private paint(erase = false): void {
     const { size } = this.brushInfo;
     let { ch } = this.brushInfo;
-    const cx = Math.floor(this.cursor.x / size);
-    const cy = Math.floor(this.cursor.y / size);
+    let cx = Math.floor(this.cursor.x / size);
+    let cy = Math.floor(this.cursor.y / size);
     const key = `${size}:${cx},${cy}`;
     if (key === this.lastPainted) return;
-    if (this.lastPainted === '') this.strokeRecorded = false; // a new stroke: one undo step for all of it
     this.lastPainted = key;
     const g = this.layout.ground;
+    if (g.type === 'room') {
+      // the cursor can be past the room's edge: building there grows the room (outside it, there's
+      // nothing to erase or clear)
+      const k = size === CELL ? 2 : 1;
+      const sx = Math.floor(cx / k);
+      const sy = Math.floor(cy / k);
+      const inside = sx >= 0 && sy >= 0 && sx < g.rows[0].length && sy < g.rows.length;
+      if (!inside && (erase || ch === '.')) return;
+      if (!erase) {
+        // floor needs room round it for the walls it wraps itself in; a wall needs just its cell
+        const [x0, y0, x1, y1] = size === CELL ? [sx - 1, sy - 2, sx + 1, sy + 1] : [sx, sy, sx, sy];
+        const grow = () => growRoom(this.layout, x0, y0, x1, y1);
+        if (x0 < 0 || y0 < 0 || x1 >= g.rows[0].length || y1 >= g.rows.length) {
+          this.recordStroke();
+          const s = grow();
+          this.shifted(s);
+          cx += s.dx * k;
+          cy += s.dy * k;
+          this.lastPainted = `${size}:${cx},${cy}`;
+        }
+      }
+    }
+    const ground = this.layout.ground; // growing replaces the room's grids
     if (erase) {
-      if (g.type === 'tiles') ch = '.';
+      if (ground.type === 'tiles') ch = '.';
       else if (size === CELL) {
-        if (g.rows[cy >> 1][cx >> 1] !== 'f') return; // no floor here to take back to wood
-        ch = 'w';
+        if (ground.rows[cy >> 1][cx >> 1] !== 'f') return; // no floor here to take back to wood
+        ch = ground.floor[cy][cx] === 'w' ? '.' : 'w'; // stone goes back to wood; wood goes altogether
       } else {
-        if (!WALL_CHARS.has(g.rows[cy][cx])) return;
+        if (!WALL_CHARS.has(ground.rows[cy][cx])) return;
         ch = 'f';
       }
     }
     const set = (rows: string[], x: number, y: number, c: string) => {
       if (rows[y][x] === c) return false;
-      if (!this.strokeRecorded) {
-        this.history.record();
-        this.strokeRecorded = true;
-      }
+      this.recordStroke();
       rows[y] = rows[y].slice(0, x) + c + rows[y].slice(x + 1);
       return true;
     };
-    if (g.type === 'tiles') {
-      if (!set(g.rows, cx, cy, ch)) return;
+    if (ground.type === 'tiles') {
+      if (!set(ground.rows, cx, cy, ch)) return;
       // outdoors only the painted patch changes: redraw just that, not the whole map
-      const ground = this.game.scene.ground;
-      if (ground instanceof TileMap) ground.repaint(cx, cy);
+      const map = this.game.scene.ground;
+      if (map instanceof TileMap) map.repaint(cx, cy);
       this.unsaved.add(this.layout.id);
       this.checkIn = 0.4;
       return;
     }
+    const sx = Math.floor(cx / 2);
+    const sy = Math.floor(cy / 2);
+    if (size === CELL && erase && ch === '.') {
+      // erasing wood floor takes the floor away altogether (the whole 32px cell)
+      if (set(ground.rows, sx, sy, '.')) this.roomChanged('Floor removed');
+      return;
+    }
     if (size === CELL) {
       // floor material; painting floor where there was none also makes it floor and wraps walls round it
-      let changed = set(g.floor, cx, cy, ch);
-      const sx = cx >> 1;
-      const sy = cy >> 1;
-      if (g.rows[sy][sx] !== 'f') {
-        set(g.rows, sx, sy, 'f');
-        g.rows.splice(0, g.rows.length, ...wrapWalls(g.rows, sx, sy, this.wallMat));
+      let changed = set(ground.floor, cx, cy, ch);
+      if (ground.rows[sy][sx] !== 'f') {
+        set(ground.rows, sx, sy, 'f');
+        ground.rows.splice(0, ground.rows.length, ...wrapWalls(ground.rows, sx, sy, this.wallMat));
         changed = true;
       }
-      if (changed) this.changed(undefined, true);
+      if (changed) this.roomChanged();
+      return;
+    }
+    if (erase) {
+      if (set(ground.rows, cx, cy, ch)) this.roomChanged('Wall removed');
       return;
     }
     // painting floor walls itself in with the material of the last wall brush (plain, outer)
-    if (erase) {
-      if (set(g.rows, cx, cy, ch)) this.changed('Wall removed', true);
-      return;
-    }
     if ('WI'.includes(ch)) this.wallMat = 'W';
     if ('SJ'.includes(ch)) this.wallMat = 'S';
-    if (set(g.rows, cx, cy, ch)) this.changed(undefined, true);
+    if (set(ground.rows, cx, cy, ch)) this.roomChanged();
+  }
+
+  /** After an interior's walls or floor changed: fit the room to what's built, then rebuild. */
+  private roomChanged(message?: string): void {
+    this.shifted(trimRoom(this.layout));
+    this.changed(message, true);
   }
 
   // ------------------------------------------------------------------ change, check, save
@@ -892,13 +973,13 @@ export class Editor {
         { label: 'Rename this map', run: () => this.renamePrompt() },
         {
           label: 'Door to...',
-          note: hit >= 0 ? label(this.layout.props[hit]) : 'point at a building or stairs',
+          note: hit >= 0 ? label(this.layout.props[hit]) : 'point at a building, stairs or a door',
           disabled: hit < 0 || !interiors.length,
           run: () => ({
-            title: `${label(this.layout.props[hit])} leads ${isStairs(this.layout.props[hit]) ? 'to' : 'into'}`,
+            title: `${label(this.layout.props[hit])} leads ${isPassage(this.layout.props[hit]) ? 'to' : 'into'}`,
             items: interiors.map((l) => ({
               label: l.id,
-              run: () => (isStairs(this.layout.props[hit]) ? this.linkStairs(hit, l.id) : this.linkDoor(hit, l.id)),
+              run: () => (isPassage(this.layout.props[hit]) ? this.linkPassage(hit, l.id) : this.linkDoor(hit, l.id)),
             })),
           }),
         },
@@ -1107,12 +1188,12 @@ export class Editor {
       if (e.button === 2) {
         if (this.tool === 'props') this.remove();
         else {
-          this.lastPainted = '';
+          this.startStroke();
           this.paint(true);
         }
       } else if (e.button === 0) {
         if (this.tool === 'ground') {
-          this.lastPainted = '';
+          this.startStroke();
           this.paint();
         } else this.primary();
       }
@@ -1136,7 +1217,7 @@ export class Editor {
         if (e.ctrlKey) {
           const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(this.zoom) + d));
           this.setZoom(ZOOMS[i]);
-        } else if (e.altKey) this.turnBy(d * TURN_FINE);
+        } else if (this.rHeld) this.turnBy(d * (e.shiftKey ? TURN_FINE : TURN_STEP));
         else if (e.shiftKey) this.stepTab(d);
         else this.stepItem(d);
       }
@@ -1198,19 +1279,27 @@ export class Editor {
 
     // grid
     ctx.globalAlpha = this.zoom < 1 ? 0.08 : 0.12;
-    const g = scene.ground;
-    for (let x = 0; x <= g.pixelW; x += TILE) r.rect(x - cx, -cy, px, g.pixelH, '#ffffff', true);
-    for (let y = 0; y <= g.pixelH; y += TILE) r.rect(-cx, y - cy, g.pixelW, px, '#ffffff', true);
+    // over the whole canvas: past an interior's walls too, where it can be built out
+    const cv = this.canvas;
+    for (let x = cv.x0; x <= cv.x1; x += TILE) r.rect(x - cx, cv.y0 - cy, px, cv.y1 - cv.y0, '#ffffff', true);
+    for (let y = cv.y0; y <= cv.y1; y += TILE) r.rect(cv.x0 - cx, y - cy, cv.x1 - cv.x0, px, '#ffffff', true);
     ctx.globalAlpha = 1;
 
     for (const p of scene.props) {
       const c = p.collider();
       if (c) r.rect(c.x - cx, c.y - cy, c.w, c.h, '#d95763');
     }
+    for (const b of scene.blockers) r.rect(b.x - cx, b.y - cy, b.w, b.h, '#d95763');
     ctx.globalAlpha = 0.35;
     for (const ex of scene.exits) r.rect(ex.area.x - cx, ex.area.y - cy, ex.area.w, ex.area.h, '#fbf236', true);
     ctx.globalAlpha = 1;
     for (const s of Object.values(scene.spawns)) r.rect(s.x + 10 - cx, s.y + 22 - cy, 12, 6, '#6abe30');
+    // the player's own collision box (what has to fit between pieces and walls), filled so it stands out
+    const feet = this.game.player.feet();
+    ctx.globalAlpha = 0.6;
+    r.rect(feet.x - cx, feet.y - cy, feet.w, feet.h, '#5fcde4', true);
+    ctx.globalAlpha = 1;
+    r.rect(feet.x - cx, feet.y - cy, feet.w, feet.h, '#5fcde4');
 
     ctx.globalAlpha = 0.4 + 0.15 * Math.sin(this.time * 6);
     for (const i of this.issues) for (const q of i.rects) r.rect(q.x - cx, q.y - cy, Math.max(2, q.w), Math.max(2, q.h), '#ff3030', true);

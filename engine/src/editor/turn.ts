@@ -1,11 +1,11 @@
 /**
- * Turning pieces. Floor and wall pieces turn freely (any angle), except stairs. Standing pieces can't (the art is drawn
+ * Turning pieces. Floor and wall pieces turn freely (any angle), except stairs and doors. Standing pieces can't (the art is drawn
  * from one viewpoint), but where the art comes in facings (a cart facing left, up, right, down), turning
  * steps through those instead.
  */
 import type { Assets } from '../core/assets';
 import type { PlacedProp } from '../world/layout';
-import { isStairs } from './stairs';
+import { isPassage } from './passages';
 
 const CLOCKWISE = ['up', 'right', 'down', 'left'];
 
@@ -30,9 +30,9 @@ function nextFacing(name: string, steps: number, has: (n: string) => boolean): s
   return null;
 }
 
-/** Floor and wall pieces turn freely, except stairs (they climb into the wall behind them, or the floor below). */
+/** Floor and wall pieces turn freely, except stairs and doors (their way through is straight in from below). */
 export function canTurnFreely(p: PlacedProp): boolean {
-  return p.layer !== undefined && !isStairs(p);
+  return p.layer !== undefined && !isPassage(p);
 }
 
 /**

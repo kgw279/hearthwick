@@ -13,7 +13,7 @@
  * lies on the floor (layer "floor": rugs, mats, stairs; no collider, drawn under everything standing), or
  * hangs on a wall (layer "wall": paintings, windows, shelves; no collider, drawn over the wall it's on).
  * Floor and wall props can be turned to any angle (rot, degrees clockwise).
- * Props can carry a behavior (talk, shop, forage, stairs...) that the game wires up when it builds the scene.
+ * Props can carry a behavior (talk, shop, forage, stairs, door...) that the game wires up when it builds the scene.
  */
 import type { Rect } from '../core/geom';
 import type { Facing } from './scene';
@@ -28,8 +28,9 @@ export type Behavior =
   | { type: 'draw_water' }
   | { type: 'forage'; node: string }
   | { type: 'fish'; item: string }
-  /** Stairs to another map: walking onto them goes there, arriving by that map's stairs back here. */
-  | { type: 'stairs'; to: string };
+  /** Stairs or a door to another map: walking onto / into them goes there, arriving by that map's way back. */
+  | { type: 'stairs'; to: string }
+  | { type: 'door'; to: string };
 
 export type PropLayer = 'floor' | 'wall';
 export const PROP_LAYERS: PropLayer[] = ['floor', 'wall'];
@@ -107,7 +108,7 @@ const FLOOR_CHARS = new Set(['w', 's']);
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
 const BEHAVIOR_FIELDS: Record<Behavior['type'], string[]> = {
   talk: ['who', 'line'], read: ['text'], enter: ['to', 'spawn'], shop: ['shop'], market: ['shop'],
-  pet: [], draw_water: [], forage: ['node'], fish: ['item'], stairs: ['to'],
+  pet: [], draw_water: [], forage: ['node'], fish: ['item'], stairs: ['to'], door: ['to'],
 };
 const PROP_KEYS = new Set(['sprite', 'x', 'y', 'layer', 'rot', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 
@@ -148,8 +149,8 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
   for (const k of Object.keys(g)) if (!fields.includes(k)) fail(`ground.${k}`, 'is not a ground field');
 
   if (!l.spawns || typeof l.spawns !== 'object') fail('spawns', 'must be an object');
-  if (Object.keys(l.spawns).length === 0 && !l.props?.some((p) => p.behavior?.type === 'stairs')) {
-    fail('spawns', 'needs at least one spawn (or stairs to arrive by)');
+  if (Object.keys(l.spawns).length === 0 && !l.props?.some((p) => p.behavior?.type === 'stairs' || p.behavior?.type === 'door')) {
+    fail('spawns', 'needs at least one spawn (or stairs or a door to arrive by)');
   }
   for (const [k, s] of Object.entries(l.spawns)) {
     num(s.x, `spawns.${k}.x`);

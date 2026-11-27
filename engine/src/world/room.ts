@@ -20,7 +20,10 @@
  *     face, L/R beside the room, B along the front, outer corners TL/TR/BL/BR, inner corners where a back
  *     wall steps, and *_end pieces either side of a doorway (a floor cell in a wall line);
  *   - where plaster meets stone along a run, the transition piece is used.
- * Only floor cells are walkable; furniture adds its own colliders as props.
+ * Collision is per pixel: you can walk wherever floor shows and no wall art covers it. Interior walls
+ * have floor under them, so they block exactly where they're drawn (a thin wall's cap, the end of a wall
+ * beside a doorway, a junction); outer walls and the outside block whole cells (only backdrop shows
+ * round their art). Furniture adds its own colliders as props.
  */
 import type { Assets } from '../core/assets';
 import type { Rect } from '../core/geom';
@@ -41,6 +44,8 @@ export class RoomMap implements Ground {
   private readonly canvas: HTMLCanvasElement;
 
   private readonly rows: string[];
+  /** 1 where the ground blocks, per world pixel. */
+  private readonly solid: Uint8Array;
 
   constructor(ground: { rows: string[]; floor: string[] }, assets: Assets) {
     const rows = ground.rows;
@@ -60,11 +65,22 @@ export class RoomMap implements Ground {
       const f = assets.frame(name);
       ctx.drawImage(f.img, f.x, f.y, f.w, f.h, x * TILE, y * TILE, f.w, f.h);
     };
+    const W = this.pixelW;
+    this.solid = new Uint8Array(W * this.pixelH);
+    const pixels = tilePixels(assets);
+    const alpha = new Map<string, ImageData>();
     for (let y = 0; y < this.h; y++) {
       for (let x = 0; x < this.w; x++) {
-        if (!this.wall(x, y)) continue;
-        const piece = this.wallPiece(x, y);
+        if (this.floor(x, y)) continue;
+        const piece = this.wall(x, y) ? this.wallPiece(x, y) : null;
         if (piece) put(piece, x, y);
+        // only interior walls have floor drawn round their art: everywhere else the whole cell blocks
+        let a = piece && this.interior(x, y) ? alpha.get(piece) : undefined;
+        if (piece && this.interior(x, y) && !a) alpha.set(piece, (a = pixels(piece)));
+        for (let py = 0; py < TILE; py++) {
+          const row = (y * TILE + py) * W + x * TILE;
+          for (let px = 0; px < TILE; px++) this.solid[row + px] = !a || a.data[(py * TILE + px) * 4 + 3] > 0 ? 1 : 0;
+        }
       }
     }
   }
@@ -157,10 +173,6 @@ export class RoomMap implements Ground {
     return this.wall(x - 1, y) || this.wall(x + 1, y) || !(this.wall(x, y - 1) || this.wall(x, y + 1));
   }
 
-  /** North-south interior wall: only its narrow cap blocks (it's 10px thick, not a whole cell). */
-  private thinV(x: number, y: number): boolean {
-    return this.interior(x, y) && !this.runsEW(x, y);
-  }
 
   /** A floor cell in a side wall: walls above and below. */
   private doorV(x: number, y: number): boolean {
@@ -243,20 +255,14 @@ export class RoomMap implements Ground {
   }
 
   blocks(rect: Rect): boolean {
-    const x0 = Math.floor(rect.x / TILE);
-    const x1 = Math.floor((rect.x + rect.w - 0.001) / TILE);
-    const y0 = Math.floor(rect.y / TILE);
-    const y1 = Math.floor((rect.y + rect.h - 0.001) / TILE);
+    if (rect.x < 0 || rect.y < 0 || rect.x + rect.w > this.pixelW || rect.y + rect.h > this.pixelH) return true;
+    const x0 = Math.floor(rect.x);
+    const x1 = Math.ceil(rect.x + rect.w) - 1;
+    const y0 = Math.floor(rect.y);
+    const y1 = Math.ceil(rect.y + rect.h) - 1;
     for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
-        if (this.floor(x, y)) continue;
-        if (this.thinV(x, y)) {
-          const cap = { x: x * TILE + 11, y: y * TILE, w: 10, h: TILE };
-          if (rect.x < cap.x + cap.w && rect.x + rect.w > cap.x) return true;
-          continue;
-        }
-        return true;
-      }
+      const row = y * this.pixelW;
+      for (let x = x0; x <= x1; x++) if (this.solid[row + x]) return true;
     }
     return false;
   }

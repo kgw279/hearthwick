@@ -17,9 +17,20 @@ export class Camera {
   /** smoothing: how quickly the camera catches up (per second); higher = tighter. */
   constructor(private worldW: number, private worldH: number, private readonly smoothing = 12) {}
 
+  /** Top-left of the area the camera keeps to (the world starts at 0, 0; the editor can widen it). */
+  private originX = 0;
+  private originY = 0;
+
   setWorld(w: number, h: number): void {
-    this.worldW = w;
-    this.worldH = h;
+    this.setBounds(0, 0, w, h);
+  }
+
+  /** Keep to a rectangle other than the world (the editor's canvas reaches past a room's edges). */
+  setBounds(x0: number, y0: number, x1: number, y1: number): void {
+    this.originX = x0;
+    this.originY = y0;
+    this.worldW = x1 - x0;
+    this.worldH = y1 - y0;
   }
 
   setInset(top: number, bottom: number): void {
@@ -73,12 +84,13 @@ export class Camera {
   /** Keep the view inside the world; a world smaller than the screen is centred instead. */
   private clamp(): void {
     const vw = this.viewW;
-    const { top, bottom } = this;
-    this.x = this.worldW <= vw ? (this.worldW - vw) / 2 : Math.max(0, Math.min(this.x, this.worldW - vw));
+    const { top, bottom, originX: ox, originY: oy } = this;
+    this.x = this.worldW <= vw ? ox + (this.worldW - vw) / 2 : Math.max(ox, Math.min(this.x, ox + this.worldW - vw));
     this.y = this.worldH <= this.viewH
-      ? (this.worldH - this.viewH) / 2 - top
-      : Math.max(-top, Math.min(this.y, this.worldH - VIEW_H / this.zoom + bottom));
+      ? oy + (this.worldH - this.viewH) / 2 - top
+      : Math.max(oy - top, Math.min(this.y, oy + this.worldH - VIEW_H / this.zoom + bottom));
   }
+
 
   /** Position for drawing, blended between the last two game steps (alpha 0..1). */
   at(alpha: number): { x: number; y: number } {

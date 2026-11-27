@@ -146,6 +146,7 @@ export class Game {
 
   blocked = (r: Rect): boolean => {
     if (this.scene.ground.blocks(r)) return true;
+    for (const b of this.scene.blockers) if (overlaps(r, b)) return true;
     for (const e of this.entities) {
       if (e === this.player) continue;
       const c = e.collider();
@@ -232,6 +233,8 @@ export class Game {
     if (this.editor.active) {
       // the editor aims the camera directly (no easing), so the world never slides under its pointer
       this.camera.setZoom(this.editor.zoom);
+      const c = this.editor.canvas;
+      this.camera.setBounds(c.x0, c.y0, c.x1, c.y1);
       const f = this.editor.focus();
       this.camera.centerOn(f.x, f.y);
     } else this.camera.follow(this.player.center.x, this.player.center.y, dt);

@@ -24,20 +24,24 @@ export interface SceneHooks {
   openShop(shop: string): void;
 }
 
-/** Named colliders, relative to the sprite's top-left, for props whose footprint isn't simply their art's base. */
+/**
+ * Named colliders, relative to the sprite's top-left, for props whose footprint isn't simply their art's
+ * base. Like footprints, they're only the strip a thing stands on (a few px deep), so pieces go right up
+ * to walls and each other and the player walks round and behind them; buildings keep their full depth.
+ */
 export const COLLIDERS: Record<string, Rect> = {
-  tree: { x: 11, y: 22, w: 10, h: 7 }, bush: { x: 6, y: 18, w: 20, h: 10 }, barrel: { x: 9, y: 19, w: 14, h: 9 },
-  crate: { x: 7, y: 17, w: 18, h: 11 }, fence: { x: 0, y: 21, w: 32, h: 6 }, lamppost: { x: 13, y: 24, w: 6, h: 5 },
-  well: { x: 6, y: 16, w: 20, h: 12 }, signpost: { x: 13, y: 24, w: 6, h: 4 }, market_stall: { x: 2, y: 14, w: 28, h: 14 },
-  house: { x: 2, y: 12, w: 28, h: 16 }, forage: { x: 9, y: 21, w: 14, h: 7 }, npc: { x: 10, y: 22, w: 12, h: 6 },
-  hitching_post: { x: 4, y: 16, w: 24, h: 10 }, chicken_coop: { x: 5, y: 12, w: 22, h: 16 }, hay_bale: { x: 6, y: 13, w: 20, h: 13 },
-  feed_trough: { x: 5, y: 18, w: 22, h: 8 }, big_animal: { x: 7, y: 20, w: 18, h: 8 },
-  block: { x: 2, y: 14, w: 28, h: 16 }, small: { x: 8, y: 20, w: 16, h: 9 }, table: { x: 0, y: 12, w: 32, h: 16 },
+  tree: { x: 11, y: 23, w: 10, h: 6 }, bush: { x: 6, y: 22, w: 20, h: 6 }, barrel: { x: 9, y: 22, w: 14, h: 6 },
+  crate: { x: 7, y: 22, w: 18, h: 6 }, fence: { x: 0, y: 21, w: 32, h: 6 }, lamppost: { x: 13, y: 24, w: 6, h: 5 },
+  well: { x: 6, y: 20, w: 20, h: 8 }, signpost: { x: 13, y: 24, w: 6, h: 4 }, market_stall: { x: 2, y: 20, w: 28, h: 8 },
+  house: { x: 2, y: 12, w: 28, h: 16 }, forage: { x: 9, y: 22, w: 14, h: 6 }, npc: { x: 10, y: 22, w: 12, h: 6 },
+  hitching_post: { x: 4, y: 20, w: 24, h: 6 }, chicken_coop: { x: 5, y: 20, w: 22, h: 8 }, hay_bale: { x: 6, y: 18, w: 20, h: 8 },
+  feed_trough: { x: 5, y: 20, w: 22, h: 6 }, big_animal: { x: 7, y: 22, w: 18, h: 6 },
+  block: { x: 2, y: 22, w: 28, h: 8 }, small: { x: 8, y: 23, w: 16, h: 6 }, table: { x: 0, y: 20, w: 32, h: 8 },
   bench: { x: 0, y: 20, w: 32, h: 6 },
 };
 
-/** Default footprint depth (px) for colliders worked out from the art. */
-export const FOOTPRINT_DEPTH = 14;
+/** Default footprint depth (px) for colliders worked out from the art: the strip it stands on. */
+export const FOOTPRINT_DEPTH = 6;
 
 export function buildGround(g: LayoutGround, assets: Assets): Ground {
   return g.type === 'tiles' ? new TileMap(g.rows, assets) : new RoomMap(g, assets);
@@ -70,7 +74,8 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
     case 'fish':
       return { interaction: () => ({ label: 'Fish', use: () => void hooks.give(b.item, 1) }) };
     case 'stairs':
-      return {}; // an exit, not a button: see stairsLink
+    case 'door':
+      return {}; // an exit, not a button: see passageLink
     case 'forage': {
       const node = content.forageNode(b.node);
       return {
@@ -125,30 +130,52 @@ export function artRect(p: PlacedProp, frame: string, assets: Assets): Rect {
   return { x: at.x + b.x, y: at.y + b.y, w: b.w, h: b.h };
 }
 
-/** The spawn a map's stairs to `from` put you on when you arrive from there. */
-export const stairsSpawn = (from: string) => `stairs:${from}`;
+/** The spawn a map's stairs or door to `from` put you on when you arrive from there. */
+export const passageSpawn = (kind: 'stairs' | 'door', from: string) => `${kind}:${from}`;
+
+/** How a passage (stairs or a door) sits in the map: its way through, where you arrive, and what walls it in. */
+export interface PassageLink { exit: Exit; spawn: Spawn; rails: Rect[] }
+
+const RAIL = 5; // px: the sides and top of a stairwell
+const WELL = 32; // px: the stairwell is the lower part of the stairs' art, this deep
 
 /**
- * Stairs: the exit they make (the lower part of their art; walking onto it goes to the other map) and
- * the spawn where you arrive coming back up or down them (just in front, facing into the room).
+ * Stairs and doors to another map.
+ *  - Stairs: their lower 32px is the stairwell, railed in on its sides and top (stairs up also block the
+ *    wall they climb into), so they can only be walked onto from below; the way through is inside it.
+ *  - A door hangs on a wall face: walking up into it from the floor in front goes through.
+ * Either way you arrive just in front, facing into the room. (The player's feet are rows 22-28 of its sprite.)
  */
-export function stairsLink(p: PlacedProp, here: string, assets: Assets, content: Content): { exit: Exit; spawn: Spawn } | null {
-  if (p.behavior?.type !== 'stairs') return null;
+export function passageLink(p: PlacedProp, here: string, assets: Assets, content: Content): PassageLink | null {
+  const b = p.behavior;
+  if (b?.type !== 'stairs' && b?.type !== 'door') return null;
   const a = artRect(p, propFrames(p, assets, content)[0], assets);
   const bottom = a.y + a.h;
+  const to = { to: b.to, spawn: passageSpawn(b.type, here) };
+  const arrive = (feetY: number): Spawn => ({ x: Math.round(a.x + a.w / 2 - 16), y: feetY - 22, facing: 'down' });
+  if (b.type === 'door') {
+    return { exit: { area: { x: a.x, y: bottom, w: a.w, h: 6 }, ...to, dir: 'up' }, spawn: arrive(bottom + 12), rails: [] };
+  }
+  const top = Math.max(a.y, bottom - WELL);
+  const rails: Rect[] = [
+    { x: a.x, y: top, w: RAIL, h: bottom - top },
+    { x: a.x + a.w - RAIL, y: top, w: RAIL, h: bottom - top },
+    { x: a.x, y: top, w: a.w, h: RAIL },
+  ];
+  if (top > a.y) rails.push({ x: a.x, y: a.y, w: a.w, h: top - a.y }); // the wall stairs up climb into
   return {
-    exit: { area: { x: a.x + 6, y: bottom - 22, w: a.w - 12, h: 16 }, to: p.behavior.to, spawn: stairsSpawn(here) },
-    // the player sprite's feet are rows 22-28: stand them just below the stairs
-    spawn: { x: Math.round(a.x + a.w / 2 - 16), y: bottom - 20, facing: 'down' },
+    exit: { area: { x: a.x + RAIL, y: top + RAIL, w: a.w - RAIL * 2, h: 14 }, ...to },
+    spawn: arrive(bottom + 2),
+    rails,
   };
 }
 
-/** Every spawn a layout offers: its own, plus one in front of each of its stairs. */
+/** Every spawn a layout offers: its own, plus one in front of each of its stairs and doors. */
 export function layoutSpawns(layout: Layout, assets: Assets, content: Content): Record<string, Spawn> {
   const out: Record<string, Spawn> = Object.fromEntries(Object.entries(layout.spawns).map(([k, s]) => [k, spawnAt(s.x, s.y, s.facing)]));
   for (const p of layout.props) {
-    const link = stairsLink(p, layout.id, assets, content);
-    if (link) out[stairsSpawn(link.exit.to)] = link.spawn;
+    const link = passageLink(p, layout.id, assets, content);
+    if (link) out[passageSpawn(p.behavior!.type as 'stairs' | 'door', link.exit.to)] = link.spawn;
   }
   return out;
 }
@@ -183,9 +210,13 @@ export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks
 export function buildScene(layout: Layout, assets: Assets, content: Content, hooks: SceneHooks, ground?: Ground): Scene {
   const exits: Exit[] = layout.exits.map((e) =>
     'cell' in e ? cellExit(e.cell[0], e.cell[1], e.to, e.spawn, e.dir) : { area: { ...e.area }, to: e.to, spawn: e.spawn, dir: e.dir });
+  const blockers: Rect[] = [];
   for (const p of layout.props) {
-    const link = stairsLink(p, layout.id, assets, content);
-    if (link) exits.push(link.exit);
+    const link = passageLink(p, layout.id, assets, content);
+    if (link) {
+      exits.push(link.exit);
+      blockers.push(...link.rails);
+    }
   }
   return {
     id: layout.id,
@@ -193,6 +224,7 @@ export function buildScene(layout: Layout, assets: Assets, content: Content, hoo
     props: layout.props.map((p) => buildProp(p, assets, content, hooks)),
     spawns: layoutSpawns(layout, assets, content),
     exits,
+    blockers,
     backdrop: layout.backdrop,
   };
 }

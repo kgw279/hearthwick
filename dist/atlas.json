@@ -2307,13 +2307,13 @@
           "w": 32,
           "h": 32
         },
-        "wall_window_stone": {
+        "wall_shelf": {
           "x": 192,
           "y": 64,
           "w": 32,
           "h": 32
         },
-        "wall_shelf": {
+        "wall_door": {
           "x": 224,
           "y": 64,
           "w": 32,

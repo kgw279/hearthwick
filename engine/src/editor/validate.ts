@@ -52,7 +52,7 @@ export function validate(
   const gw = Math.floor((scene.ground.pixelW - FEET.w - ox) / STEP) + 1;
   const gh = Math.floor((scene.ground.pixelH - FEET.h - oy) / STEP) + 1;
   const feetAt = (gx: number, gy: number): Rect => ({ x: ox + gx * STEP, y: oy + gy * STEP, w: FEET.w, h: FEET.h });
-  const free = (r: Rect) => !scene.ground.blocks(r) && !solids.some((s) => overlaps(r, s.c));
+  const free = (r: Rect) => !scene.ground.blocks(r) && !solids.some((s) => overlaps(r, s.c)) && !scene.blockers.some((b) => overlaps(r, b));
   const cellOf = (x: number, y: number) => [Math.round((x + FEET.x - ox) / STEP), Math.round((y + FEET.y - oy) / STEP)];
 
   const seen = new Uint8Array(gw * gh);

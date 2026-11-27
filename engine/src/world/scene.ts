@@ -24,6 +24,8 @@ export interface Scene {
   readonly props: Entity[];
   readonly spawns: Record<string, Spawn>;
   readonly exits: Exit[];
+  /** Extra solid rects that belong to no single prop (the rails round a stairwell). */
+  readonly blockers: Rect[];
   /** Background colour around maps smaller than the screen. */
   readonly backdrop?: string;
 }
