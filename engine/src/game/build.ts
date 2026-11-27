@@ -40,7 +40,7 @@ export const COLLIDERS: Record<string, Rect> = {
 export const FOOTPRINT_DEPTH = 14;
 
 export function buildGround(g: LayoutGround, assets: Assets): Ground {
-  return g.type === 'tiles' ? new TileMap(g.rows, assets) : new RoomMap(g.rows, assets);
+  return g.type === 'tiles' ? new TileMap(g.rows, assets) : new RoomMap(g, assets);
 }
 
 /** A behavior resolved for one prop: the frames it supplies (if any) and how it reacts to the player. */
@@ -136,12 +136,13 @@ export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks
   return prop;
 }
 
-export function buildScene(layout: Layout, assets: Assets, content: Content, hooks: SceneHooks): Scene {
+/** `ground`: reuse an already-built ground (the editor does when only props changed). */
+export function buildScene(layout: Layout, assets: Assets, content: Content, hooks: SceneHooks, ground?: Ground): Scene {
   const exits: Exit[] = layout.exits.map((e) =>
     'cell' in e ? cellExit(e.cell[0], e.cell[1], e.to, e.spawn, e.dir) : { area: { ...e.area }, to: e.to, spawn: e.spawn, dir: e.dir });
   return {
     id: layout.id,
-    ground: buildGround(layout.ground, assets),
+    ground: ground ?? buildGround(layout.ground, assets),
     props: layout.props.map((p) => buildProp(p, assets, content, hooks)),
     spawns: Object.fromEntries(Object.entries(layout.spawns).map(([k, s]) => [k, spawnAt(s.x, s.y, s.facing)])),
     exits,

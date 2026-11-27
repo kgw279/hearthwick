@@ -3,7 +3,8 @@
  * The game builds scenes from them and the layout editor reads and writes them, so a map made in the
  * editor is exactly the map the game plays.
  *
- * Ground is a grid of 32px cells. Props are placed freely: a prop's x, y is the world pixel at the middle
+ * Ground: outdoors, a grid of 16px cells of terrain; indoors, a grid of 32px cells of walls and floor
+ * (the structure) plus a 16px grid of floor materials. Props are placed freely: a prop's x, y is the world pixel at the middle
  * of the bottom of its art (where it stands on the ground), so placement follows the art, not a grid.
  * Its collider is a preset, a rect relative to the sprite, or by default its footprint: the bottom
  * `depth` px of its art. Flat props (rugs, mats, stairs holes) have no collider and draw under everything.
@@ -41,8 +42,12 @@ export interface PlacedProp {
   behavior?: Behavior;
 }
 
-/** Outdoor ground (terrain characters) or an interior (floors and autotiled walls, see world/room.ts). */
-export type LayoutGround = { type: 'tiles'; rows: string[] } | { type: 'room'; rows: string[] };
+/**
+ * Outdoor ground: rows of 16px terrain cells (see world/tilemap.ts).
+ * Interior: rows of 32px structure cells (walls, floor, outside; see world/room.ts) and `floor`, rows of
+ * 16px floor-material cells, twice as many each way.
+ */
+export type LayoutGround = { type: 'tiles'; rows: string[] } | { type: 'room'; rows: string[]; floor: string[] };
 
 export interface LayoutSpawn { x: number; y: number; facing: Facing }
 
@@ -57,27 +62,34 @@ export interface Layout {
   props: PlacedProp[];
 }
 
-/** Ground characters each ground type understands (what the editor's ground brush offers). */
-export const GROUND_CHARS: Record<LayoutGround['type'], Array<{ ch: string; name: string; sample: string }>> = {
+/**
+ * The brushes each kind of ground offers (what the editor's Ground tab shows). `fine` brushes paint the
+ * 16px grid (terrain, floor materials); the others paint the 32px structure grid (walls, clearing).
+ */
+export interface GroundBrush { ch: string; name: string; sample: string; fine: boolean }
+export const GROUND_CHARS: Record<LayoutGround['type'], GroundBrush[]> = {
   tiles: [
-    { ch: '.', name: 'Grass', sample: 'grass' },
-    { ch: 'd', name: 'Road', sample: 'dirt_path' },
-    { ch: 'p', name: 'Path', sample: 'path_00_v0' },
-    { ch: 'D', name: 'Path to door', sample: 'path_00_v0' },
-    { ch: 'c', name: 'Cobblestone', sample: 'cobble_v0' },
-    { ch: 's', name: 'Square pavers', sample: 'pavers_v0' },
-    { ch: 'w', name: 'Water', sample: 'water' },
+    { ch: '.', name: 'Grass', sample: 'grass', fine: true },
+    { ch: 'd', name: 'Dirt', sample: 'dirt_path', fine: true },
+    { ch: 'c', name: 'Cobblestone', sample: 'cobble_v0', fine: true },
+    { ch: 's', name: 'Square pavers', sample: 'pavers_v0', fine: true },
+    { ch: 'w', name: 'Water', sample: 'water', fine: true },
   ],
   room: [
-    { ch: 'w', name: 'Wood floor', sample: 'floor_wood_flagstone_00' },
-    { ch: 's', name: 'Stone floor', sample: 'floor_wood_flagstone_15' },
-    { ch: 'W', name: 'Plaster wall', sample: 'face_plaster_plain' },
-    { ch: 'N', name: 'Plaster wall, window', sample: 'face_plaster_window' },
-    { ch: 'S', name: 'Stone wall', sample: 'face_stone_plain' },
-    { ch: 'M', name: 'Stone wall, window', sample: 'face_stone_window' },
-    { ch: '.', name: 'Clear', sample: '' },
+    { ch: 'w', name: 'Wood floor', sample: 'floor_wood_flagstone_00', fine: true },
+    { ch: 's', name: 'Stone floor', sample: 'floor_wood_flagstone_15', fine: true },
+    { ch: 'W', name: 'Plaster wall', sample: 'face_plaster_plain', fine: false },
+    { ch: 'N', name: 'Plaster wall, window', sample: 'face_plaster_window', fine: false },
+    { ch: 'S', name: 'Stone wall', sample: 'face_stone_plain', fine: false },
+    { ch: 'M', name: 'Stone wall, window', sample: 'face_stone_window', fine: false },
+    { ch: '.', name: 'Clear', sample: '', fine: false },
   ],
 };
+
+/** Characters allowed in each grid. */
+const TILE_CHARS = new Set(['.', 'd', 'c', 's', 'w']);
+const STRUCTURE_CHARS = new Set(['.', 'f', 'W', 'N', 'S', 'M']);
+const FLOOR_CHARS = new Set(['w', 's']);
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
 const BEHAVIOR_FIELDS: Record<Behavior['type'], string[]> = {
@@ -102,13 +114,25 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
   str(l.id, 'id');
   const g = l.ground;
   if (!g || (g.type !== 'tiles' && g.type !== 'room')) fail('ground.type', 'must be "tiles" or "room"');
-  if (!Array.isArray(g.rows) || g.rows.length === 0) fail('ground.rows', 'must be a non-empty list of strings');
-  const allowed = new Set(GROUND_CHARS[g.type].map((c) => c.ch));
-  g.rows.forEach((row, i) => {
-    if (typeof row !== 'string' || row.length !== g.rows[0].length) fail(`ground.rows[${i}]`, `must be ${g.rows[0].length} characters`);
-    for (const ch of row) if (!allowed.has(ch)) fail(`ground.rows[${i}]`, `has unknown ground "${ch}"`);
-  });
-  for (const k of Object.keys(g)) if (k !== 'type' && k !== 'rows') fail(`ground.${k}`, 'is not a ground field');
+  const grid = (rows: unknown, name: string, chars: Set<string>, h?: number, w?: number) => {
+    const r = rows as string[];
+    if (!Array.isArray(r) || r.length === 0) fail(name, 'must be a non-empty list of strings');
+    if (h !== undefined && r.length !== h) fail(name, `must have ${h} rows`);
+    const width = w ?? r[0].length;
+    r.forEach((row, i) => {
+      if (typeof row !== 'string' || row.length !== width) fail(`${name}[${i}]`, `must be ${width} characters`);
+      for (const ch of row) if (!chars.has(ch)) fail(`${name}[${i}]`, `has unknown ground "${ch}"`);
+    });
+  };
+  if (g.type === 'tiles') {
+    grid(g.rows, 'ground.rows', TILE_CHARS);
+    if (g.rows.length % 2 || g.rows[0].length % 2) fail('ground.rows', 'must be whole tiles (an even number of 16px cells each way)');
+  } else {
+    grid(g.rows, 'ground.rows', STRUCTURE_CHARS);
+    grid(g.floor, 'ground.floor', FLOOR_CHARS, g.rows.length * 2, g.rows[0].length * 2);
+  }
+  const fields = g.type === 'room' ? ['type', 'rows', 'floor'] : ['type', 'rows'];
+  for (const k of Object.keys(g)) if (!fields.includes(k)) fail(`ground.${k}`, 'is not a ground field');
 
   if (!l.spawns || typeof l.spawns !== 'object' || Object.keys(l.spawns).length === 0) fail('spawns', 'needs at least one spawn');
   for (const [k, s] of Object.entries(l.spawns)) {
@@ -169,7 +193,10 @@ export function formatLayout(l: Layout): string {
   const g = l.ground;
   out.push('  "ground": {', `    "type": ${j(g.type)},`);
   const rows = g.rows.map((r) => `      ${j(r)}`).join(',\n');
-  out.push(`    "rows": [\n${rows}\n    ]`);
+  if (g.type === 'room') {
+    out.push(`    "rows": [\n${rows}\n    ],`);
+    out.push(`    "floor": [\n${g.floor.map((r) => `      ${j(r)}`).join(',\n')}\n    ]`);
+  } else out.push(`    "rows": [\n${rows}\n    ]`);
   out.push('  },');
   out.push(`  "spawns": ${j(l.spawns)},`);
   out.push(`  "exits": [\n${l.exits.map((e) => `    ${j(e)}`).join(',\n')}\n  ],`);

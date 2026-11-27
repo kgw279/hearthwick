@@ -113,11 +113,15 @@ export class Game {
     this.target = null;
   }
 
-  /** Rebuild the current scene from its (edited) layout, keeping the player where they stand. */
-  rebuildScene(): void {
+  /**
+   * Rebuild the current scene from its (edited) layout, keeping the player where they stand. The ground
+   * is kept unless it changed (rebuilding a big outdoor map takes a moment).
+   */
+  rebuildScene(groundChanged = true): void {
     const id = this.scene.id;
-    this.scenes.delete(id);
-    const scene = this.getScene(id);
+    const layout = this.layouts.get(id)!;
+    const scene = buildScene(layout, this.assets, this.content, this.hooks, groundChanged ? undefined : this.scene.ground);
+    this.scenes.set(id, scene);
     this.scene = scene;
     this.entities = [...scene.props, this.player];
     this.camera.setWorld(scene.ground.pixelW, scene.ground.pixelH);

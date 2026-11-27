@@ -6,11 +6,27 @@
     "rows": [
       "WWWWWWWWWW",
       "WWNWWNWWNW",
-      "WwwwwwwwwW",
-      "WwwwwwwwwW",
-      "WwwwwwwwwW",
-      "WwwwwwwwwW",
+      "WffffffffW",
+      "WffffffffW",
+      "WffffffffW",
+      "WffffffffW",
       "WWWWWWWWWW"
+    ],
+    "floor": [
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwww"
     ]
   },
   "spawns": {"stairs": {"x": 6, "y": 5, "facing": "down"}},

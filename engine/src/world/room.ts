@@ -1,15 +1,17 @@
 /**
- * Interior ground: floors and walls from the art pack's interior kit, worked out from a character grid
- * and pre-rendered once. One character per 32px cell:
+ * Interior ground: floors and walls from the art pack's interior kit, worked out from two grids and
+ * pre-rendered once.
  *
- *   w  wood floor            s  flagstone floor
- *   W  plaster wall          N  plaster wall with a window
- *   S  stone wall            M  stone wall with a window
- *   .  nothing (outside)
+ * Structure, one character per 32px cell:
+ *   f  floor          W  plaster wall      N  plaster wall with a window
+ *   .  outside        S  stone wall        M  stone wall with a window
+ * Floor material, one character per 16px cell (twice as many each way): w wood, s flagstone. Floors are
+ * composited per pixel: flagstone patches take their shape from their cells (see field.ts), so one
+ * painted cell is a small patch and painting more widens it.
  *
- * Floors: wood/stone borders use the floor_wood_flagstone corner autotile (a corner is stone if any
- * cell around it is stone floor).
  * Walls are autotiled from the shape of the room, the way the kit is drawn (top-down 3/4):
+ *   - interior walls (floor on both sides): north-south walls are a narrow cap (with ends where they stop
+ *     at open floor), east-west walls a cap along the top with their face below;
  *   - a wall cell with floor below it is a wall *face* (plaster or stone, windowed for N/M), unless that
  *     floor is a doorway through a side wall;
  *   - every other wall cell shows the *cap* (top edge) that the floor next to it calls for: T above a
@@ -21,10 +23,11 @@
 import type { Assets } from '../core/assets';
 import type { Rect } from '../core/geom';
 import type { Renderer } from '../core/renderer';
+import { inside } from './field';
 import type { Ground } from './ground';
-import { TILE } from './tilemap';
+import { tilePixels, TILE } from './tilemap';
 
-const FLOOR = new Set(['w', 's']);
+const FLOOR = new Set(['f']);
 const WALL = new Set(['W', 'S', 'N', 'M']);
 
 export class RoomMap implements Ground {
@@ -32,7 +35,11 @@ export class RoomMap implements Ground {
   readonly h: number;
   private readonly canvas: HTMLCanvasElement;
 
-  constructor(private readonly rows: string[], assets: Assets) {
+  private readonly rows: string[];
+
+  constructor(ground: { rows: string[]; floor: string[] }, assets: Assets) {
+    const rows = ground.rows;
+    this.rows = rows;
     this.h = rows.length;
     this.w = rows[0].length;
     rows.forEach((r, i) => {
@@ -43,22 +50,62 @@ export class RoomMap implements Ground {
     this.canvas.height = this.pixelH;
     const ctx = this.canvas.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
+    ctx.putImageData(this.floors(ground.floor, assets), 0, 0);
     const put = (name: string, x: number, y: number) => {
       const f = assets.frame(name);
       ctx.drawImage(f.img, f.x, f.y, f.w, f.h, x * TILE, y * TILE, f.w, f.h);
     };
     for (let y = 0; y < this.h; y++) {
       for (let x = 0; x < this.w; x++) {
-        if (this.floor(x, y)) {
-          const stone = [this.stoneCorner(x, y), this.stoneCorner(x + 1, y), this.stoneCorner(x, y + 1), this.stoneCorner(x + 1, y + 1)];
-          const index = stone.reduce((acc, s, i) => acc | (s ? 1 << i : 0), 0);
-          put(`floor_wood_flagstone_${String(index).padStart(2, '0')}`, x, y);
-        } else if (this.wall(x, y)) {
-          const piece = this.wallPiece(x, y);
-          if (piece) put(piece, x, y);
-        }
+        if (!this.wall(x, y)) continue;
+        const piece = this.wallPiece(x, y);
+        if (piece) put(piece, x, y);
       }
     }
+  }
+
+  /** Floor pixels: wood, with flagstone where its cells are painted, and a stone edge where they meet. */
+  private floors(floor: string[], assets: Assets): ImageData {
+    const W = this.pixelW;
+    const H = this.pixelH;
+    const img = new ImageData(W, H);
+    const pixels = tilePixels(assets);
+    const wood = pixels(assets.terrain.floors.wood).data;
+    const stone = pixels(assets.terrain.floors.stone).data;
+    const edge = parseInt(assets.terrain.edges.flagstone_edge.slice(1), 16);
+    const fw = floor[0].length;
+    const fh = floor.length;
+    const isStone = (i: number, j: number) => floor[j][i] === 's';
+    const st = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const cx = x >> 5;
+        const cy = y >> 5;
+        if (this.floor(cx, cy) || this.interior(cx, cy)) st[y * W + x] = inside(isStone, fw, fh, x, y, 0.04) ? 2 : 1;
+      }
+    }
+    const out = img.data;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        const k = st[y * W + x];
+        if (!k) continue;
+        const o = (y * W + x) * 4;
+        const t = (((y & 31) * TILE) + (x & 31)) * 4;
+        const src = k === 2 ? stone : wood;
+        const woodNext = (px: number, py: number) => px >= 0 && py >= 0 && px < W && py < H && st[py * W + px] === 1;
+        if (k === 2 && (woodNext(x - 1, y) || woodNext(x + 1, y) || woodNext(x, y - 1) || woodNext(x, y + 1))) {
+          out[o] = (edge >> 16) & 255;
+          out[o + 1] = (edge >> 8) & 255;
+          out[o + 2] = edge & 255;
+        } else {
+          out[o] = src[t];
+          out[o + 1] = src[t + 1];
+          out[o + 2] = src[t + 2];
+        }
+        out[o + 3] = 255;
+      }
+    }
+    return img;
   }
 
   get pixelW(): number {
@@ -87,31 +134,58 @@ export class RoomMap implements Ground {
     return c === 'S' || c === 'M';
   }
 
-  private stoneCorner(vx: number, vy: number): boolean {
-    return [this.cell(vx - 1, vy - 1), this.cell(vx, vy - 1), this.cell(vx - 1, vy), this.cell(vx, vy)].includes('s');
-  }
-
   /** A floor cell in a wall line: walls on both sides (left/right = through a front or back wall). */
   private doorH(x: number, y: number): boolean {
-    return this.floor(x, y) && this.wall(x - 1, y) && this.wall(x + 1, y) && !this.floor(x, y + 1);
+    return this.floor(x, y) && this.wall(x - 1, y) && this.wall(x + 1, y) && !this.floor(x, y + 1)
+      && !this.floor(x - 2, y) && !this.floor(x + 2, y); // in a run of wall, not a gap between two pieces
+  }
+
+  /** An interior wall cell (floor on both sides): thin art, so floor shows round it. */
+  private interior(x: number, y: number): boolean {
+    return this.wall(x, y) && ((this.floor(x, y - 1) && this.floor(x, y + 1)) || (this.floor(x - 1, y) && this.floor(x + 1, y)));
+  }
+
+  /** North-south interior wall: only its narrow cap blocks (it's 8px thick, not a whole cell). */
+  private thinV(x: number, y: number): boolean {
+    return this.wall(x, y) && this.floor(x - 1, y) && this.floor(x + 1, y) && !(this.floor(x, y - 1) && this.floor(x, y + 1));
+  }
+
+  /** A doorway through an east-west interior wall: walls left and right, floor above and below. */
+  private doorWithin(x: number, y: number): boolean {
+    return this.floor(x, y) && this.wall(x - 1, y) && this.wall(x + 1, y) && this.floor(x, y - 1) && this.floor(x, y + 1);
   }
 
   /** A floor cell in a side wall: walls above and below. */
   private doorV(x: number, y: number): boolean {
-    return this.floor(x, y) && this.wall(x, y - 1) && this.wall(x, y + 1);
+    return this.floor(x, y) && this.wall(x, y - 1) && this.wall(x, y + 1)
+      && !this.floor(x, y - 2) && !this.floor(x, y + 2); // in a run of wall, not a gap between two pieces
   }
 
+  /** A wall seen from the front: floor below it (or an interior wall running off it), not a side doorway. */
   private face(x: number, y: number): boolean {
-    return this.wall(x, y) && this.floor(x, y + 1) && !this.doorV(x, y + 1);
+    if (!this.wall(x, y) || this.interior(x, y)) return false;
+    return (this.floor(x, y + 1) && !this.doorV(x, y + 1)) || this.interior(x, y + 1);
   }
 
-  /** Floor, or a wall face: the parts of the room a cap borders. */
+  /** Floor, a wall face, or an interior wall: the parts of the room a cap borders. */
   private inside(x: number, y: number): boolean {
-    return this.floor(x, y) || this.face(x, y);
+    return this.floor(x, y) || this.face(x, y) || this.interior(x, y);
   }
 
   private wallPiece(x: number, y: number): string | null {
     const mat = this.stone(x, y) ? 'stone' : 'wood';
+    // interior walls: floor on both sides
+    const iw = (kind: string) => `iwall_${mat}_${kind}`;
+    if (this.floor(x, y - 1) && this.floor(x, y + 1)) {
+      if (this.doorWithin(x + 1, y)) return iw('H_end_L');
+      if (this.doorWithin(x - 1, y)) return iw('H_end_R');
+      return iw('H');
+    }
+    if (this.floor(x - 1, y) && this.floor(x + 1, y)) {
+      if (this.floor(x, y + 1)) return iw('V_end');
+      if (this.floor(x, y - 1)) return iw('V_top');
+      return iw('V');
+    }
     if (this.face(x, y)) {
       const window = this.cell(x, y) === 'N' || this.cell(x, y) === 'M';
       if (this.face(x + 1, y) && this.stone(x + 1, y) !== this.stone(x, y)) {
@@ -159,7 +233,17 @@ export class RoomMap implements Ground {
     const x1 = Math.floor((rect.x + rect.w - 0.001) / TILE);
     const y0 = Math.floor(rect.y / TILE);
     const y1 = Math.floor((rect.y + rect.h - 0.001) / TILE);
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (!this.floor(x, y)) return true;
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        if (this.floor(x, y)) continue;
+        if (this.thinV(x, y)) {
+          const cap = { x: x * TILE + 11, y: y * TILE, w: 10, h: TILE };
+          if (rect.x < cap.x + cap.w && rect.x + rect.w > cap.x) return true;
+          continue;
+        }
+        return true;
+      }
+    }
     return false;
   }
 }
@@ -169,6 +253,7 @@ export class RoomMap implements Ground {
  * of the given material, including the cap row above a new back-wall face.
  */
 export function wrapWalls(rows: string[], x: number, y: number, wall: string): string[] {
+  // (x, y) is a 32px structure cell
   const out = rows.slice();
   const set = (cx: number, cy: number) => {
     if (cy < 0 || cy >= out.length || cx < 0 || cx >= out[0].length) return;

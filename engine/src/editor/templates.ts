@@ -17,7 +17,7 @@ export const SIZES = {
 export function outdoorTemplate(id: string, w: number, h: number): Layout {
   return {
     id,
-    ground: { type: 'tiles', rows: Array.from({ length: h }, () => '.'.repeat(w)) },
+    ground: { type: 'tiles', rows: Array.from({ length: h * 2 }, () => '.'.repeat(w * 2)) }, // 16px cells
     spawns: { start: { x: Math.floor(w / 2), y: Math.floor(h / 2), facing: 'down' } },
     exits: [],
     props: [],
@@ -31,13 +31,14 @@ export function interiorTemplate(id: string, w: number, h: number): Layout {
   for (let y = 0; y < h; y++) {
     if (y === 0) rows.push('W'.repeat(w));
     else if (y === 1) rows.push(Array.from({ length: w }, (_, x) => (x > 0 && x < w - 1 && x % 3 === 2 ? 'N' : 'W')).join(''));
-    else if (y === h - 1) rows.push('W'.repeat(door) + 'w' + 'W'.repeat(w - door - 1));
-    else rows.push('W' + 'w'.repeat(w - 2) + 'W');
+    else if (y === h - 1) rows.push('W'.repeat(door) + 'f' + 'W'.repeat(w - door - 1));
+    else rows.push('W' + 'f'.repeat(w - 2) + 'W');
   }
+  const floor = Array.from({ length: h * 2 }, () => 'w'.repeat(w * 2));
   return {
     id,
     backdrop: '#221c2c',
-    ground: { type: 'room', rows },
+    ground: { type: 'room', rows, floor },
     spawns: { entrance: { x: door, y: h - 2, facing: 'up' } },
     exits: [{ cell: [door, h - 1], to: UNLINKED, spawn: UNLINKED, dir: 'down' }],
     props: [{ sprite: 'doormat', x: door * 32 + 16, y: (h - 2) * 32 + 30, flat: true }],

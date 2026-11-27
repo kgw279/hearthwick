@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from core import PAL  # noqa: E402
 from art_ground import GROUND_TILES, VARIANTS as PAVE_VARIANTS  # noqa: E402
 from art_town import TOWN_BUILDINGS, TOWN_PROPS, TOWN_ANIMATIONS  # noqa: E402
+from art_iwalls import IWALLS  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
 from sprites2 import AUTOTILES, BUILDINGS, STATIONS, VARIANTS, grass_v, dirt_v, water_v, corner_mask  # noqa: E402
 from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
@@ -51,7 +52,7 @@ def build_groups(data):
         'props': ([(n, f()) for n, f in PROPS + TOWN_PROPS], 32, 32, 8, 'grass'),
         'forage': ([(f'{n}_{st}', f(st == 'ready')) for n, f, _ in FORAGE for st in ('ready', 'harvested')], 32, 32, 8, 'grass'),
         'walls': ([(n, f()) for n, f in WALL_KIT], 32, 32, 10, 'floor'),
-        'interior_walls': ([(n, f()) for n, f in WALL_KIT2], 32, 32, 18, 'void'),
+        'interior_walls': ([(n, f()) for n, f in WALL_KIT2 + IWALLS], 32, 32, 18, 'void'),
         'floor_transitions': ([(n, f()) for n, f in FLOOR_TRANSITIONS], 32, 32, 16, None),
         'furniture': ([(n, f()) for n, f in FURNITURE + STAIRS_SMALL], 32, 32, 8, 'floor'),
         'stairs': ([(n, f()) for n, f in STAIRS], 32, 64, 4, 'floor'),
@@ -148,7 +149,9 @@ def write_terrain(out):
                   'pavers': [f'pavers_v{v}' for v in range(PAVE_VARIANTS)],
                   'water': [f'grass_water_15_v{v}' for v in range(VARIANTS)]},
         'edges': {'dirt_lip': PAL['B'], 'grass_fringe': PAL['g'], 'bank': PAL['b'], 'bank_low': PAL['B'],
-                  'foam': PAL['p'], 'shallows': PAL['c'], 'cobble_kerb': PAL['d'], 'pavers_kerb': PAL['B']},
+                  'foam': PAL['p'], 'shallows': PAL['c'], 'cobble_kerb': PAL['d'], 'pavers_kerb': PAL['B'],
+                  'flagstone_edge': PAL['e']},
+        'floors': {'wood': 'floor_wood_flagstone_00', 'stone': 'floor_wood_flagstone_15'},
         'corner': [[enc(corner_mask(i, v)) for i in range(16)] for v in range(VARIANTS)],
         'corner_paved': [enc(corner_mask(i, 0, amp=0.0)) for i in range(16)],
         'path': [[enc(path_mask(c, v)) for c in range(16)] for v in range(PATH_VARIANTS)],

@@ -27,9 +27,11 @@ import type { Game } from '../game/game';
 import { placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
-import { TILE } from '../world/tilemap';
+import { CELL } from '../world/field';
+import { TileMap, TILE } from '../world/tilemap';
 import { wrapWalls } from '../world/room';
 import { drawSlot } from '../ui/items';
+import { Nav } from '../ui/screen';
 import { Menu, type MenuPage } from './menu';
 import { buildPalette, type Category } from './palette';
 import { interiorTemplate, outdoorTemplate, SIZES, UNLINKED } from './templates';
@@ -52,18 +54,20 @@ const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel
 const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
 const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
-const PANEL_H = 100;
+/** The strip along the bottom: the piece in hand, snap, and control hints. */
+const BAR_H = 46;
+/** The piece picker window: slots per row and rows visible. */
+const PICK_ROWS = 4;
 const HUD_H = 22;
-const TAB_Y = 4;
 const TAB_H = 16;
 /** Hints per device: glyph frames (or actions, resolved to the pad's glyphs) and what they do. */
 const MOUSE_HINTS: Array<[string[], string]> = [
-  [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'],
-  [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'], [['key_tab'], 'Palette'], [['key_esc'], 'Menu'],
+  [['key_tab'], 'Pieces'], [['mouse_left'], 'Place'], [['mouse_right'], 'Delete'], [['key_esc'], 'Menu'],
+  [['mouse_scroll'], 'Pick'], [['key_ctrl', 'mouse_scroll'], 'Zoom'], [['key_w', 'key_a', 'key_s', 'key_d'], 'Pan'],
 ];
 const PAD_HINTS: Array<[Action[], string]> = [
-  [['interact'], 'Place'], [['cook'], 'Delete'], [['tab_prev', 'tab_next'], 'Pick'], [['cat_prev', 'cat_next'], 'Tab'],
-  [['recipes'], 'Palette'], [['map'], 'Snap'], [['zoom'], 'Zoom'], [['menu'], 'Menu'],
+  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['menu'], 'Menu'],
+  [['tab_prev', 'tab_next'], 'Pick'], [['map'], 'Snap'], [['zoom'], 'Zoom'],
 ];
 
 export class Editor {
@@ -80,9 +84,13 @@ export class Editor {
   private brush = 0;
   /** Material that painting floor wraps walls in (the last wall brush used). */
   private wallMat = 'W';
-  /** The palette panel is showing. */
-  private panel = true;
-  private readonly tabs: Array<{ x: number; w: number; index: number }> = [];
+  /** The piece picker window is open (Tab / Y). */
+  private picking = false;
+  /** Picker: first visible row, the slot under the pointer, and stepping for pad/keys. */
+  private pickScroll = 0;
+  private pickHover = -1;
+  private readonly pickNav = new Nav();
+  private readonly tabs: Array<{ x: number; y: number; w: number; index: number }> = [];
   private snapButton = { x: 0, w: 0 };
   private held: Held | null = null;
   private checkIn = -1;
@@ -98,7 +106,6 @@ export class Editor {
   /** Mouse position in logical screen pixels while the mouse is driving the cursor. */
   private mouse: { x: number; y: number } | null = null;
   cam = { x: 0, y: 0 };
-  private readonly slots: Array<{ x: number; y: number; index: number }> = [];
   /** Where the camera is aimed. */
   view = { x: 0, y: 0 };
   private pan: { x: number; y: number } | null = null;
@@ -125,7 +132,7 @@ export class Editor {
   }
 
   private get panelH(): number {
-    return this.panel ? PANEL_H : 0;
+    return BAR_H;
   }
 
   private applyInset(): void {
@@ -133,9 +140,75 @@ export class Editor {
     this.clampView();
   }
 
-  private togglePanel(): void {
-    this.panel = !this.panel;
-    this.applyInset();
+  private togglePicker(): void {
+    if (this.held) return; // finish or cancel the move first
+    this.picking = !this.picking;
+    this.pickHover = -1;
+    this.pickScroll = Math.max(0, Math.floor(this.selected() / this.pickCols) - 1);
+  }
+
+  /** Index of the selected slot in the current tab. */
+  private selected(): number {
+    return this.tool === 'ground' ? this.brush : this.itemIndex[this.cat];
+  }
+
+  /** Entries of the current tab: thumbnails and names (pieces, or ground brushes). */
+  private entries(): Array<{ draw: (x: number, y: number) => void; name: string }> {
+    const r = this.game.renderer;
+    if (this.tool === 'ground') {
+      return GROUND_CHARS[this.layout.ground.type].map((c) => ({
+        name: c.name,
+        draw: (x, y) => (c.sample ? r.sprite(c.sample, x + 1, y + 1) : r.rect(x + 1, y + 1, 32, 32, '#120e18', true)),
+      }));
+    }
+    return this.palette[this.cat].items.map((it) => ({ name: it.name, draw: (x, y) => this.thumb(it.prop, x, y) }));
+  }
+
+  private get pickCols(): number {
+    return Math.max(4, Math.min(12, Math.floor((VIEW_W - 60) / (SLOT + 2))));
+  }
+
+  /** The picker window's box. */
+  private get pickBox(): { x: number; y: number; w: number; h: number } {
+    const w = this.pickCols * (SLOT + 2) + 22;
+    const h = 30 + TAB_H + 6 + PICK_ROWS * (SLOT + 2) + 22;
+    return { x: Math.round((VIEW_W - w) / 2), y: Math.max(HUD_H + 4, Math.round((VIEW_H - BAR_H - h) / 2)), w, h };
+  }
+
+  private pickSlotAt(i: number): { x: number; y: number } {
+    const b = this.pickBox;
+    const row = Math.floor(i / this.pickCols) - this.pickScroll;
+    return { x: b.x + 11 + (i % this.pickCols) * (SLOT + 2), y: b.y + 30 + TAB_H + 6 + row * (SLOT + 2) };
+  }
+
+  private pickSet(i: number): void {
+    if (this.tool === 'ground') this.brush = i;
+    else this.itemIndex[this.cat] = i;
+    const row = Math.floor(i / this.pickCols);
+    if (row < this.pickScroll) this.pickScroll = row;
+    if (row >= this.pickScroll + PICK_ROWS) this.pickScroll = row - PICK_ROWS + 1;
+  }
+
+  /** Picker input: move through slots, change tabs, choose (closes), back out. */
+  private updatePicker(dt: number): void {
+    const input = this.game.input;
+    if (input.pressed('back') || input.pressed('recipes') || (input.device !== 'gamepad' && input.pressed('menu'))) {
+      this.picking = false;
+      return;
+    }
+    if (input.pressed('cat_prev') || input.pressed('tab_prev')) this.stepTab(-1);
+    if (input.pressed('cat_next') || input.pressed('tab_next')) this.stepTab(1);
+    const d = this.pickNav.step(input, dt);
+    if (d) {
+      const n = this.entries().length;
+      const i = this.selected();
+      const cols = this.pickCols;
+      let j = i;
+      if (d.x) j = Math.max(0, Math.min(n - 1, i + d.x));
+      if (d.y) j = i + d.y * cols >= 0 && i + d.y * cols < n ? i + d.y * cols : i;
+      this.pickSet(j);
+    }
+    if (input.pressed('interact')) this.picking = false;
   }
 
   private close(): void {
@@ -170,12 +243,16 @@ export class Editor {
       this.menu.update(input);
       return;
     }
+    if (this.picking) {
+      this.updatePicker(dt);
+      return;
+    }
     const pad = input.device === 'gamepad';
     this.moveCursor(dt);
 
     // keyboard: only Tab (palette) and Esc (menu) - everything else is the mouse
     if (pad) {
-      if (input.pressed('recipes')) this.togglePanel();
+      if (input.pressed('recipes')) this.togglePicker();
       if (input.pressed('tab_prev')) this.stepItem(-1);
       if (input.pressed('tab_next')) this.stepItem(1);
       if (input.pressed('cat_prev')) this.stepTab(-1);
@@ -183,7 +260,7 @@ export class Editor {
       if (input.pressed('map')) this.cycleSnap();
       if (input.pressed('zoom')) this.setZoom(ZOOMS[(ZOOMS.indexOf(this.zoom) + 1) % ZOOMS.length]);
     } else if (input.pressed('menu')) {
-      this.togglePanel();
+      this.togglePicker();
     }
     if ((pad && input.pressed('menu')) || (!pad && input.pressed('back') && !this.held)) {
       this.cancelHeld();
@@ -285,14 +362,6 @@ export class Editor {
   private centreOnTile(): void {
     this.cursor.x = Math.floor(this.cursor.x / TILE) * TILE + TILE / 2;
     this.cursor.y = Math.floor(this.cursor.y / TILE) * TILE + TILE / 2;
-  }
-
-  private get tileX(): number {
-    return Math.floor(this.cursor.x / TILE);
-  }
-
-  private get tileY(): number {
-    return Math.floor(this.cursor.y / TILE);
   }
 
   /** Tabs: one per palette group, then Ground. */
@@ -476,27 +545,56 @@ export class Editor {
 
   // ------------------------------------------------------------------ ground
 
+  /** The brush in hand and the size of the cells it paints (16px fine cells, or 32px structure cells). */
+  private get brushInfo(): { ch: string; size: number } {
+    const b = GROUND_CHARS[this.layout.ground.type][this.brush];
+    return { ch: b.ch, size: b.fine ? CELL : TILE };
+  }
+
   private paint(): void {
-    const tx = this.tileX;
-    const ty = this.tileY;
-    const key = `${tx},${ty}`;
+    const { ch, size } = this.brushInfo;
+    const cx = Math.floor(this.cursor.x / size);
+    const cy = Math.floor(this.cursor.y / size);
+    const key = `${size}:${cx},${cy}`;
     if (key === this.lastPainted) return;
     this.lastPainted = key;
     const g = this.layout.ground;
-    const ch = GROUND_CHARS[g.type][this.brush].ch;
-    if ('WNSM'.includes(ch) && g.type === 'room') this.wallMat = ch === 'S' || ch === 'M' ? 'S' : 'W';
-    const row = g.rows[ty];
-    if (row[tx] === ch) return;
-    g.rows[ty] = row.slice(0, tx) + ch + row.slice(tx + 1);
-    // indoors, new floor gets walls wrapped around it
-    if (g.type === 'room' && (ch === 'w' || ch === 's')) g.rows.splice(0, g.rows.length, ...wrapWalls(g.rows, tx, ty, this.wallMat));
-    this.changed();
+    const set = (rows: string[], x: number, y: number, c: string) => {
+      if (rows[y][x] === c) return false;
+      rows[y] = rows[y].slice(0, x) + c + rows[y].slice(x + 1);
+      return true;
+    };
+    if (g.type === 'tiles') {
+      if (!set(g.rows, cx, cy, ch)) return;
+      // outdoors only the painted patch changes: redraw just that, not the whole map
+      const ground = this.game.scene.ground;
+      if (ground instanceof TileMap) ground.repaint(cx, cy);
+      this.unsaved.add(this.layout.id);
+      this.checkIn = 0.4;
+      return;
+    }
+    if (size === CELL) {
+      // floor material; painting floor where there was none also makes it floor and wraps walls round it
+      let changed = set(g.floor, cx, cy, ch);
+      const sx = cx >> 1;
+      const sy = cy >> 1;
+      if (g.rows[sy][sx] !== 'f') {
+        set(g.rows, sx, sy, 'f');
+        g.rows.splice(0, g.rows.length, ...wrapWalls(g.rows, sx, sy, this.wallMat));
+        changed = true;
+      }
+      if (changed) this.changed(undefined, true);
+      return;
+    }
+    if ('WNSM'.includes(ch)) this.wallMat = ch === 'S' || ch === 'M' ? 'S' : 'W';
+    if (set(g.rows, cx, cy, ch)) this.changed(undefined, true);
   }
 
   // ------------------------------------------------------------------ change, check, save
 
-  private changed(message?: string): void {
-    this.game.rebuildScene();
+  /** After an edit: rebuild the scene (the ground too only if it changed), mark unsaved, re-check soon. */
+  private changed(message?: string, groundChanged = false): void {
+    this.game.rebuildScene(groundChanged);
     this.unsaved.add(this.layout.id);
     this.checkIn = 0.25;
     if (message) this.say(message);
@@ -722,6 +820,10 @@ export class Editor {
       if (!this.active) return;
       const m = toView(e);
       if (this.menu.pointer(m.x, m.y, false)) return;
+      if (this.picking) {
+        this.pickHover = this.pickSlotUnder(m);
+        return;
+      }
       if (this.pan) {
         this.view.x -= (m.x - this.pan.x) / this.zoom;
         this.view.y -= (m.y - this.pan.y) / this.zoom;
@@ -744,7 +846,11 @@ export class Editor {
       if (!this.active) return;
       this.mouse = toView(e);
       if (this.menu.pointer(this.mouse.x, this.mouse.y, e.button === 0)) return;
-      if (this.panelClick(this.mouse)) return;
+      if (this.picking) {
+        this.pickerClick(this.mouse, e.button);
+        return;
+      }
+      if (this.barClick(this.mouse)) return;
       if (e.button === 1) {
         e.preventDefault();
         this.pan = this.mouse;
@@ -765,6 +871,11 @@ export class Editor {
       if (!this.active) return;
       e.preventDefault();
       if (this.menu.open) return;
+      if (this.picking && !e.ctrlKey && !e.shiftKey) {
+        const rows = Math.ceil(this.entries().length / this.pickCols);
+        this.pickScroll = Math.max(0, Math.min(rows - PICK_ROWS, this.pickScroll + Math.sign(e.deltaY)));
+        return;
+      }
       // one step per wheel notch, however many events the mouse or trackpad sends for it
       const px = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 300 : 1);
       if (Math.sign(px) !== Math.sign(this.wheel)) this.wheel = 0;
@@ -785,25 +896,45 @@ export class Editor {
     return m.y >= VIEW_H - this.panelH || m.y < HUD_H;
   }
 
-  /** A click on the palette panel: a tab, the snap button or a slot. True if the click was on the panel. */
-  private panelClick(m: { x: number; y: number }): boolean {
-    if (!this.panel || m.y < VIEW_H - PANEL_H) return false;
-    const y0 = VIEW_H - PANEL_H;
-    if (m.y >= y0 + TAB_Y && m.y < y0 + TAB_Y + TAB_H) {
-      const t = this.tabs.find((t) => m.x >= t.x && m.x < t.x + t.w);
-      if (t) this.selectTab(t.index);
-      else if (m.x >= this.snapButton.x && m.x < this.snapButton.x + this.snapButton.w) this.cycleSnap();
-      return true;
-    }
-    const s = this.slots.find((s) => m.x >= s.x && m.x < s.x + SLOT && m.y >= s.y && m.y < s.y + SLOT);
-    if (s) this.pick(s.index);
+  /** A click on the bottom bar: the piece in hand opens the picker, the snap button cycles snap. */
+  private barClick(m: { x: number; y: number }): boolean {
+    if (m.y < VIEW_H - BAR_H) return false;
+    if (m.x >= this.snapButton.x && m.x < this.snapButton.x + this.snapButton.w) this.cycleSnap();
+    else if (m.x < 6 + SLOT + 2) this.togglePicker();
     return true;
   }
 
-  private pick(index: number): void {
-    if (this.tool === 'ground') this.brush = index;
-    else if (!this.held) this.itemIndex[this.cat] = index;
+  private pickSlotUnder(m: { x: number; y: number }): number {
+    const n = this.entries().length;
+    for (let i = this.pickScroll * this.pickCols; i < Math.min(n, (this.pickScroll + PICK_ROWS) * this.pickCols); i++) {
+      const p = this.pickSlotAt(i);
+      if (m.x >= p.x && m.x < p.x + SLOT && m.y >= p.y && m.y < p.y + SLOT) return i;
+    }
+    return -1;
   }
+
+  /** Picker clicks: a tab switches, a slot is chosen (and the window closes), outside closes it. */
+  private pickerClick(m: { x: number; y: number }, button: number): void {
+    const b = this.pickBox;
+    if (m.x < b.x || m.y < b.y || m.x >= b.x + b.w || m.y >= b.y + b.h) {
+      this.picking = false;
+      return;
+    }
+    if (button !== 0) return;
+    const t = this.tabs.find((t) => m.y >= t.y && m.y < t.y + TAB_H && m.x >= t.x && m.x < t.x + t.w);
+    if (t) {
+      this.selectTab(t.index);
+      this.pickScroll = 0;
+      return;
+    }
+    const i = this.pickSlotUnder(m);
+    if (i >= 0) {
+      this.pickSet(i);
+      this.picking = false;
+    }
+  }
+
+
 
   // ------------------------------------------------------------------ drawing (world, at the editor's zoom)
 
@@ -835,7 +966,8 @@ export class Editor {
     ctx.globalAlpha = 1;
 
     if (this.tool === 'ground') {
-      r.rect(this.tileX * TILE - cx, this.tileY * TILE - cy, TILE, TILE, '#ffffff');
+      const { size } = this.brushInfo;
+      r.rect(Math.floor(this.cursor.x / size) * size - cx, Math.floor(this.cursor.y / size) * size - cy, size, size, '#ffffff');
       return;
     }
     const hit = this.held ? -1 : this.propAtCursor();
@@ -913,81 +1045,92 @@ export class Editor {
     drawText(r, assets, clipped, VIEW_W - w + 4, 7);
   }
 
-  /** The palette, styled like the bag: tabs, a row of slots, the selected piece's name, control hints. */
+  /** The bottom bar: the piece in hand (click or Tab to choose another), snap, and control hints. */
   private drawPalette(): void {
     const r = this.game.renderer;
     const assets = this.game.assets;
-    if (!this.panel) {
-      this.drawHints(4, VIEW_H - 20);
-      return;
-    }
-    const y0 = VIEW_H - PANEL_H;
-    r.nine('panel_dark', 0, y0, VIEW_W, PANEL_H);
-
-    // tabs: groups, then Ground; the snap button on the right
-    const names = [...this.palette.map((c) => c.name), 'Ground'];
-    const snapLabel = `Snap: ${snapName(this.snap)}`;
-    this.snapButton = { x: VIEW_W - measure(snapLabel) - 18, w: measure(snapLabel) + 12 };
-    this.tabs.length = 0;
-    // the strip scrolls so the current tab is always on screen
-    const widths = names.map((n) => measure(n) + 10);
-    const room = this.snapButton.x - 10;
-    let firstTab = 0;
-    const span = (a: number, b: number) => widths.slice(a, b + 1).reduce((t, w) => t + w + 2, 0);
-    while (firstTab < this.tab && span(firstTab, this.tab) > room) firstTab++;
-    let tx = 6;
-    if (firstTab > 0) drawText(r, assets, '<', 0, y0 + TAB_Y + 4);
-    for (let i = firstTab; i < names.length; i++) {
-      const w = widths[i];
-      if (tx + w > room + 6) {
-        drawText(r, assets, '>', tx, y0 + TAB_Y + 4);
-        break;
-      }
-      this.tabs.push({ x: tx, w, index: i });
-      r.nine(i === this.tab ? 'tab_active' : 'tab_inactive', tx, y0 + TAB_Y, w, TAB_H);
-      drawText(r, assets, names[i], tx + 5, y0 + TAB_Y + 4);
-      tx += w + 2;
-    }
-    r.nine('tab_inactive', this.snapButton.x, y0 + TAB_Y, this.snapButton.w, TAB_H);
-    drawText(r, assets, snapLabel, this.snapButton.x + 6, y0 + TAB_Y + 4);
-
-    // slots
-    let entries: Array<{ draw: (x: number, y: number) => void; name: string }>;
-    let selected: number;
-    if (this.tool === 'ground') {
-      selected = this.brush;
-      entries = GROUND_CHARS[this.layout.ground.type].map((c) => ({
-        name: c.name,
-        draw: (x, y) => (c.sample ? r.sprite(c.sample, x + 1, y + 1) : r.rect(x + 1, y + 1, 32, 32, '#120e18', true)),
-      }));
-    } else if (this.held) {
-      const held = this.held.prop;
-      selected = 0;
-      entries = [{ name: `Moving ${label(held)}`, draw: (x, y) => this.thumb(held, x, y) }];
-    } else {
-      const cat = this.palette[this.cat];
-      selected = this.itemIndex[this.cat];
-      entries = cat.items.map((it) => ({ name: it.name, draw: (x, y) => this.thumb(it.prop, x, y) }));
-    }
-    const rowY = y0 + TAB_Y + TAB_H + 4;
-    const visible = Math.max(1, Math.floor((VIEW_W - 12) / (SLOT + 2)));
-    const first = Math.max(0, Math.min(entries.length - visible, selected - Math.floor(visible / 2)));
-    this.slots.length = 0;
-    const ctx = r.ctx;
-    for (let i = first; i < Math.min(entries.length, first + visible); i++) {
-      const x = 6 + (i - first) * (SLOT + 2);
-      this.slots.push({ x, y: rowY, index: i });
-      drawSlot(r, x, rowY, i === selected);
+    const y0 = VIEW_H - BAR_H;
+    r.nine('panel_dark', 0, y0, VIEW_W, BAR_H);
+    const entries = this.entries();
+    const sel = this.held ? null : entries[this.selected()];
+    drawSlot(r, 6, y0 + 6, true);
+    if (this.held) this.thumb(this.held.prop, 6, y0 + 6);
+    else if (sel) {
+      const ctx = r.ctx;
       ctx.save();
       ctx.beginPath();
-      ctx.rect(x + 2, rowY + 2, SLOT - 4, SLOT - 4);
+      ctx.rect(8, y0 + 8, SLOT - 4, SLOT - 4);
       ctx.clip();
-      entries[i].draw(x, rowY);
+      sel.draw(6, y0 + 6);
       ctx.restore();
     }
-    const sel = entries[selected];
-    if (sel) drawText(r, assets, `${sel.name}  ${selected + 1}/${entries.length}`, 8, rowY + SLOT + 4);
-    this.drawHints(6, rowY + SLOT + 16);
+    const tabName = this.tool === 'ground' ? 'Ground' : this.palette[this.cat].name;
+    drawText(r, assets, this.held ? `Moving ${label(this.held.prop)}` : sel?.name ?? '', 46, y0 + 10);
+    r.ctx.globalAlpha = 0.6;
+    drawText(r, assets, this.held ? 'click to put it down' : tabName, 46, y0 + 24);
+    r.ctx.globalAlpha = 1;
+    const snapLabel = `Snap: ${snapName(this.snap)}`;
+    this.snapButton = { x: VIEW_W - measure(snapLabel) - 18, w: measure(snapLabel) + 12 };
+    r.nine('tab_inactive', this.snapButton.x, y0 + 15, this.snapButton.w, TAB_H);
+    drawText(r, assets, snapLabel, this.snapButton.x + 6, y0 + 19);
+    const nameW = Math.max(measure(sel?.name ?? ''), measure(tabName)) + 56;
+    this.drawHints(Math.max(nameW, 170), y0 + 15, this.snapButton.x - 8);
+    if (this.picking) this.drawPicker();
+  }
+
+  /** The piece picker, laid out like the bag: tabs along the top, a grid of slots, the name of the one in focus. */
+  private drawPicker(): void {
+    const r = this.game.renderer;
+    const assets = this.game.assets;
+    const b = this.pickBox;
+    r.ctx.globalAlpha = 0.45;
+    r.rect(0, 0, VIEW_W, VIEW_H - BAR_H, '#120e18', true);
+    r.ctx.globalAlpha = 1;
+    r.nine('panel_dark', b.x, b.y, b.w, b.h);
+    drawText(r, assets, 'Pieces', b.x + 11, b.y + 9);
+
+    // tabs: groups, then Ground; the strip scrolls so the current tab is always on screen
+    const names = [...this.palette.map((c) => c.name), 'Ground'];
+    const ty = b.y + 26;
+    const widths = names.map((n) => measure(n) + 10);
+    const room = b.w - 22;
+    let firstTab = 0;
+    const span = (a: number, z: number) => widths.slice(a, z + 1).reduce((t, w) => t + w + 2, 0);
+    while (firstTab < this.tab && span(firstTab, this.tab) > room) firstTab++;
+    this.tabs.length = 0;
+    let tx = b.x + 11;
+    if (firstTab > 0) drawText(r, assets, '<', b.x + 3, ty + 4);
+    for (let i = firstTab; i < names.length; i++) {
+      const w = widths[i];
+      if (tx + w > b.x + 11 + room) {
+        drawText(r, assets, '>', b.x + b.w - 9, ty + 4);
+        break;
+      }
+      this.tabs.push({ x: tx, y: ty, w, index: i });
+      r.nine(i === this.tab ? 'tab_active' : 'tab_inactive', tx, ty, w, TAB_H);
+      drawText(r, assets, names[i], tx + 5, ty + 4);
+      tx += w + 2;
+    }
+
+    const entries = this.entries();
+    const sel = this.selected();
+    const ctx = r.ctx;
+    const first = this.pickScroll * this.pickCols;
+    for (let i = first; i < Math.min(entries.length, first + PICK_ROWS * this.pickCols); i++) {
+      const p = this.pickSlotAt(i);
+      drawSlot(r, p.x, p.y, i === sel || i === this.pickHover);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(p.x + 2, p.y + 2, SLOT - 4, SLOT - 4);
+      ctx.clip();
+      entries[i].draw(p.x, p.y);
+      ctx.restore();
+    }
+    const rows = Math.ceil(entries.length / this.pickCols);
+    if (this.pickScroll > 0) drawText(r, assets, '^', b.x + b.w - 10, b.y + 30 + TAB_H + 4);
+    if (this.pickScroll + PICK_ROWS < rows) drawText(r, assets, 'v', b.x + b.w - 10, b.y + b.h - 30);
+    const focus = entries[this.pickHover >= 0 ? this.pickHover : sel];
+    if (focus) drawText(r, assets, focus.name, b.x + 11, b.y + b.h - 16);
   }
 
   private hintList(): Array<[string[], string]> {
@@ -997,11 +1140,13 @@ export class Editor {
       : MOUSE_HINTS;
   }
 
-  private drawHints(x: number, y: number): void {
+  private drawHints(x: number, y: number, maxX = VIEW_W): void {
     const r = this.game.renderer;
     const assets = this.game.assets;
     let hx = x;
     for (const [glyphs, text] of this.hintList()) {
+      const w = glyphs.reduce((t, n) => t + assets.frame(n).w, 0) + measure(text) + 6;
+      if (hx + w > maxX) break;
       for (const n of glyphs) {
         const g = assets.frame(n);
         r.sprite(g, hx, y);

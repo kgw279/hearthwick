@@ -27,8 +27,10 @@ export interface TerrainData {
   bases: { grass: string[]; dirt: string[]; cobble: string[]; pavers: string[]; water: string[] };
   edges: {
     dirt_lip: string; grass_fringe: string; bank: string; bank_low: string; foam: string; shallows: string;
-    cobble_kerb: string; pavers_kerb: string;
+    cobble_kerb: string; pavers_kerb: string; flagstone_edge: string;
   };
+  /** Plain interior floor textures. */
+  floors: { wood: string; stone: string };
   /** corner[variant][index], corner_paved[index] and path[variant][conn]: 32 rows of 8 hex digits, bit 31 = leftmost pixel. */
   corner: string[][][];
   corner_paved: string[][];
