@@ -16,7 +16,7 @@ const KEYBOARD: Record<string, Action[]> = {
   KeyA: ['left'], ArrowLeft: ['left'], KeyD: ['right'], ArrowRight: ['right'],
   KeyE: ['interact'], Space: ['interact'], Enter: ['interact'],
   Escape: ['back'], KeyF: ['cook'], KeyR: ['recipes'],
-  KeyQ: ['tab_prev'], KeyC: ['tab_next'], Tab: ['menu'], KeyM: ['map'], F3: ['debug'],
+  KeyQ: ['tab_prev'], KeyC: ['tab_next'], Tab: ['menu'], KeyI: ['menu'], KeyM: ['map'], F3: ['debug'],
   KeyZ: ['cat_prev'], KeyX: ['cat_next'], F2: ['edit'], Digit1: ['zoom'],
 };
 

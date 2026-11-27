@@ -17,6 +17,12 @@ import { loadLayouts, type Layout } from '../world/layout';
 import { buildScene, type SceneHooks } from './build';
 import { Content } from './data';
 import { Editor } from '../editor/editor';
+import { Bag } from '../state/bag';
+import { Shops } from '../state/shops';
+import { BagScreen } from '../ui/bagScreen';
+import { drawCoins } from '../ui/items';
+import type { Screen } from '../ui/screen';
+import { ShopScreen } from '../ui/shopScreen';
 import { Player } from './player';
 
 const FADE = 0.22; // seconds for each half of a scene transition
@@ -39,6 +45,11 @@ export class Game {
   private readonly emotes = new Emotes();
   private readonly floats = new FloatTexts();
   private transition: Transition | null = null;
+  /** The player's bag and purse, and the shops' shelves: the state a save game will hold. */
+  readonly bag: Bag;
+  readonly shops: Shops;
+  /** A full-screen UI (bag, shop) that has the input while it's open. */
+  private screen: Screen | null = null;
   private target: Entity | null = null;
   private time = 0;
   private debug = false;
@@ -53,7 +64,21 @@ export class Game {
       emote: (name) => this.emotes.pop(name, this.player.center.x, this.player.y, this.time),
       float: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
       go: (to, spawn) => this.goTo(to, spawn),
+      give: (item, n) => {
+        const got = this.bag.add(item, n);
+        const name = this.content.itemName(item);
+        if (got) this.floats.pop(`+${got > 1 ? ` ${got}` : ''} ${name}`, this.player.center.x, this.player.y, this.time);
+        else this.floats.pop('Your bag is full', this.player.center.x, this.player.y, this.time);
+        if (got) this.emotes.pop('emote_happy', this.player.center.x, this.player.y, this.time);
+        return got === n;
+      },
+      openShop: (shop) => (this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets)),
     };
+    const e = this.content.economy;
+    this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
+    this.shops = new Shops(this.content);
+    this.shops.restock(1);
+    this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
     this.editor = new Editor(this);
     this.enter('town', 'start');
@@ -150,10 +175,13 @@ export class Game {
     this.time += dt;
     this.input.update();
     if (this.input.pressed('debug')) this.debug = !this.debug;
-    if (this.input.pressed('edit') && !this.transition && !this.dialog.open) this.editor.toggle();
+    if (this.input.pressed('edit') && !this.transition && !this.dialog.open && !this.screen) this.editor.toggle();
 
     if (this.editor.active) {
       this.editor.update(dt);
+    } else if (this.screen) {
+      if (!this.screen.update(this.input, dt)) this.screen = null;
+      this.target = null;
     } else if (this.transition) {
       const tr = this.transition;
       tr.t += dt;
@@ -167,6 +195,7 @@ export class Game {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
+      if (this.input.pressed('menu')) this.screen = new BagScreen(this.bag, this.content, this.assets);
       this.player.move(dt, this.input, this.blocked);
       const exit = this.exitHit();
       if (exit) {
@@ -218,6 +247,15 @@ export class Game {
       if (this.debug && a) r.rect(a.x - cx, a.y - cy, a.w, a.h, '#fbf236');
     }
     this.dialog.draw(r, this.assets, this.input, this.time);
+    if (this.screen) {
+      r.ctx.globalAlpha = 0.5;
+      r.rect(0, 0, VIEW_W, VIEW_H, '#120e18', true);
+      r.ctx.globalAlpha = 1;
+      this.screen.draw(r, this.time);
+    } else if (!this.dialog.open) {
+      r.nine('panel_dark', 4, 4, 28 + String(this.bag.coins).length * 6, 24);
+      drawCoins(r, this.assets, this.bag.coins, 8, 8);
+    }
     if (this.debug) this.drawDebug(cx, cy);
 
     if (this.transition) {
@@ -226,6 +264,24 @@ export class Game {
       r.rect(0, 0, VIEW_W, VIEW_H, '#120e18', true);
       r.ctx.globalAlpha = 1;
     }
+  }
+
+  /** Mouse for full-screen UI (the editor listens for itself). */
+  private listenMouse(canvas: HTMLCanvasElement): void {
+    const at = (e: MouseEvent) => {
+      const b = canvas.getBoundingClientRect();
+      return { x: ((e.clientX - b.left) / b.width) * VIEW_W, y: ((e.clientY - b.top) / b.height) * VIEW_H };
+    };
+    canvas.addEventListener('mousemove', (e) => {
+      if (!this.screen || this.editor.active) return;
+      const p = at(e);
+      this.screen.pointer(p.x, p.y, -1, e.shiftKey);
+    });
+    canvas.addEventListener('mousedown', (e) => {
+      if (!this.screen || this.editor.active) return;
+      const p = at(e);
+      if (!this.screen.pointer(p.x, p.y, e.button, e.shiftKey)) this.screen = null;
+    });
   }
 
   private drawDebug(cx: number, cy: number): void {

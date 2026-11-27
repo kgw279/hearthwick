@@ -11526,164 +11526,329 @@
       "stock": [
         {
           "item": "wheat",
-          "price": 3
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "flour",
-          "price": 6
+          "price": 6,
+          "daily_qty": 6
         },
         {
           "item": "egg",
-          "price": 4
+          "price": 4,
+          "daily_qty": 6
         },
         {
           "item": "oats",
           "price": 3,
-          "pack": "oats"
+          "pack": "oats",
+          "daily_qty": 10
         }
       ],
-      "building": "bakery"
+      "building": "bakery",
+      "buys": [
+        "egg",
+        "flour",
+        "oats",
+        "wheat"
+      ]
     },
     "grocer": {
       "name": "Greengrocer",
       "stock": [
         {
           "item": "tomato",
-          "price": 4
+          "price": 4,
+          "daily_qty": 6
         },
         {
           "item": "potato",
-          "price": 3
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "carrot",
-          "price": 3
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "onion",
-          "price": 3
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "cress",
-          "price": 3
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "salt",
           "price": 2,
-          "pack": "seasoning"
+          "pack": "seasoning",
+          "daily_qty": 10
         }
       ],
-      "building": "general_store"
+      "building": "general_store",
+      "buys": [
+        "carrot",
+        "cress",
+        "onion",
+        "potato",
+        "salt",
+        "tomato"
+      ]
     },
     "dairy": {
       "name": "Clover Dairy",
       "stock": [
         {
           "item": "milk",
-          "price": 4
+          "price": 4,
+          "daily_qty": 6
         },
         {
           "item": "cheese",
-          "price": 6
+          "price": 6,
+          "daily_qty": 6
         }
       ],
-      "building": "dairy"
+      "building": "dairy",
+      "buys": [
+        "cheese",
+        "milk"
+      ]
     },
     "butcher": {
       "name": "Hollin's Butchery",
       "stock": [
         {
           "item": "beef",
-          "price": 9
+          "price": 9,
+          "daily_qty": 3
         },
         {
           "item": "venison",
-          "price": 10
+          "price": 10,
+          "daily_qty": 3
         },
         {
           "item": "mutton",
-          "price": 8
+          "price": 8,
+          "daily_qty": 3
         },
         {
           "item": "chicken",
           "price": 7,
-          "pack": "chicken"
+          "pack": "chicken",
+          "daily_qty": 3
         },
         {
           "item": "pork",
           "price": 8,
-          "pack": "pork"
+          "pack": "pork",
+          "daily_qty": 3
         }
       ],
-      "building": "butcher"
+      "building": "butcher",
+      "buys": [
+        "beef",
+        "chicken",
+        "mutton",
+        "pork",
+        "venison"
+      ]
     },
     "fish": {
       "name": "The Fishmonger",
       "stock": [
         {
           "item": "trout",
-          "price": 8
+          "price": 8,
+          "daily_qty": 3
         },
         {
           "item": "trout_fillet",
-          "price": 10
+          "price": 10,
+          "daily_qty": 3
         },
         {
           "item": "fish_stock",
-          "price": 10
+          "price": 10,
+          "daily_qty": 3
         }
       ],
-      "building": "fishmonger"
+      "building": "fishmonger",
+      "buys": [
+        "fish_stock",
+        "trout",
+        "trout_fillet"
+      ]
     },
     "spice": {
       "name": "Zephra's Spices",
       "stock": [
         {
           "item": "ember_pepper",
-          "price": 12
+          "price": 12,
+          "daily_qty": 3
         },
         {
           "item": "honey",
-          "price": 7
+          "price": 7,
+          "daily_qty": 3
         },
         {
           "item": "salt",
           "price": 2,
-          "pack": "seasoning"
+          "pack": "seasoning",
+          "daily_qty": 10
         },
         {
           "item": "peppercorns",
           "price": 4,
-          "pack": "seasoning"
+          "pack": "seasoning",
+          "daily_qty": 6
         }
       ],
-      "building": "spice_shop"
+      "building": "spice_shop",
+      "buys": [
+        "ember_pepper",
+        "honey",
+        "peppercorns",
+        "salt"
+      ]
     },
     "market": {
       "name": "Market Square",
       "stock": "rotating",
       "pool": [
-        "egg",
-        "onion",
-        "tomato",
-        "potato",
-        "carrot",
-        "honey",
-        "cheese",
-        "milk",
-        "apple",
-        "berries",
-        "mushroom",
-        "ember_pepper",
-        "acorns",
-        "herbs",
-        "cress",
-        "wheat",
-        "flour",
-        "beef",
-        "trout"
+        {
+          "item": "egg",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "onion",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "tomato",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "potato",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "carrot",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "honey",
+          "price": 7,
+          "daily_qty": 3
+        },
+        {
+          "item": "cheese",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "milk",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "apple",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "berries",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "mushroom",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "ember_pepper",
+          "price": 12,
+          "daily_qty": 3
+        },
+        {
+          "item": "acorns",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "herbs",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "cress",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "wheat",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "flour",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "beef",
+          "price": 9,
+          "daily_qty": 3
+        },
+        {
+          "item": "trout",
+          "price": 8,
+          "daily_qty": 3
+        }
       ],
-      "building": "market_stall"
+      "building": "market_stall",
+      "daily_items": 6,
+      "buys": [
+        "acorns",
+        "apple",
+        "beef",
+        "berries",
+        "carrot",
+        "cheese",
+        "chicken",
+        "cress",
+        "egg",
+        "ember_pepper",
+        "herbs",
+        "honey",
+        "milk",
+        "mushroom",
+        "mutton",
+        "oats",
+        "onion",
+        "peppercorns",
+        "pork",
+        "potato",
+        "salt",
+        "tomato",
+        "trout",
+        "venison",
+        "water",
+        "wheat"
+      ]
     }
   },
   "folk": {
@@ -11751,6 +11916,12 @@
       "hates": "sweet",
       "odd": 0
     }
+  },
+  "economy": {
+    "starting_coins": 30,
+    "bag_slots": 24,
+    "stack_size": 20,
+    "sell_ratio": 1.0
   },
   "rules": {
     "odd_tag": "a dish gains the odd tag when it mixes sweet+fish or fish+meat",

@@ -19,6 +19,9 @@ export interface SceneHooks {
   emote(name: string): void;
   float(text: string): void;
   go(scene: string, spawn: string): void;
+  /** Put items in the player's bag (shows what was picked up); false if there was no room. */
+  give(item: string, n: number): boolean;
+  openShop(shop: string): void;
 }
 
 /** Named colliders, relative to the sprite's top-left, for props whose footprint isn't simply their art's base. */
@@ -55,22 +58,17 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
       const shop = content.shop(b.shop);
       return {
         frames: shop.building ? [shop.building] : undefined, // a shop prop without a sprite is its building
-        interaction: () => ({
-          label: 'Shop',
-          use: () => hooks.say(`Today's stock: ${shop.stock.map((s) => `${content.itemName(s.item)} ${s.price}`).join(', ')}.`, shop.name),
-        }),
+        interaction: () => ({ label: 'Shop', use: () => hooks.openShop(b.shop) }),
       };
     }
-    case 'market': {
-      const shop = content.shop(b.shop);
-      return { interaction: () => ({ label: 'Browse', use: () => hooks.say(`Fresh today: ${shop.stock.map((s) => content.itemName(s.item)).join(', ')}.`, shop.name) }) };
-    }
+    case 'market':
+      return { interaction: () => ({ label: 'Browse', use: () => hooks.openShop(b.shop) }) };
     case 'pet':
       return { interaction: () => ({ label: 'Pet', use: () => hooks.emote('emote_love') }) };
     case 'draw_water':
-      return { interaction: () => ({ label: 'Draw water', use: () => { hooks.emote('emote_happy'); hooks.float('+ Water'); } }) };
+      return { interaction: () => ({ label: 'Draw water', use: () => void hooks.give('water', 1) }) };
     case 'fish':
-      return { interaction: () => ({ label: 'Fish', use: () => { hooks.emote('emote_exclaim'); hooks.float(`+ ${content.itemName(b.item)}`); } }) };
+      return { interaction: () => ({ label: 'Fish', use: () => void hooks.give(b.item, 1) }) };
     case 'forage': {
       const node = content.forageNode(b.node);
       return {
@@ -78,10 +76,9 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks): Wired {
         interaction: (prop) => ({
           label: 'Harvest',
           use: () => {
+            if (!hooks.give(node.yields, 1)) return; // bag full: leave it growing
             prop.setFrames(node.states.harvested);
             prop.setInteraction(null);
-            hooks.emote('emote_happy');
-            hooks.float(`+ ${content.itemName(node.yields)}`);
           },
         }),
       };
@@ -100,7 +97,7 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
   return fromBehavior;
 }
 
-const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {} };
+const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {} };
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
 export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: number }

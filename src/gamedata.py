@@ -3,7 +3,8 @@
 The atlas says where pictures are. This file says what things ARE.
 Every item's `sprite` points at a frame in the atlas.
 """
-import json, os, re, unicodedata
+import json, math, os, re, unicodedata
+import content_economy
 import design_src as D
 import content_wheat
 import content_eggs
@@ -240,6 +241,25 @@ def build():
                 shops[sh]['stock'].append({'item': ids[i], 'price': p, 'pack': pname})
                 items[ids[i]]['sources'].append({'type': 'shop', 'shop': sh, 'price': p})
 
+    # economy: daily quantities, what each shop buys back, market pool prices
+    cheapest = {}
+    for sh in shops.values():
+        if sh['stock'] == 'rotating': continue
+        for st in sh['stock']:
+            st['daily_qty'] = content_economy.daily_qty(st['price'])
+            cheapest[st['item']] = min(st['price'], cheapest.get(st['item'], st['price']))
+        sh['buys'] = sorted({st['item'] for st in sh['stock']})
+    E = content_economy.ECONOMY
+    for sh in shops.values():
+        if sh['stock'] != 'rotating': continue
+        pool = []
+        for i in sh['pool']:
+            price = cheapest.get(i) or math.ceil(items[i]['value'] * E['market_markup'])
+            pool.append({'item': i, 'price': price, 'daily_qty': content_economy.daily_qty(price)})
+        sh['pool'] = pool
+        sh['daily_items'] = E['market_daily_items']
+        sh['buys'] = sorted(i for i, it in items.items() if it['kind'] == 'raw')
+
     animals = {}
     for aid, a in content_animals.ANIMALS.items():
         bad = [i for i in a['related_items'] if i not in items]
@@ -260,6 +280,7 @@ def build():
         'forage_nodes': nodes,
         'shops': shops,
         'folk': {f: {'name': n, 'likes': l, 'hates': h, 'odd': o} for f, (n, l, h, o) in D.FOLK.items()},
+        'economy': {k: v for k, v in content_economy.ECONOMY.items() if not k.startswith('market_')},
         'rules': {'odd_tag': D.ODD_RULE,
                   'recipe_match': 'a dish is made on the plate station from exactly its components, in any order'},
     }
