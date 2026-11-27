@@ -1,9 +1,11 @@
 /**
  * Rearranging furniture in play: hold the use button (A / E) on a piece in front of you to pick it up;
  * it rides just in front of you as you walk, washed red wherever it won't fit; tap the button to set it
- * down there, or Back (B / Esc) to put it back where it was. While carrying, hold the turn button (R / Y)
- * and scroll (or push the right stick) to turn it: rugs and other floor, wall and table-top pieces by
- * 15 degrees a step, pieces that come in facings (chairs) to the next facing. It keeps whatever turn it had. Indoors only, and only furniture and decor
+ * down there, or Back (B / Esc) to put it back where it was. While carrying, push the right stick (or hold
+ * R and scroll) to turn it: rugs and other floor, wall and table-top pieces by 15 degrees a step, pieces
+ * that come in facings (chairs) to the next facing. It keeps whatever turn it had. The D-pad (arrow keys)
+ * nudges it a pixel at a time, as in the editor, while the left stick (WASD) still walks; the nudge is
+ * kept until you turn to face another way. Indoors only, and only furniture and decor
  * (not stairs, doors, shop counters or people). A tap that isn't a pick-up is an ordinary "use".
  *
  * Moving a piece changes the map's layout (the editor saves it with everything else).
@@ -17,6 +19,7 @@ import type { Scene } from '../world/scene';
 import type { Player } from './player';
 import { artRect, placeProp, propFrames, resolveCollider } from './build';
 import { turn } from '../world/turn';
+import { Nudge } from '../core/nudge';
 import type { Content } from './data';
 
 /** How long (s) the button is held before it picks a piece up. */
@@ -25,6 +28,8 @@ const HOLD = 0.4;
 const MOVABLE = new Set(['storage', 'wash']);
 const BAD = 'rgba(217, 87, 99, 0.55)';
 const TURN_STEP = 15; // degrees a step (5 with Shift on the wheel)
+const NUDGE_GLIDE = 40; // px per second once a held nudge glides
+const NUDGE_REACH = 32; // px a piece can be nudged from the spot in front of the player
 const TURN_REPEAT = 0.18; // seconds between steps while the right stick is held over
 const WHEEL_NOTCH = 100; // wheel delta per step
 
@@ -46,6 +51,8 @@ export class Furnish {
   /** The piece being carried, and where it came from (its place in the layout, its old spot). */
   private carried: { prop: PlacedProp; from: number; was: PlacedProp } | null = null;
   private stick = 0; // time until the right stick turns again
+  private readonly nudger = new Nudge();
+  private offset = { x: 0, y: 0, facing: '' }; // nudged from the spot in front of the player
   private wheelAcc = 0;
   private held = 0;
   private pressed = false;
@@ -63,14 +70,15 @@ export class Furnish {
       this.putBack();
       return false;
     }
-    if (this.carried && input.down('recipes')) {
-      // hold the turn button and push the right stick: a step, then repeating while it's held over
+    if (this.carried) {
+      // the right stick turns it: a step, then repeating while it's held over
       const x = input.rightStick().x;
       if (Math.abs(x) < 0.5) this.stick = 0;
       else if ((this.stick -= dt) <= 0) {
         this.stick = TURN_REPEAT;
         this.turnBy(Math.sign(x) * TURN_STEP);
       }
+      this.nudgeBy(this.nudger.update(input.nudge(), dt, 1, NUDGE_GLIDE));
     }
     if (input.pressed('interact')) {
       this.pressed = true;
@@ -102,6 +110,20 @@ export class Furnish {
     }
   }
 
+  /** Nudge the carried piece from its spot in front of the player, kept within reach. */
+  private nudgeBy(d: { x: number; y: number }): void {
+    const o = this.offsetNow();
+    o.x = Math.max(-NUDGE_REACH, Math.min(NUDGE_REACH, o.x + d.x));
+    o.y = Math.max(-NUDGE_REACH, Math.min(NUDGE_REACH, o.y + d.y));
+  }
+
+  /** The nudge, cleared when the player turns to face another way (it's relative to their front). */
+  private offsetNow(): { x: number; y: number } {
+    const f = this.w.player.facing;
+    if (this.offset.facing !== f) this.offset = { x: 0, y: 0, facing: f };
+    return this.offset;
+  }
+
   private turnBy(deg: number): void {
     if (this.carried && !turn(this.carried.prop, deg, this.w.assets)) this.w.say("That doesn't turn");
   }
@@ -129,6 +151,7 @@ export class Furnish {
     if (best < 0) return false;
     const [prop] = l.props.splice(best, 1);
     this.carried = { prop, from: best, was: structuredClone(prop) };
+    this.offset = { x: 0, y: 0, facing: '' };
     this.w.rebuild();
     return true;
   }
@@ -170,11 +193,13 @@ export class Furnish {
     const depth = this.footprint(p)?.h ?? 0;
     const cx = Math.round(f.x + f.w / 2);
     const gap = 3;
+    const o = this.offsetNow();
+    const at = (x: number, y: number): PlacedProp => ({ ...p, x: Math.round(x + o.x), y: Math.round(y + o.y) });
     switch (this.w.player.facing) {
-      case 'up': return { ...p, x: cx, y: f.y - gap };
-      case 'down': return { ...p, x: cx, y: f.y + f.h + gap + depth };
-      case 'left': return { ...p, x: Math.round(f.x - gap - a.w / 2), y: f.y + f.h };
-      default: return { ...p, x: Math.round(f.x + f.w + gap + a.w / 2), y: f.y + f.h };
+      case 'up': return at(cx, f.y - gap);
+      case 'down': return at(cx, f.y + f.h + gap + depth);
+      case 'left': return at(f.x - gap - a.w / 2, f.y + f.h);
+      default: return at(f.x + f.w + gap + a.w / 2, f.y + f.h);
     }
   }
 

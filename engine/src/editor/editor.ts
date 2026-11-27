@@ -12,7 +12,7 @@
  * arrows pan, middle-drag pans, Tab shows/hides the palette, Esc opens the menu (save, undo, snap, new
  * map, open, rename, Door to, Copy for chat: this map's file to the clipboard), F2 leaves the editor.
  * Controller: the left stick moves the cursor like a mouse, the D-pad nudges it a pixel at a time,
- * A places, X deletes, holding Y the right stick turns, LB/RB pick a slot, LT/RT a tab, Y tapped shows/hides the palette,
+ * A places, X deletes, the right stick turns, LB/RB pick a slot, LT/RT a tab, Y shows/hides the palette,
  * View undoes, right stick click zooms, Menu opens the menu (redo and snap are there), B cancels a move.
  *
  * Pieces are layered: floor pieces (rugs, stairs) under everything, wall pieces (pictures, windows,
@@ -26,6 +26,7 @@
  * Save writes every changed map to src/maps/<id>.json when running the dev server, and downloads the
  * files anywhere else.
  */
+import { Nudge } from '../core/nudge';
 import type { Action } from '../core/input';
 import { overlaps, type Rect } from '../core/geom';
 import { VIEW_H, VIEW_W } from '../core/renderer';
@@ -58,9 +59,6 @@ const MAGNET = 8; // px within which a prop pulls flush against a wall or shore
 const STICK_SPEED = 300; // screen px per second at full tilt (like a mouse pointer, so the same at any zoom)
 const DPAD_GLIDE = 110; // screen px per second once a held D-pad direction starts gliding
 const EDGE = 24; // screen px: keys or stick pushing the cursor this close to an edge scroll the view
-const REPEAT_FIRST = 0.22;
-const REPEAT_NEXT = 0.06;
-const GLIDE_AFTER = 0.7; // seconds a held D-pad direction nudges pixel by pixel before gliding
 const SLOT = 34;
 const WHEEL_NOTCH = 100; // wheel delta (px) per palette step: one notch of a mouse wheel
 /** Structure cells that are walls (what erasing in the Walls tab turns back into floor). */
@@ -68,7 +66,7 @@ const WALL_CHARS = new Set(['W', 'S', 'I', 'J']);
 /** How far (px) past an interior's walls the cursor and view reach, so a room can be built out in any direction. */
 const ROOM_REACH = 6 * 32;
 const PAN_SPEED = 260; // screen px per second when panning with WASD / arrows
-const TURN_STEP = 15; // degrees per wheel notch (R held) or right-stick step (Y held)
+const TURN_STEP = 15; // degrees per wheel notch (R held) or right-stick step
 const TURN_FINE = 5; // degrees per notch with Shift too
 const TURN_REPEAT = 0.18; // seconds between turning steps while the right stick is held over
 /** The strip along the bottom: the piece in hand, snap, and control hints. */
@@ -85,7 +83,7 @@ const MOUSE_HINTS: Array<[string[], string]> = [
 ];
 /** Actions (shown with the pad's glyph for them), or a glyph frame for a control that isn't an action. */
 const PAD_HINTS: Array<[Array<Action | 'xb_rs_move'>, string]> = [
-  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['recipes', 'xb_rs_move'], 'Turn'], [['map'], 'Undo'],
+  [['recipes'], 'Pieces'], [['interact'], 'Place'], [['cook'], 'Delete'], [['xb_rs_move'], 'Turn'], [['map'], 'Undo'],
   [['menu'], 'Menu'], [['tab_prev', 'tab_next'], 'Pick'], [['zoom'], 'Zoom'],
 ];
 
@@ -122,7 +120,7 @@ export class Editor {
   private wheel = 0;
   private status = { text: '', until: 0 };
   private time = 0;
-  private repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
+  private readonly nudger = new Nudge(); // D-pad nudging (same feel as nudging a carried piece)
   private lastPainted = '';
   /** The current paint stroke has been recorded for undo. */
   private strokeRecorded = false;
@@ -137,8 +135,7 @@ export class Editor {
   private readonly turns = new Map<string, number>();
   /** R is held: the wheel turns instead of picking. */
   private rHeld = false;
-  /** Y on the pad: held (with the right stick turning) or tapped (opens the Pieces window when let go). */
-  private yHold = { down: false, turned: false, next: 0 };
+  private turnNext = 0; // time until a held right stick turns again
 
   constructor(private readonly game: Game) {
     this.palette = buildPalette(game.assets, game.content);
@@ -320,7 +317,8 @@ export class Editor {
 
     // keyboard: only Tab (palette) and Esc (menu) - everything else is the mouse
     if (pad) {
-      this.padTurn(input.down('recipes'), input.rightStick().x, dt);
+      if (input.pressed('recipes')) this.togglePicker();
+      this.padTurn(input.rightStick().x, dt);
       if (input.pressed('tab_prev')) this.stepItem(-1);
       if (input.pressed('tab_next')) this.stepItem(1);
       if (input.pressed('cat_prev')) this.stepTab(-1);
@@ -379,25 +377,10 @@ export class Editor {
       }
       return;
     }
-    if (!dx && !dy) {
-      this.repeat = { dx: 0, dy: 0, held: 0, next: REPEAT_FIRST };
-      return;
-    }
-    this.mouse = null;
-    const step = this.tool === 'ground' ? TILE : 1;
-    if (dx !== this.repeat.dx || dy !== this.repeat.dy) {
-      this.repeat = { dx, dy, held: 0, next: REPEAT_FIRST };
-      this.moveBy(dx * step, dy * step);
-      return;
-    }
-    this.repeat.held += dt;
-    if (step === 1 && this.repeat.held >= GLIDE_AFTER) {
-      const len = Math.hypot(dx, dy);
-      const v = DPAD_GLIDE / this.zoom;
-      this.moveBy((dx / len) * v * dt, (dy / len) * v * dt);
-    } else if (this.repeat.held >= this.repeat.next) {
-      this.repeat.next += REPEAT_NEXT;
-      this.moveBy(dx * step, dy * step);
+    const d = this.nudger.update({ x: dx, y: dy }, dt, this.tool === 'ground' ? TILE : 1, this.tool === 'ground' ? 0 : DPAD_GLIDE / this.zoom);
+    if (d.x || d.y) {
+      this.mouse = null;
+      this.moveBy(d.x, d.y);
     }
   }
 
@@ -705,26 +688,14 @@ export class Editor {
     if (i >= 0) this.itemIndex[this.cat] = i;
   }
 
-  /**
-   * Y on the pad: hold it and push the right stick to turn (a step, then repeating while held over);
-   * tapped without turning, it opens the Pieces window when let go.
-   */
-  private padTurn(yDown: boolean, x: number, dt: number): void {
-    const h = this.yHold;
-    if (!yDown) {
-      if (h.down && !h.turned) this.togglePicker();
-      this.yHold = { down: false, turned: false, next: 0 };
-      return;
-    }
-    if (!h.down) this.yHold = { down: true, turned: false, next: 0 };
+  /** The right stick on the pad turns: a step, then repeating while it's held over. */
+  private padTurn(x: number, dt: number): void {
     if (Math.abs(x) < 0.5) {
-      this.yHold.next = 0;
+      this.turnNext = 0;
       return;
     }
-    this.yHold.next -= dt;
-    if (this.yHold.next > 0) return;
-    this.yHold.next = TURN_REPEAT;
-    this.yHold.turned = true;
+    if ((this.turnNext -= dt) > 0) return;
+    this.turnNext = TURN_REPEAT;
     this.turnBy(Math.sign(x) * TURN_STEP);
   }
 

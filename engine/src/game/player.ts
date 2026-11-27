@@ -68,11 +68,14 @@ export class Player extends Entity {
     return { x: this.prevX + (this.x - this.prevX) * alpha, y: this.prevY + (this.y - this.prevY) * alpha };
   }
 
-  /** speed: how fast the ground under a world point is walked on (1 = normal). */
-  move(dt: number, input: Input, blocked: (r: Rect) => boolean, speed: (x: number, y: number) => number = () => 1): void {
+  /**
+   * speed: how fast the ground under a world point is walked on (1 = normal). walkOnly: the D-pad and
+   * arrow keys are busy nudging (see Input.move), so only the left stick and WASD walk.
+   */
+  move(dt: number, input: Input, blocked: (r: Rect) => boolean, speed: (x: number, y: number) => number = () => 1, walkOnly = false): void {
     this.prevX = this.x;
     this.prevY = this.y;
-    const m = input.move();
+    const m = input.move(walkOnly);
     this.moving = m.x !== 0 || m.y !== 0;
     if (this.moving) {
       if (Math.abs(m.x) > Math.abs(m.y)) this.facing = m.x > 0 ? 'right' : 'left';

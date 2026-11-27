@@ -214,7 +214,7 @@ export class Game {
   /** An exit the player is walking into, if any. */
   private exitHit(): { to: string; spawn: string } | null {
     if (this.arrivedAt) {
-      const m = this.input.move();
+      const m = this.input.move(this.furnish.carrying);
       const away = Math.hypot(this.player.x - this.arrivedAt.x, this.player.y - this.arrivedAt.y) > ARM_DISTANCE;
       if ((!m.x && !m.y) || away) this.arrivedAt = null;
       else return null;
@@ -254,7 +254,7 @@ export class Game {
     } else {
       if (this.input.pressed('menu')) this.screen = new BagScreen(this.bag, this.content, this.assets);
       const g = this.scene.ground;
-      this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1);
+      this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1, this.furnish.carrying);
       const exit = this.exitHit();
       if (exit) {
         this.goTo(exit.to, exit.spawn);

@@ -6,14 +6,16 @@
 
 export type Action =
   | 'up' | 'down' | 'left' | 'right'
+  | 'walk_up' | 'walk_down' | 'walk_left' | 'walk_right' // WASD only: walking while the D-pad / arrows nudge
+  | 'nudge_up' | 'nudge_down' | 'nudge_left' | 'nudge_right' // D-pad and arrow keys
   | 'interact' | 'back' | 'cook' | 'recipes'
   | 'tab_prev' | 'tab_next' | 'cat_prev' | 'cat_next' | 'menu' | 'map' | 'debug' | 'edit' | 'zoom';
 
 export type Device = 'keyboard' | 'gamepad';
 
 const KEYBOARD: Record<string, Action[]> = {
-  KeyW: ['up'], ArrowUp: ['up'], KeyS: ['down'], ArrowDown: ['down'],
-  KeyA: ['left'], ArrowLeft: ['left'], KeyD: ['right'], ArrowRight: ['right'],
+  KeyW: ['up', 'walk_up'], ArrowUp: ['up', 'nudge_up'], KeyS: ['down', 'walk_down'], ArrowDown: ['down', 'nudge_down'],
+  KeyA: ['left', 'walk_left'], ArrowLeft: ['left', 'nudge_left'], KeyD: ['right', 'walk_right'], ArrowRight: ['right', 'nudge_right'],
   KeyE: ['interact'], Space: ['interact'], Enter: ['interact'],
   Escape: ['back'], KeyF: ['cook'], KeyR: ['recipes'],
   KeyQ: ['tab_prev'], KeyC: ['tab_next'], Tab: ['menu'], KeyI: ['menu'], KeyM: ['map'], F3: ['debug'],
@@ -24,7 +26,7 @@ const KEYBOARD: Record<string, Action[]> = {
 const PAD_BUTTONS: Record<number, Action[]> = {
   0: ['interact'], 1: ['back'], 2: ['cook'], 3: ['recipes'],
   4: ['tab_prev'], 5: ['tab_next'], 6: ['cat_prev'], 7: ['cat_next'], 8: ['map'], 9: ['menu'], 10: ['edit'], 11: ['zoom'],
-  12: ['up'], 13: ['down'], 14: ['left'], 15: ['right'],
+  12: ['up', 'nudge_up'], 13: ['down', 'nudge_down'], 14: ['left', 'nudge_left'], 15: ['right', 'nudge_right'],
 };
 
 /** Sprite to show for an action on each device (frames from atlas.json ui sheets). */
@@ -110,10 +112,13 @@ export class Input {
     return this.now.has(a) && !this.prev.has(a);
   }
 
-  /** Movement as a vector with length <= 1 (analog stick, or D-pad/keys normalised). */
-  move(): { x: number; y: number } {
+  /**
+   * Movement as a vector with length <= 1 (analog stick, or D-pad/keys normalised). walkOnly leaves the
+   * D-pad and arrow keys out (they're nudging something): just the left stick and WASD.
+   */
+  move(walkOnly = false): { x: number; y: number } {
     if (this.stick.x || this.stick.y) return this.stick;
-    const d = this.digital();
+    const d = walkOnly ? this.axes('walk_') : this.digital();
     const len = Math.hypot(d.x, d.y) || 1;
     return { x: d.x / len, y: d.y / len };
   }
@@ -130,10 +135,17 @@ export class Input {
 
   /** D-pad / arrow keys / WASD alone, each axis -1, 0 or 1. */
   digital(): { x: number; y: number } {
-    return {
-      x: (this.down('right') ? 1 : 0) - (this.down('left') ? 1 : 0),
-      y: (this.down('down') ? 1 : 0) - (this.down('up') ? 1 : 0),
-    };
+    return this.axes('');
+  }
+
+  /** The D-pad / arrow keys alone, each axis -1, 0 or 1. */
+  nudge(): { x: number; y: number } {
+    return this.axes('nudge_');
+  }
+
+  private axes(pre: '' | 'walk_' | 'nudge_'): { x: number; y: number } {
+    const on = (d: 'up' | 'down' | 'left' | 'right') => (this.down(`${pre}${d}` as Action) ? 1 : 0);
+    return { x: on('right') - on('left'), y: on('down') - on('up') };
   }
 
   glyph(a: Action): string {
