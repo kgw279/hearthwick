@@ -4,8 +4,8 @@
  * levels slowly. A higher reputation brings more guests, more often, and more of them asking for
  * something in particular. Pure state.
  */
-const FIRST_LEVEL = 12; // points to go from level 1 to 2...
-const GROWTH = 1.6; // ...and each level needs this much more than the last
+const FIRST_LEVEL = 30; // points to go from level 1 to 2...
+const GROWTH = 1.7; // ...and each level needs this much more than the last
 
 export class Reputation {
   level = 1;
@@ -36,7 +36,7 @@ export class Reputation {
 
   /** Seconds between guests arriving: often, as the inn's name spreads. */
   get arriveEvery(): number {
-    return Math.max(12, 40 - (this.level - 1) * 6);
+    return Math.max(25, 75 - (this.level - 1) * 8);
   }
 
   /** The chance a course a guest orders is "anything that's ready" rather than something in particular. */
@@ -49,6 +49,6 @@ export class Reputation {
    * then (one at a time, mostly, at first).
    */
   get usualGuests(): number {
-    return this.level;
+    return Math.ceil(this.level / 2);
   }
 }

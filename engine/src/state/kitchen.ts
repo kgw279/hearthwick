@@ -14,7 +14,7 @@ import { containerOf, type ContainerSpec } from '../world/containers';
 import type { Layout } from '../world/layout';
 import type { Bag, Inventory, Stack } from './inventory';
 import type { Storage } from './storage';
-import { READY_MAX, type Served } from './service';
+import { isSetting, READY_MAX, type ReadySlot } from './service';
 
 /** The inn's maps: every map whose id starts with "inn". */
 export const isInn = (layoutId: string) => layoutId.startsWith('inn');
@@ -203,16 +203,16 @@ export class Kitchen {
   }
 
   /** Why a dish (or snack) can't be plated now into what's ready, or null if it can. */
-  canPlate(dish: string, ready: Served[]): Blocker {
+  canPlate(dish: string, ready: ReadySlot[]): Blocker {
     const short = this.missing(this.parts(dish));
     if (short) return short;
     if (!this.ware(dish)) return this.content.dishes[dish]?.kind === 'drink' ? 'No clean mugs' : 'No clean plates';
-    if (ready.length >= READY_MAX) return `${READY_MAX} are ready already: serve some first`;
+    if (ready.length >= READY_MAX) return 'Your hands are full: serve or wash what you have first';
     return null;
   }
 
   /** Plate a dish (or snack): its components and a clean plate (or mug) are used up; it joins what's ready. */
-  plate(dish: string, ready: Served[]): Blocker {
+  plate(dish: string, ready: ReadySlot[]): Blocker {
     const why = this.canPlate(dish, ready);
     if (why) return why;
     const ware = this.ware(dish)!;
@@ -222,9 +222,10 @@ export class Kitchen {
   }
 
   /** Unplate something ready: its components and what it was on go back to the stores (or the bag). */
-  unplate(ready: Served[], i: number): Blocker {
+  unplate(ready: ReadySlot[], i: number): Blocker {
     const s = ready[i];
     if (!s) return null;
+    if (isSetting(s)) return 'Dirty dishes: take them to the wash station';
     const need = this.needs([...this.parts(s.dish), s.ware]);
     if (need.some((n) => this.stores.room(n.item) + this.bag.room(n.item) < n.count)) return 'No room to put it back';
     for (const n of need) {

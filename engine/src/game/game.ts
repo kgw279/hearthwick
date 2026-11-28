@@ -14,7 +14,7 @@ import type { Scene } from '../world/scene';
 import { drawText } from '../ui/text';
 import { DialogBox, drawPrompt, Emotes, FloatTexts } from '../ui/widgets';
 import { loadLayouts, type Layout } from '../world/layout';
-import { artRect, buildScene, propFrames, titleOf, type SceneHooks } from './build';
+import { artRect, buildScene, layoutSpawns, propFrames, titleOf, type SceneHooks } from './build';
 import { Content } from './data';
 import { Editor } from '../editor/editor';
 import { Bag } from '../state/inventory';
@@ -26,17 +26,15 @@ import { InventoryScreen } from '../ui/inventoryScreen';
 import { PrepScreen } from '../ui/prepScreen';
 import { PlatingScreen } from '../ui/platingScreen';
 import { accepts, InnStores, isInn, Kitchen } from '../state/kitchen';
-import { Service, type Leaving } from '../state/service';
+import { isSetting, Service, type Guest } from '../state/service';
 import { Cookbook } from '../state/cookbook';
-import { Journal } from '../state/journal';
 import { JournalScreen } from '../ui/journalScreen';
-import { COURSES } from './data';
 import { Reputation } from '../state/reputation';
 import { Pops } from '../ui/fx';
 import { Washing } from '../state/washing';
 import { WashScreen } from '../ui/washScreen';
 import { barKey, platingStations, seating, type Seat } from './seating';
-import { GuestEntity, ReadyEntity, TopEntity } from './serviceView';
+import { GuestEntity, ReadyEntity, TopEntity, WalkerEntity } from './serviceView';
 import { TableScreen } from '../ui/tableScreen';
 import { containerOf } from '../world/containers';
 import { drawCoins } from '../ui/items';
@@ -44,6 +42,7 @@ import type { Screen } from '../ui/screen';
 import { ShopScreen } from '../ui/shopScreen';
 import { Player } from './player';
 
+const GUEST_SPEED = 38; // px per second guests walk at
 const FADE = 0.22; // seconds for each half of a scene transition
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
@@ -87,8 +86,6 @@ export class Game {
   private readonly worldPops = new Pops();
   private readonly hudPops = new Pops();
   private seenTimer = 0;
-  /** A history of what's happened (the player's journal). */
-  readonly journal = new Journal();
   /** The recipes the player knows. */
   readonly cookbook: Cookbook;
   /** The wash station's tub and drying rack. */
@@ -116,7 +113,7 @@ export class Game {
         const name = this.content.itemName(item);
         // what was picked up pops out over the player's head
         if (got) this.worldPops.pop(this.player.center.x, this.player.y + 2, this.time, { item, text: `+${got > 1 ? `${got} ` : ''}${name}` });
-        else this.floats.pop('Your bag is full', this.player.center.x, this.player.y, this.time);
+        else this.floats.pop(this.bag.why(item) ?? 'Your bag is full', this.player.center.x, this.player.y, this.time);
         return got === n;
       },
       openShop: (shop) => {
@@ -131,10 +128,11 @@ export class Game {
       openPlating: () => (this.screen = new PlatingScreen(this.service.ready, this.kitchen, this.cookbook, () => this.service.changed(), this.content, assets)),
       openBar: () => this.openTable(barKey(this.scene.id), 'The bar'),
       openTable: (key) => this.openTable(`${this.scene.id}:${key}`, 'Table'),
-      wash: () => (this.screen = new WashScreen(this.washing, this.kitchen, this.content, assets)),
+      wash: () => (this.screen = new WashScreen(this.washing, this.kitchen,
+        { count: (item) => this.service.dirtyReady(item), take: (item) => this.service.takeDirty(item) }, this.content, assets)),
     };
     const e = this.content.economy;
-    this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
+    this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins, e.bag_weight, (item) => this.content.items[item]?.weight ?? 1);
     this.shops = new Shops(this.content, () => this.time);
     this.storage = new Storage(e.stack_size);
     this.furnish = new Furnish({
@@ -152,17 +150,6 @@ export class Game {
     this.reputation = new Reputation();
     this.service = new Service(this.content, looks, this.reputation);
     this.cookbook = new Cookbook(this.content);
-    this.service.onArrive = (seat, g) => {
-      const who = this.content.folk[g.folk]?.name ?? g.folk;
-      const where = seat.bar ? 'at the bar' : 'at a table';
-      const wants = this.service.wants(g).map((c) => this.service.describe(c, g.order[c]!)).join(', ');
-      this.journal.add({ kind: 'arrive', text: `${who} sat down ${where}, wanting ${wants}` });
-    };
-    this.shops.onTrade = (shop, item, n, coins) => {
-      const name = this.content.itemName(item);
-      const where = this.content.shop(shop).name;
-      this.journal.add({ kind: coins < 0 ? 'buy' : 'sell', text: `${coins < 0 ? 'Bought' : 'Sold'} ${n} ${name} ${coins < 0 ? 'at' : 'to'} ${where}`, coins });
-    };
     this.washing = new Washing(this.content);
     this.editor = new Editor(this);
     this.enter('town', 'start');
@@ -184,44 +171,48 @@ export class Game {
     for (let i = 1; i < 10; i++) r.rect(bx + Math.round((bw * i) / 10), by, 1, 4, '#45283c', true);
   }
 
-  /** Every seat in the inn. */
-  private seats(): Seat[] {
-    return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => seating(l, this.assets, this.content).seats);
+  /** Every seat in the inn, with how long a guest takes to walk there from the door. */
+  private seats(): Array<Seat & { walk: number }> {
+    return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => {
+      const door = this.doorOf(l.id);
+      return seating(l, this.assets, this.content).seats.map((s) => {
+        const to = this.seatSpot(s);
+        return { ...s, walk: Math.hypot(to.x - door.x, to.y - door.y) / GUEST_SPEED };
+      });
+    });
   }
 
-  /** A guest has left: their coins and the renown they earn the inn, how they felt (over where they sat), the journal. */
-  private guestLeft(l: Leaving): void {
-    this.bag.coins += l.coins;
-    const levels = l.reputation ? this.reputation.add(l.reputation) : 0;
-    if (levels) {
-      this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
-      this.journal.add({ kind: 'renown', text: `The inn's renown grew to ${this.reputation.level}` });
-    } else if (l.reputation) {
-      this.hudPops.pop(70, 34, this.time, { text: `+${l.reputation} renown` });
-    }
-    const who = this.content.folk[l.guest.folk]?.name ?? l.guest.folk;
-    const had = COURSES.map((c) => l.guest.got[c]?.dish).filter((d): d is string => !!d).map((d) => this.content.itemName(d));
-    const felt = l.how === 'paid' ? 'left happy' : l.how === 'gave up' ? 'gave up waiting and left' : l.mood >= 0.8 ? 'was sent on their way, and didn\'t mind' : 'was sent on their way, a little put out';
-    this.journal.add({
-      kind: 'leave',
-      text: `${who} ${felt}${had.length ? `, having had ${had.join(', ')}` : ''}`,
-      detail: l.awards.length ? l.awards.map((a) => `${a.why} ${a.points > 0 ? '+' : ''}${a.points}`).join(', ') : undefined,
-      coins: l.coins || undefined,
-      renown: l.reputation || undefined,
-    });
-    if (l.seat.layout !== this.scene.id) return;
-    const s = this.seats().find((x) => x.key === l.seat.key);
-    if (!s) return;
+  /** Where guests come in and go out of a map: its front door (its first spawn), at their feet. */
+  private doorOf(layout: string): { x: number; y: number } {
+    const sp = layoutSpawns(this.layouts.get(layout)!, this.assets, this.content);
+    const s = sp.front ?? Object.values(sp)[0] ?? { x: 0, y: 0 };
+    return { x: s.x + 16, y: s.y + 28 };
+  }
+
+  /** Where a guest sitting in a seat has their feet. */
+  private seatSpot(s: Seat): { x: number; y: number } {
+    return { x: s.art.x + s.art.w / 2, y: s.art.y + s.art.h - 6 };
+  }
+
+  /** A guest has left: their coins and the renown they earn the inn, and what they say (over where they sat). */
+  private guestLeft(g: Guest): void {
+    const o = g.outcome!;
+    this.bag.coins += o.coins;
+    const levels = o.renown ? this.reputation.add(o.renown) : 0;
+    if (levels) this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
+    else if (o.renown) this.hudPops.pop(70, 34, this.time, { text: `+${o.renown} renown` });
+    const s = this.seats().find((x) => x.key === g.seat);
+    if (!s || s.layout !== this.scene.id) return;
     const x = s.art.x + s.art.w / 2;
-    if (l.coins) this.worldPops.pop(x, s.art.y + 4, this.time, { text: `+${l.coins} coins` });
-    this.emotes.pop(l.mood >= 0.8 ? 'emote_happy' : l.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
+    if (o.coins) this.worldPops.pop(x, s.art.y + 12, this.time, { text: `+${o.coins} coins` });
+    this.floats.pop(`"${o.remark}"`, x, s.art.y - 6, this.time);
+    this.emotes.pop(o.mood >= 0.8 ? 'emote_happy' : o.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
   }
 
   /** Serving a table (key: map and position), or the bar: its seats, from what's ready at the plating station. */
   private openTable(key: string, title: string): void {
     const seats = seating(this.layouts.get(this.scene.id)!, this.assets, this.content).seats.filter((s) => s.table === key);
-    this.screen = new TableScreen(title, seats, this.service, (item) => this.bag.add(item, 1) === 1,
-      () => this.kitchen.takeCutlery(), (l) => this.guestLeft(l), this.content, this.assets);
+    this.screen = new TableScreen(title, seats, this.service, () => this.kitchen.takeCutlery(), (g) => this.guestLeft(g), this.content, this.assets);
   }
 
   /** Guests eat, pay and leave, and new ones arrive (wherever the player is). */
@@ -229,7 +220,7 @@ export class Game {
   private noteSeen(): void {
     for (const s of this.bag.slots) if (s) this.cookbook.see(s.item);
     for (const b of this.kitchen.stores.boxes()) for (const s of b.inv.slots) if (s) this.cookbook.see(s.item);
-    for (const s of this.service.ready) this.cookbook.see(s.dish);
+    for (const s of this.service.ready) if (!isSetting(s)) this.cookbook.see(s.dish);
   }
 
   private tickService(dt: number): void {
@@ -237,8 +228,7 @@ export class Game {
       this.seenTimer = 1;
       this.noteSeen();
     }
-    this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (l) => this.guestLeft(l));
-    this.washing.update(dt, (item) => this.kitchen.put(item));
+    this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (g) => this.guestLeft(g));
   }
 
   /** Serving as seen in this map: what's ready on the plating station, seated guests, what's on the tables and bar. */
@@ -248,9 +238,17 @@ export class Game {
     const props = this.scene.props;
     const { seats, tables } = seating(l, this.assets, this.content);
     const out: Entity[] = [];
+    // guests: walking in from the door, sat down, or walking out
+    const door = this.doorOf(l.id);
     for (const seat of seats) {
       const g = this.service.guests.get(seat.key);
-      if (g && props[seat.chair]) out.push(new GuestEntity(g, seat, props[seat.chair], this.assets));
+      if (!g || !props[seat.chair]) continue;
+      if (g.state === 'arriving') out.push(new WalkerEntity(g.look, door, this.seatSpot(seat), 1 - g.walk / g.walkTotal, this.assets, this.time));
+      else out.push(new GuestEntity(g, seat, props[seat.chair], this.assets));
+    }
+    for (const w of this.service.leavers) {
+      const seat = seats.find((s) => s.key === w.seat);
+      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), door, w.t / w.total, this.assets, this.time));
     }
     // on each table and along the bar: each guest's meal in front of them while they eat, and the
     // dishes left at each seat once they've gone
@@ -418,7 +416,7 @@ export class Game {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
-      if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.journal, this.cookbook, this.content, this.assets);
+      if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.service, this.cookbook, this.content, this.assets);
       if (this.input.pressed('menu')) {
         this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id), this.content, this.assets);
       }

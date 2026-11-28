@@ -1,8 +1,9 @@
 /**
- * The wash station. Left: the dirty and wet tableware to hand (the inn's stores and the bag). Right, two
- * sections: the washing tub (dirty pieces in, wet ones out) and the drying rack (wet in, clean out), each
- * with what's waiting and a bar for the piece being done (about a second each). Finished pieces go back
- * into the stores (or the bag), and carry on while you're away.
+ * The wash station. Left: the dirty and wet tableware to hand (place settings cleared from the tables,
+ * the inn's stores, the bag). Right, two sections: the washing tub (dirty pieces in, wet ones out) and the
+ * drying rack (wet in, clean out), each with what's waiting and a bar for the piece being done. One piece
+ * at a time, washing first, about a second each, and only while you're here: leave, and the work waits.
+ * Finished pieces go into the stores (or the bag).
  * A (E, click) puts one of the chosen pieces in its section; Y (R) puts in all of them; X (F, right-click)
  * takes one back out; B (Esc) leaves.
  */
@@ -43,6 +44,8 @@ export class WashScreen implements Screen {
   constructor(
     private readonly washing: Washing,
     private readonly kitchen: Kitchen,
+    /** Dirty pieces carried in the ready slots (cleared place settings): how many of a kind, and take one. */
+    private readonly carried: { count: (item: string) => number; take: (item: string) => boolean },
     private readonly content: Content,
     private readonly assets: Assets,
   ) {
@@ -60,13 +63,14 @@ export class WashScreen implements Screen {
   /** Dirty pieces first, then wet ones, each with how many are to hand. */
   private stock(): Stack[] {
     const of = (test: (id: string) => boolean) => Object.keys(this.content.items).filter(test)
-      .map((item) => ({ item, count: this.kitchen.have(item) })).filter((s) => s.count > 0);
+      .map((item) => ({ item, count: this.kitchen.have(item) + this.carried.count(item) })).filter((s) => s.count > 0);
     return [...of((i) => !!this.content.items[i].washes_to), ...of((i) => !!this.content.items[i].dries_to)];
   }
 
   update(input: Input, dt: number): boolean {
     this.time += dt;
     this.device = input.device;
+    this.washing.update(dt, (item) => this.kitchen.put(item)); // only while the player's here
     // a pop for each piece that's come out of the tub or off the rack
     const sx = this.x + PAD + COLS * (SLOT + 2) + 16 + SLOT / 2;
     ([[this.washing.washing, 0, this.y + TOP + 2 + SLOT / 2, 'Washed!'], [this.washing.drying, 1, this.y + TOP + 76 + SLOT / 2, 'Clean!']] as const)
@@ -96,7 +100,7 @@ export class WashScreen implements Screen {
     const line = s && this.washing.lineFor(s.item);
     if (!s || !line) return;
     let k = 0;
-    while (k < n && this.kitchen.take(s.item)) {
+    while (k < n && (this.carried.take(s.item) || this.kitchen.take(s.item))) {
       line.queue.push(s.item);
       k++;
     }

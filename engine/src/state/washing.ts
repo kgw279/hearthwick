@@ -1,8 +1,9 @@
 /**
  * The wash station: dirty tableware goes in the washing tub and comes out wet; wet tableware goes on the
- * drying rack and comes off clean. Each takes about a second a piece, one piece at a time in each, and
- * carries on whether or not anyone's watching. What's done goes back where tableware is kept (the inn's
- * stores, else the bag); with nowhere to put it, that side waits. Pure state.
+ * drying rack and comes off clean. One thing at a time: a piece washed, or a piece dried (washing first),
+ * about a second each, and only while the player is at it (the station's screen ticks it). What's done
+ * goes back where tableware is kept (the inn's stores, else the bag); with nowhere to put it, it waits.
+ * Pure state.
  */
 import type { Content } from '../game/data';
 
@@ -19,8 +20,9 @@ export class Washing {
 
   /** put: put a finished piece away; false if there's no room (then it waits). */
   update(dt: number, put: (item: string) => boolean): void {
-    this.step(this.washing, dt, WASH_TIME, (i) => this.content.item(i).washes_to, put);
-    this.step(this.drying, dt, DRY_TIME, (i) => this.content.item(i).dries_to, put);
+    // one thing at a time: washing while there's any to wash, then drying
+    if (this.washing.queue.length) this.step(this.washing, dt, WASH_TIME, (i) => this.content.item(i).washes_to, put);
+    else this.step(this.drying, dt, DRY_TIME, (i) => this.content.item(i).dries_to, put);
   }
 
   private step(line: Line, dt: number, time: number, next: (item: string) => string | undefined, put: (item: string) => boolean): void {

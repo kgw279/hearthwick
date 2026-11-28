@@ -8,7 +8,8 @@ import type { Assets } from '../core/assets';
 import type { Renderer } from '../core/renderer';
 import { Entity } from '../world/entity';
 import type { Content } from './data';
-import type { Guest, Meal, Served } from '../state/service';
+import { isSetting, type Guest, type Meal, type ReadySlot } from '../state/service';
+import { loopFrame } from '../core/anim';
 import type { Seat } from './seating';
 import type { Rect } from '../core/geom';
 
@@ -34,7 +35,7 @@ export function drawMeal(r: Renderer, content: Content, m: Meal, x: number, y: n
 /** What's ready to serve, set out along the top of the plating station. */
 export class ReadyEntity extends Entity {
   constructor(
-    private readonly ready: Served[],
+    private readonly ready: ReadySlot[],
     private readonly art: Rect,
     private readonly station: Entity,
     private readonly content: Content,
@@ -49,9 +50,38 @@ export class ReadyEntity extends Entity {
   draw(r: Renderer, camX: number, camY: number): void {
     const gap = (this.art.w - 16) / Math.max(1, this.ready.length);
     this.ready.forEach((s, i) => {
+      if (isSetting(s)) return; // cleared dishes are carried, not set out here
       const meal: Meal = { [this.content.course(s.dish)]: s };
       drawMeal(r, this.content, meal, Math.round(this.art.x + 8 + i * gap + gap / 2 - 5) - camX, this.art.y + 7 - camY);
     });
+  }
+}
+
+/** A guest walking (in from the door, or out to it): straight across, then along, at a stroll. */
+export class WalkerEntity extends Entity {
+  private readonly facing: 'up' | 'down' | 'left' | 'right';
+
+  /** t: how far along, 0 to 1. Feet go from `from` to `to`: up or down first, then across. */
+  constructor(private readonly look: string, from: { x: number; y: number }, to: { x: number; y: number }, t: number, private readonly assets: Assets, private readonly time: number) {
+    const dy = to.y - from.y;
+    const dx = to.x - from.x;
+    const len = Math.abs(dx) + Math.abs(dy) || 1;
+    const along = Math.max(0, Math.min(1, t)) * len;
+    const first = Math.min(along, Math.abs(dy));
+    const fx = from.x + Math.sign(dx) * Math.max(0, along - Math.abs(dy));
+    const fy = from.y + Math.sign(dy) * first;
+    super(Math.round(fx - 16), Math.round(fy - 28));
+    this.facing = along < Math.abs(dy) ? (dy < 0 ? 'up' : 'down') : dx < 0 ? 'left' : 'right';
+  }
+
+  get sortY(): number {
+    return this.y + 28;
+  }
+
+  draw(r: Renderer, camX: number, camY: number): void {
+    const anim = `${this.look}_walk_${this.facing}`;
+    const frames = this.assets.hasAnimation(anim) ? this.assets.animation(anim) : [`${this.look}_${this.facing}_idle`];
+    r.sprite(loopFrame(frames, this.time, 6, 0), this.x - camX, this.y - camY);
   }
 }
 

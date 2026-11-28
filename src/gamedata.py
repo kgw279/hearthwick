@@ -307,7 +307,9 @@ def build():
     for loop, node in content_animals.AMBIENT.items():
         if node not in nodes: raise ValueError(f'ambient {loop}: unknown forage node {node}')
 
-    for iid, it in items.items(): it['store'] = store_class(it, dishes)
+    for iid, it in items.items():
+        it['store'] = store_class(it, dishes)
+        it['weight'] = weight_of(iid, it)
     # how interesting a dish is: the prep steps behind it, and each component past the first. Serving it
     # earns that less one in reputation, so plain things (a fried egg, a cup of milk) earn none
     for d in dishes.values():
@@ -335,7 +337,7 @@ def build():
         'forage_spots': spots,
         'forage_nodes': nodes,
         'shops': shops,
-        'folk': {f: {'name': n, 'likes': l, 'hates': h, 'odd': o} for f, (n, l, h, o) in D.FOLK.items()},
+        'folk': {f: {'name': n, 'likes': l, 'hates': h, 'odd': o, 'cravings': CRAVINGS[f]} for f, (n, l, h, o) in D.FOLK.items()},
         'economy': {k: v for k, v in content_economy.ECONOMY.items() if not k.startswith('market_')},
         # guests at the bar order drinks, simple dishes (this few components at most) and raw snacks, served
         # straight over the counter; at the tables they order anything
@@ -346,6 +348,31 @@ def build():
     }
     return data
 
+
+# how heavy things are to carry (the bag holds so much weight): most things weigh 1; these differ
+HEAVY = {'water': 3, 'milk': 2, 'honey': 1.5, 'beef': 2, 'venison': 2, 'mutton': 2, 'pork': 2, 'chicken': 1.5, 'trout': 1.5,
+         'potato': 1.5, 'wheat': 1.5, 'oats': 1.5, 'flour': 1.5, 'salt': 0.5, 'peppercorns': 0.5, 'herbs': 0.5, 'cress': 0.5,
+         'berries': 0.5, 'egg': 0.5, 'ember_pepper': 0.5}
+KIND_WEIGHT = {'tableware': 0.5, 'supply': 1}
+
+
+def weight_of(iid, it):
+    if iid in HEAVY: return HEAVY[iid]
+    if it['kind'] == 'tableware': return 0.25 if it.get('tableware', {}).get('kind') == 'cutlery' else KIND_WEIGHT['tableware']
+    if it['kind'] == 'supply': return 1.5 if iid == 'bed_linens' else KIND_WEIGHT['supply']
+    return 1
+
+
+# what each folk secretly craves, beyond what they ask for: one is drawn for each guest, by these weights.
+# A guest served something with it is delighted; without it, they say what they'd have liked. Learned in play.
+CRAVINGS = {
+    'human': {'sweet': 3, 'warm': 3, 'hearty': 2, 'fresh': 2},
+    'dwarf': {'hearty': 4, 'meaty': 3, 'warm': 2, 'brewed': 1},
+    'elf': {'fresh': 4, 'sweet': 3, 'baked': 2, 'boiled': 1},
+    'beetle': {'sweet': 4, 'fresh': 3, 'baked': 3},
+    'frog': {'fresh': 4, 'fishy': 3, 'boiled': 3},
+    'minotaur': {'meaty': 5, 'hearty': 3, 'grilled': 2},
+}
 
 BAR_SNACKS = ['apple', 'berries', 'carrot', 'cress', 'tomato', 'cheese']   # raw things a bar guest might nibble
 # things served just as they are, plated on their own: the raw snacks, and small prepped things

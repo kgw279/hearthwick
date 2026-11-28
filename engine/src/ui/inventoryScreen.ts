@@ -12,7 +12,7 @@ import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
 import type { Bag, Stack } from '../state/inventory';
 import { InnStores } from '../state/kitchen';
-import { READY_MAX, type Served } from '../state/service';
+import { READY_MAX, type ReadySlot } from '../state/service';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';
@@ -45,7 +45,7 @@ export class InventoryScreen implements Screen {
   constructor(
     private readonly bag: Bag,
     private readonly stores: InnStores,
-    private readonly ready: Served[],
+    private readonly ready: ReadySlot[],
     private readonly inInn: boolean,
     private readonly content: Content,
     private readonly assets: Assets,
@@ -103,7 +103,7 @@ export class InventoryScreen implements Screen {
       return;
     }
     const k = Math.min(n, s.count, this.bag.stackSize, this.bag.room(s.item));
-    if (!k) return this.say('Your bag is full');
+    if (!k) return this.say(this.bag.why(s.item) ?? 'Your bag is full');
     this.stores.remove(s.item, k);
     this.bag.add(s.item, k);
     this.sel = Math.min(this.sel, Math.max(0, this.cells().length - 1));
@@ -182,6 +182,12 @@ export class InventoryScreen implements Screen {
     let cy = this.y + TOP + 84;
     if (this.tab === 'Bag') {
       drawText(r, assets, `${this.bag.slots.filter(Boolean).length}/${this.bag.slots.length} slots`, ix, cy);
+      // how much is carried: a bar filling towards what the player can manage
+      const load = this.bag.load;
+      drawText(r, assets, `Carrying ${Math.round(load * 10) / 10} of ${this.bag.maxWeight}`, ix, cy + 14);
+      const bw = 110;
+      r.rect(ix, cy + 27, bw, 5, '#45283c', true);
+      r.rect(ix, cy + 27, Math.round((bw * Math.min(1, load / this.bag.maxWeight))), 5, load / this.bag.maxWeight > 0.85 ? '#df7126' : '#99e550', true);
     } else {
       const caps = this.stores.capacity(this.tab === 'Kitchen' ? 'kitchen' : 'inn');
       if (!caps.length) drawText(r, assets, 'No containers for these yet', ix, cy);
@@ -190,7 +196,7 @@ export class InventoryScreen implements Screen {
         cy += 12;
       }
       if (this.tab === 'Kitchen') {
-        drawText(r, assets, `Ready to serve  ${this.ready.length}/${READY_MAX}`, ix, cy + 4);
+        drawText(r, assets, `In hand to serve  ${this.ready.length}/${READY_MAX}`, ix, cy + 4);
       }
     }
     const msg = this.time < this.message.until;

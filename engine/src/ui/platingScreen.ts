@@ -20,10 +20,11 @@ import type { Content } from '../game/data';
 import type { Cookbook } from '../state/cookbook';
 import type { Stack } from '../state/inventory';
 import type { Kitchen } from '../state/kitchen';
-import { READY_MAX, type Served } from '../state/service';
+import { READY_MAX, type ReadySlot } from '../state/service';
 import { buttonName, hint } from './buttons';
 import { Pops } from './fx';
 import { drawItem, drawSlot, SLOT } from './items';
+import { drawReady, readyName } from './ready';
 import { gridMove } from './inventoryScreen';
 import { RecipeBook } from './recipeBook';
 import { Nav, type Screen } from './screen';
@@ -60,7 +61,7 @@ export class PlatingScreen implements Screen {
 
   /** ready: what's plated and waiting here. changed: tell the world to redraw it. */
   constructor(
-    private readonly ready: Served[],
+    private readonly ready: ReadySlot[],
     private readonly kitchen: Kitchen,
     private readonly cookbook: Cookbook,
     private readonly changed: () => void,
@@ -267,10 +268,10 @@ export class PlatingScreen implements Screen {
     drawText(r, assets, content.stations.plate?.name ?? 'Plating station', this.x + PAD, this.y + 10);
     const stock = this.stock();
     const chosen = this.pane === 'grid' ? stock[this.sel]?.item
-      : this.pane === 'plate' ? this.plate[this.plateSel] : this.ready[this.readySel]?.dish;
+      : this.pane === 'plate' ? this.plate[this.plateSel] : readyName(this.ready[this.readySel]);
     if (chosen) {
       r.ctx.globalAlpha = 0.8;
-      drawText(r, assets, content.itemName(chosen), this.x + PAD + 110, this.y + 10);
+      drawText(r, assets, chosen.startsWith('(') ? chosen : content.itemName(chosen), this.x + PAD + 110, this.y + 10);
       r.ctx.globalAlpha = 1;
     }
 
@@ -313,12 +314,11 @@ export class PlatingScreen implements Screen {
       r.ctx.globalAlpha = 1;
     }
 
-    drawText(r, assets, `Ready to serve  ${this.ready.length}/${READY_MAX}`, this.midX, this.readySlot(0).y - 12);
+    drawText(r, assets, `In hand  ${this.ready.length}/${READY_MAX}`, this.midX, this.readySlot(0).y - 12);
     for (let i = 0; i < READY_MAX; i++) {
       const p = this.readySlot(i);
       drawSlot(r, p.x, p.y, this.pane === 'ready' && i === this.readySel);
-      const s = this.ready[i];
-      if (s) drawItem(r, assets, content, s.dish, p.x, p.y);
+      drawReady(r, assets, content, this.ready[i], p.x, p.y);
     }
 
     // made a moment ago: what RT makes again, shown faintly in the result, with a ribbon saying so

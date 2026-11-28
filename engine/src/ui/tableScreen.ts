@@ -6,11 +6,14 @@
  *    brought, and their patience as a row of small chits marked off one at a time over a good few
  *    minutes. Courses can be served in any order.
  *  - Dishes left behind: one guest's place setting. Nobody sits there till it's cleared: choose it to
- *    take the dishes one by one (or click each) into your bag.
- * Right: what's ready at the plating station. Choose something ready, then the guest to serve it to: it
- * must be what they want for its course. A main brings a clean set of cutlery with it, if there's one to
- * hand. X politely dismisses the chosen guest (they pay nothing, and mind less the sooner it's done).
- * B puts back what you chose to serve, or leaves.
+ *    take the dishes one by one (or click each); they go together into one of your ready slots, to carry
+ *    to the wash station.
+ * Right: what you have in hand (the ready slots): dishes plated at the plating station, and cleared
+ * settings. Choose something ready, then the guest, then which of their slots it goes in (left / right;
+ * or click the slot). Anything goes in any empty slot, but the wrong course or not what they asked for
+ * leaves them less happy (and the inn less renowned); the line at the top says how it fits. A main
+ * brings clean cutlery with it, if there's some to hand. X politely dismisses the chosen guest (they pay
+ * nothing, and mind less the sooner it's done). B steps back, or leaves.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -18,7 +21,9 @@ import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import { COURSE_NAMES, type Content } from '../game/data';
 import type { Seat } from '../game/seating';
-import { CHITS, READY_MAX, type Guest, type Leaving, type Service } from '../state/service';
+import { CHITS, isSetting, READY_MAX, type Guest, type Service } from '../state/service';
+import { drawReady } from './ready';
+import type { Course } from '../game/data';
 import { hint } from './buttons';
 import { Pops } from './fx';
 import { drawItem, drawSlot, SLOT } from './items';
@@ -34,7 +39,9 @@ const TOP = 32;
 const DISH = 18; // spacing of dirty dishes in a row
 
 export class TableScreen implements Screen {
-  private pane: 'ready' | 'seats';
+  private pane: 'ready' | 'seats' | 'slots';
+  /** Which of the chosen guest's course slots (when placing). */
+  private slot = 0;
   private seat = 0;
   private readySel = 0;
   /** The ready dish chosen to serve. */
@@ -49,12 +56,10 @@ export class TableScreen implements Screen {
     private readonly title: string,
     private readonly seats: Seat[],
     private readonly service: Service,
-    /** Put a dirty piece in the bag; false if it doesn't fit. */
-    private readonly toBag: (item: string) => boolean,
     /** A clean set of cutlery to go with a main, if there's one. */
     private readonly cutlery: () => string | null,
     /** A guest has left (dismissed). */
-    private readonly left: (l: Leaving) => void,
+    private readonly left: (g: Guest) => void,
     private readonly content: Content,
     private readonly assets: Assets,
   ) {
@@ -84,9 +89,11 @@ export class TableScreen implements Screen {
     this.time += dt;
     this.device = input.device;
     if (input.pressed('back') || input.pressed('menu')) {
-      if (this.picked === null) return false;
-      this.picked = null;
-      this.pane = 'ready';
+      if (this.pane === 'slots') this.pane = 'seats';
+      else if (this.picked !== null) {
+        this.picked = null;
+        this.pane = 'ready';
+      } else return false;
       return true;
     }
     const d = this.nav.step(input, dt);
@@ -97,6 +104,11 @@ export class TableScreen implements Screen {
   }
 
   private move(d: { x: number; y: number }): void {
+    if (this.pane === 'slots') {
+      const g = this.guestAt(this.seat);
+      if (g && d.x) this.slot = Math.max(0, Math.min(this.service.wants(g).length - 1, this.slot + d.x));
+      return;
+    }
     if (this.pane === 'seats') {
       if (d.x > 0) this.pane = 'ready';
       else if (d.y) this.seat = Math.max(0, Math.min(this.seats.length - 1, this.seat + d.y));
@@ -106,9 +118,16 @@ export class TableScreen implements Screen {
     else if (d.y) this.readySel = Math.max(0, Math.min(READY_MAX - 1, this.readySel + d.y));
   }
 
+  private guestAt(row: number): Guest | undefined {
+    const seat = this.rows()[row];
+    return seat && this.service.guests.get(seat.key);
+  }
+
   private choose(): void {
     if (this.pane === 'ready') {
-      if (!this.service.ready[this.readySel]) return this.say(this.service.ready.length ? 'Nothing there' : 'Nothing ready: plate something at the plating station');
+      const r = this.service.ready[this.readySel];
+      if (!r) return this.say(this.service.ready.length ? 'Nothing there' : 'Nothing ready: plate something at the plating station');
+      if (isSetting(r)) return this.say("Dirty dishes: they're for the wash station");
       this.picked = this.readySel;
       this.pane = 'seats';
       this.say('Now choose who to serve it to');
@@ -116,33 +135,51 @@ export class TableScreen implements Screen {
     }
     const seat = this.rows()[this.seat];
     if (!seat) return;
-    if (!this.service.guests.has(seat.key) && this.service.dirty.get(seat.key)?.length) return this.clear(seat, 0);
+    const g = this.service.guests.get(seat.key);
+    if (!g && this.service.dirty.get(seat.key)?.length) return this.clear(seat, 0);
     if (this.picked === null) return this.say(this.service.ready.length ? 'Choose something ready first' : 'Nothing ready: plate something at the plating station');
-    const dish = this.service.ready[this.picked]?.dish;
-    const why = this.service.serve(this.picked, seat.key, this.cutlery);
+    if (!g) return this.say('Nobody is sitting there');
+    if (this.pane === 'seats') {
+      if (g.state === 'arriving') return this.say("They're still coming in");
+      // which slot: the first empty one of its course, if they want one, else the first empty one
+      const wants = this.service.wants(g);
+      const dish = (this.service.ready[this.picked] as { dish: string }).dish;
+      const own = wants.findIndex((c) => c === this.content.course(dish) && !g.got[c]);
+      this.slot = own >= 0 ? own : Math.max(0, wants.findIndex((c) => !g.got[c]));
+      this.pane = 'slots';
+      return;
+    }
+    this.place(seat.key, this.service.wants(g)[this.slot]);
+  }
+
+  /** Serve what's picked into a guest's slot for a course. */
+  private place(seatKey: string, c: Course): void {
+    if (this.picked === null) return;
+    const dish = (this.service.ready[this.picked] as { dish: string }).dish;
+    const why = this.service.serve(this.picked, seatKey, c, this.cutlery);
     if (why) return this.say(why);
     const p = this.rowAt(this.seat);
     this.pops.pop(p.x + LIST_W - 50, p.y + 20, this.time, { item: dish, text: 'Served!' });
-    this.say(`Served ${dish ? this.content.itemName(dish) : ''}`);
+    this.say(`Served ${this.content.itemName(dish)}`);
     this.picked = null;
     this.readySel = 0;
-    this.pane = this.service.ready.length ? 'ready' : 'seats';
+    this.pane = this.service.ready.some((r) => !isSetting(r)) ? 'ready' : 'seats';
   }
 
-  /** Take one dirty dish from a seat into the bag. */
+  /** Take one dirty dish from a seat into the ready slots (the seat's setting). */
   private clear(seat: Seat, i: number): void {
     const p = this.rowAt(this.rows().indexOf(seat));
-    const item = this.service.clearOne(seat.key, i, this.toBag);
-    if (!item) return this.say('Your bag is full');
-    this.pops.pop(p.x + 46 + i * DISH + 8, p.y + 18, this.time, { item, text: 'Cleared' });
+    const res = this.service.clearOne(seat.key, i);
+    if ('why' in res) return this.say(res.why);
+    this.pops.pop(p.x + 46 + i * DISH + 8, p.y + 18, this.time, { item: res.item, text: 'Cleared' });
   }
 
   private dismiss(): void {
     const seat = this.rows()[this.seat];
-    const l = seat && this.service.dismiss(seat);
-    if (!l) return this.say('Nobody is sitting there');
-    this.left(l);
-    this.say(l.mood >= 0.8 ? 'They nod and go on their way' : 'They leave, a little put out');
+    const g = seat && this.service.dismiss(seat);
+    if (!g) return this.say('Nobody is sitting there');
+    this.left(g);
+    this.say(`"${g.outcome!.remark}"`);
   }
 
   private say(text: string): void {
@@ -172,6 +209,20 @@ export class TableScreen implements Screen {
         if (k >= 0 && k < pile.length) this.clear(seat, k);
         return true;
       }
+      // a guest's course slot, clicked with something picked: serve it there
+      const g = this.service.guests.get(seat.key);
+      if (g && this.picked !== null && button === 0) {
+        const wants = this.service.wants(g);
+        const k = wants.findIndex((_, j) => {
+          const sx = p.x + LIST_W - 4 - (wants.length - j) * (SLOT + 2);
+          return px >= sx && px < sx + SLOT;
+        });
+        if (k >= 0) {
+          this.slot = k;
+          this.place(seat.key, wants[k]);
+          return true;
+        }
+      }
       if (button === 0) this.choose();
       if (button === 2) this.dismiss();
       return true;
@@ -188,14 +239,14 @@ export class TableScreen implements Screen {
     return !(button === 0 && outside);
   }
 
-  /** A guest's row: who, their patience, a slot per course they want. */
-  private drawGuest(r: Renderer, g: Guest, p: { x: number; y: number }): void {
+  /** A guest's row: who, their patience, a slot per course they want (the chosen one outlined, when placing). */
+  private drawGuest(r: Renderer, g: Guest, p: { x: number; y: number }, placing: number | null): void {
     const { assets, content, service } = this;
     r.sprite(`${g.look}_down_idle`, p.x + 2, p.y + 4);
     drawText(r, assets, content.folk[g.folk]?.name ?? g.folk, p.x + 38, p.y + 6);
-    if (g.state === 'eating') {
+    if (g.state === 'eating' || g.state === 'arriving') {
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, 'Enjoying their meal', p.x + 38, p.y + 22);
+      drawText(r, assets, g.state === 'eating' ? 'Enjoying their meal' : 'Coming in...', p.x + 38, p.y + 22);
       r.ctx.globalAlpha = 1;
     } else {
       const left = service.chits(g);
@@ -209,7 +260,7 @@ export class TableScreen implements Screen {
     const wants = service.wants(g);
     wants.forEach((c, k) => {
       const sx = p.x + LIST_W - 4 - (wants.length - k) * (SLOT + 2);
-      drawSlot(r, sx, p.y + 3, false);
+      drawSlot(r, sx, p.y + 3, placing === k);
       const got = g.got[c];
       const w = g.order[c]!;
       if (got) drawItem(r, assets, content, got.dish, sx, p.y + 3);
@@ -244,7 +295,7 @@ export class TableScreen implements Screen {
       r.nine(this.pane === 'seats' && i === this.seat ? 'slot_selected' : 'slot', p.x, p.y, LIST_W, ROW - 2);
       const g = service.guests.get(seat.key);
       const pile = service.dirty.get(seat.key);
-      if (g) this.drawGuest(r, g, p);
+      if (g) this.drawGuest(r, g, p, this.pane === 'slots' && i === this.seat ? this.slot : null);
       else if (pile?.length) {
         // one guest's place setting, left behind: each dish to be cleared
         r.ctx.globalAlpha = 0.7;
@@ -258,9 +309,17 @@ export class TableScreen implements Screen {
         r.ctx.globalAlpha = 1;
       }
     });
-    // what the chosen guest wants, in words
+    // placing: how what's picked fits the chosen slot; else what the chosen guest wants, in words
     const chosen = rows[this.seat] && service.guests.get(rows[this.seat].key);
-    if (chosen && this.pane === 'seats') {
+    if (chosen && this.pane === 'slots' && this.picked !== null) {
+      const c = service.wants(chosen)[this.slot];
+      const dish = (service.ready[this.picked] as { dish: string }).dish;
+      const fit = service.fit(chosen, c, dish);
+      const says = fit === 'right' ? `Their ${c}: just right` : fit === 'not asked' ? `Their ${c}: not what they asked for` : `Their ${c}: but it's not a ${c}!`;
+      r.ctx.globalAlpha = 0.9;
+      drawText(r, assets, says, this.x + 20 + measure(this.title), this.y + 10);
+      r.ctx.globalAlpha = 1;
+    } else if (chosen && this.pane === 'seats') {
       const want = service.wants(chosen).map((c) => service.describe(c, chosen.order[c]!)).join(', ');
       r.ctx.globalAlpha = 0.8;
       drawText(r, assets, `Wants ${want}`, this.x + 20 + measure(this.title), this.y + 10);
@@ -268,19 +327,18 @@ export class TableScreen implements Screen {
     }
 
     // what's ready at the plating station
-    const label = 'Ready';
+    const label = 'In hand';
     drawText(r, assets, label, this.readySlot(0).x + (SLOT - measure(label)) / 2, this.y + TOP - 8);
     for (let i = 0; i < READY_MAX; i++) {
       const p = this.readySlot(i);
       if (this.picked === i) r.nine('slot_selected', p.x - 3, p.y - 3, SLOT + 6, SLOT + 6);
       drawSlot(r, p.x, p.y, this.pane === 'ready' && i === this.readySel);
-      const s = service.ready[i];
-      if (s) drawItem(r, assets, content, s.dish, p.x, p.y);
+      drawReady(r, assets, content, service.ready[i], p.x, p.y);
     }
     const sel = this.pane === 'ready' ? service.ready[this.readySel] : undefined;
     if (sel) {
       // what's chosen, in the header: what it is and which course
-      const name = `${content.itemName(sel.dish)}, a ${COURSE_NAMES[content.course(sel.dish)]}`;
+      const name = isSetting(sel) ? 'Dirty dishes, for the wash station' : `${content.itemName(sel.dish)}, a ${COURSE_NAMES[content.course(sel.dish)]}`;
       r.ctx.globalAlpha = 0.8;
       drawText(r, assets, name, this.x + 20 + measure(this.title), this.y + 10);
       r.ctx.globalAlpha = 1;
@@ -290,7 +348,8 @@ export class TableScreen implements Screen {
     const seat = rows[this.seat];
     const onDirty = seat && !service.guests.has(seat.key) && !!service.dirty.get(seat.key)?.length;
     const help = msg ? this.message.text
-      : this.picked !== null ? hint(this.device, [['interact', 'serve them'], ['back', 'put it back']])
+      : this.pane === 'slots' ? hint(this.device, [['interact', 'serve it here'], ['back', 'another guest']])
+      : this.picked !== null ? hint(this.device, [['interact', 'choose who'], ['back', 'put it back']])
       : onDirty && this.pane === 'seats' ? hint(this.device, [['interact', 'clear a dish'], ['back', 'leave']])
       : hint(this.device, [['interact', 'choose'], ['cook', 'dismiss'], ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;

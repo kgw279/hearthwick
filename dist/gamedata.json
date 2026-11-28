@@ -279,6 +279,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "hearty"
       ]
@@ -325,6 +326,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "fresh",
         "savory"
@@ -391,6 +393,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "sweet"
       ]
@@ -440,6 +443,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "hearty"
       ]
@@ -485,6 +489,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "fresh",
         "sweet"
@@ -528,6 +533,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "savory"
       ]
@@ -566,6 +572,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -607,6 +614,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 2,
       "traits": [
         "meaty"
       ]
@@ -648,6 +656,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "fishy"
       ]
@@ -688,6 +697,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "fresh"
       ],
@@ -731,6 +741,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "savory"
       ]
@@ -776,6 +787,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 2,
       "traits": [
         "hearty"
       ]
@@ -818,6 +830,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -857,6 +870,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 2,
       "traits": [
         "meaty"
       ]
@@ -900,6 +914,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "hearty",
         "savory"
@@ -944,6 +959,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "fresh",
         "savory"
@@ -988,6 +1004,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "hearty"
       ]
@@ -1030,6 +1047,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -1073,6 +1091,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 2,
       "traits": [
         "meaty"
       ]
@@ -1110,6 +1129,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "warm"
       ]
@@ -1172,6 +1192,7 @@
         ]
       },
       "store": "pantry",
+      "weight": 3,
       "traits": [
         "fresh"
       ]
@@ -1215,6 +1236,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "savory"
       ]
@@ -1249,6 +1271,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 0.5,
       "traits": [
         "savory",
         "warm"
@@ -1286,6 +1309,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "meaty"
       ]
@@ -1324,6 +1348,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 2,
       "traits": [
         "meaty"
       ]
@@ -1363,6 +1388,7 @@
         "dishes": []
       },
       "store": "pantry",
+      "weight": 1.5,
       "traits": [
         "hearty"
       ]
@@ -1403,6 +1429,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -1447,6 +1474,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -1498,6 +1526,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1.5,
       "traits": [
         "hearty"
       ]
@@ -1538,6 +1567,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty"
@@ -1580,6 +1610,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -1625,6 +1656,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -1662,6 +1694,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -1701,6 +1734,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -1738,6 +1772,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -1782,6 +1817,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -1828,6 +1864,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fried",
@@ -1869,6 +1906,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -1915,6 +1953,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "hearty",
@@ -1965,6 +2004,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -2016,6 +2056,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty"
@@ -2077,6 +2118,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "grilled",
@@ -2118,6 +2160,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -2159,6 +2202,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -2204,6 +2248,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty"
@@ -2245,6 +2290,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -2291,6 +2337,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -2336,6 +2383,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -2375,6 +2423,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -2422,6 +2471,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "sweet",
@@ -2476,6 +2526,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "sweet",
@@ -2545,6 +2596,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "savory"
@@ -2590,6 +2642,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -2639,6 +2692,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory",
@@ -2688,6 +2742,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -2742,6 +2797,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "sweet",
@@ -2785,6 +2841,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "savory"
       ]
@@ -2831,6 +2888,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -2874,6 +2932,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "savory",
@@ -2922,6 +2981,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -2970,6 +3030,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty"
@@ -3019,6 +3080,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -3059,6 +3121,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -3097,6 +3160,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -3138,6 +3202,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -3185,6 +3250,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -3232,6 +3298,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -3283,6 +3350,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fishy",
         "fresh"
@@ -3328,6 +3396,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fishy",
         "grilled",
@@ -3376,6 +3445,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fishy",
         "fried",
@@ -3431,6 +3501,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fishy",
@@ -3481,6 +3552,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh"
       ]
@@ -3524,6 +3596,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -3569,6 +3642,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "savory"
       ]
@@ -3617,6 +3691,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -3667,6 +3742,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory",
@@ -3704,6 +3780,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "savory",
@@ -3750,6 +3827,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -3805,6 +3883,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -3852,6 +3931,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -3899,6 +3979,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -3937,6 +4018,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "sweet",
@@ -3985,6 +4067,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "sweet",
@@ -4030,6 +4113,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "sweet",
@@ -4070,6 +4154,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -4106,6 +4191,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -4155,6 +4241,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -4197,6 +4284,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -4247,6 +4335,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty",
         "savory"
@@ -4294,6 +4383,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "hearty",
@@ -4339,6 +4429,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -4383,6 +4474,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "warm"
       ]
@@ -4421,6 +4513,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "savory",
@@ -4464,6 +4557,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "warm"
@@ -4508,6 +4602,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "savory"
@@ -4552,6 +4647,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory",
@@ -4600,6 +4696,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "savory",
@@ -4642,6 +4739,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -4690,6 +4788,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -4732,6 +4831,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -4772,6 +4872,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -4822,6 +4923,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -4870,6 +4972,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -4916,6 +5019,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "sweet",
@@ -4967,6 +5071,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5014,6 +5119,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -5055,6 +5161,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -5093,6 +5200,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -5134,6 +5242,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5184,6 +5293,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -5229,6 +5339,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -5276,6 +5387,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -5315,6 +5427,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "hearty",
@@ -5357,6 +5470,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -5399,6 +5513,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5441,6 +5556,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5484,6 +5600,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5533,6 +5650,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5575,6 +5693,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -5613,6 +5732,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ],
@@ -5659,6 +5779,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5701,6 +5822,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -5741,6 +5863,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -5787,6 +5910,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "grilled",
@@ -5828,6 +5952,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "fried",
@@ -5872,6 +5997,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -5916,6 +6042,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "fresh",
@@ -5960,6 +6087,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "fishy",
@@ -6005,6 +6133,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -6044,6 +6173,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -6084,6 +6214,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -6122,6 +6253,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fresh"
       ]
@@ -6159,6 +6291,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "sweet"
@@ -6202,6 +6335,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -6245,6 +6379,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -6288,6 +6423,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -6331,6 +6467,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -6375,6 +6512,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -6437,6 +6575,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -6474,6 +6613,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "savory",
@@ -6514,6 +6654,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fresh",
@@ -6556,6 +6697,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -6603,6 +6745,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -6645,6 +6788,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -6689,6 +6833,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -6731,6 +6876,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -6781,6 +6927,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -6825,6 +6972,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "warm"
@@ -6866,6 +7014,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fresh",
@@ -6907,6 +7056,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "boiled",
         "sweet",
@@ -6948,6 +7098,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -6988,6 +7139,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -7029,6 +7181,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fishy",
@@ -7070,6 +7223,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory",
@@ -7113,6 +7267,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fresh",
@@ -7155,6 +7310,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory"
@@ -7203,6 +7359,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fresh",
@@ -7252,6 +7409,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "fresh",
@@ -7304,6 +7462,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -7346,6 +7505,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "fishy",
@@ -7387,6 +7547,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -7434,6 +7595,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "savory",
         "warm"
@@ -7474,6 +7636,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -7516,6 +7679,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -7555,6 +7719,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -7597,6 +7762,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -7640,6 +7806,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -7684,6 +7851,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "savory",
@@ -7727,6 +7895,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -7770,6 +7939,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -7812,6 +7982,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -7854,6 +8025,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -7894,6 +8066,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty"
       ]
@@ -7938,6 +8111,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty",
         "savory"
@@ -7979,6 +8153,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -8026,6 +8201,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "meaty",
         "savory"
@@ -8067,6 +8243,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "meaty",
@@ -8110,6 +8287,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "grilled",
         "meaty",
@@ -8152,6 +8330,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -8196,6 +8375,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "meaty",
@@ -8235,6 +8415,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty"
@@ -8274,6 +8455,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty"
@@ -8315,6 +8497,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -8358,6 +8541,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -8402,6 +8586,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -8453,6 +8638,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty"
       ]
@@ -8492,6 +8678,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -8534,6 +8721,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -8582,6 +8770,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -8625,6 +8814,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "boiled",
@@ -8670,6 +8860,7 @@
         "dishes": []
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "hearty",
         "sweet"
@@ -8710,6 +8901,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -8752,6 +8944,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "baked",
         "hearty",
@@ -8794,6 +8987,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fried",
         "hearty",
@@ -8836,6 +9030,7 @@
         ]
       },
       "store": "shelf",
+      "weight": 1,
       "traits": [
         "fishy",
         "fried",
@@ -8878,6 +9073,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -8917,6 +9113,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "brewed",
         "fried",
@@ -8957,6 +9154,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "brewed",
         "fried",
@@ -8999,6 +9197,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "brewed",
         "fresh",
@@ -9038,6 +9237,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "brewed",
         "sweet"
@@ -9078,6 +9278,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "brewed",
         "sweet"
@@ -9117,6 +9318,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "boiled",
         "brewed",
@@ -9158,6 +9360,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "boiled",
         "brewed",
@@ -9199,6 +9402,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "fresh",
         "sweet"
@@ -9239,6 +9443,7 @@
         ]
       },
       "store": "cask",
+      "weight": 1,
       "traits": [
         "boiled",
         "hearty",
@@ -9273,7 +9478,8 @@
           "price": 2
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_wood_plate": {
       "kind": "tableware",
@@ -9302,7 +9508,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_wood_plate": {
       "kind": "tableware",
@@ -9331,7 +9538,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "clay_plate": {
       "kind": "tableware",
@@ -9361,7 +9569,8 @@
           "price": 5
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_clay_plate": {
       "kind": "tableware",
@@ -9390,7 +9599,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_clay_plate": {
       "kind": "tableware",
@@ -9419,7 +9629,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "pewter_plate": {
       "kind": "tableware",
@@ -9449,7 +9660,8 @@
           "price": 10
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_pewter_plate": {
       "kind": "tableware",
@@ -9478,7 +9690,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_pewter_plate": {
       "kind": "tableware",
@@ -9507,7 +9720,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wood_bowl": {
       "kind": "tableware",
@@ -9537,7 +9751,8 @@
           "price": 2
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_wood_bowl": {
       "kind": "tableware",
@@ -9566,7 +9781,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_wood_bowl": {
       "kind": "tableware",
@@ -9595,7 +9811,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "clay_bowl": {
       "kind": "tableware",
@@ -9625,7 +9842,8 @@
           "price": 5
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_clay_bowl": {
       "kind": "tableware",
@@ -9654,7 +9872,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_clay_bowl": {
       "kind": "tableware",
@@ -9683,7 +9902,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "pewter_bowl": {
       "kind": "tableware",
@@ -9713,7 +9933,8 @@
           "price": 10
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_pewter_bowl": {
       "kind": "tableware",
@@ -9742,7 +9963,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_pewter_bowl": {
       "kind": "tableware",
@@ -9771,7 +9993,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wood_mug": {
       "kind": "tableware",
@@ -9801,7 +10024,8 @@
           "price": 2
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_wood_mug": {
       "kind": "tableware",
@@ -9830,7 +10054,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_wood_mug": {
       "kind": "tableware",
@@ -9859,7 +10084,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "clay_mug": {
       "kind": "tableware",
@@ -9889,7 +10115,8 @@
           "price": 5
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_clay_mug": {
       "kind": "tableware",
@@ -9918,7 +10145,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_clay_mug": {
       "kind": "tableware",
@@ -9947,7 +10175,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "pewter_mug": {
       "kind": "tableware",
@@ -9977,7 +10206,8 @@
           "price": 10
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "dirty_pewter_mug": {
       "kind": "tableware",
@@ -10006,7 +10236,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wet_pewter_mug": {
       "kind": "tableware",
@@ -10035,7 +10266,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.5
     },
     "wood_cutlery": {
       "kind": "tableware",
@@ -10065,7 +10297,8 @@
           "price": 2
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "dirty_wood_cutlery": {
       "kind": "tableware",
@@ -10094,7 +10327,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "wet_wood_cutlery": {
       "kind": "tableware",
@@ -10123,7 +10357,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "iron_cutlery": {
       "kind": "tableware",
@@ -10153,7 +10388,8 @@
           "price": 5
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "dirty_iron_cutlery": {
       "kind": "tableware",
@@ -10182,7 +10418,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "wet_iron_cutlery": {
       "kind": "tableware",
@@ -10211,7 +10448,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "pewter_cutlery": {
       "kind": "tableware",
@@ -10241,7 +10479,8 @@
           "price": 10
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "dirty_pewter_cutlery": {
       "kind": "tableware",
@@ -10270,7 +10509,8 @@
           "note": "left dirty by a served guest"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "wet_pewter_cutlery": {
       "kind": "tableware",
@@ -10299,7 +10539,8 @@
           "note": "washed at the wash tub, still to dry"
         }
       ],
-      "store": "tableware"
+      "store": "tableware",
+      "weight": 0.25
     },
     "pillow": {
       "name": "Pillow",
@@ -10323,7 +10564,8 @@
           "price": 6
         }
       ],
-      "store": "supply"
+      "store": "supply",
+      "weight": 1
     },
     "bed_linens": {
       "name": "Bed linens",
@@ -10347,7 +10589,8 @@
           "price": 8
         }
       ],
-      "store": "supply"
+      "store": "supply",
+      "weight": 1.5
     },
     "candles": {
       "name": "Candles",
@@ -10371,7 +10614,8 @@
           "price": 3
         }
       ],
-      "store": "supply"
+      "store": "supply",
+      "weight": 1
     },
     "soap": {
       "name": "Soap",
@@ -10395,7 +10639,8 @@
           "price": 2
         }
       ],
-      "store": "supply"
+      "store": "supply",
+      "weight": 1
     }
   },
   "dishes": {
@@ -16136,7 +16381,13 @@
         "fresh"
       ],
       "hates": null,
-      "odd": -1
+      "odd": -1,
+      "cravings": {
+        "sweet": 3,
+        "warm": 3,
+        "hearty": 2,
+        "fresh": 2
+      }
     },
     "dwarf": {
       "name": "Dwarf",
@@ -16147,7 +16398,13 @@
         "savory"
       ],
       "hates": "fresh",
-      "odd": 0
+      "odd": 0,
+      "cravings": {
+        "hearty": 4,
+        "meaty": 3,
+        "warm": 2,
+        "brewed": 1
+      }
     },
     "elf": {
       "name": "Elf",
@@ -16157,7 +16414,13 @@
         "savory"
       ],
       "hates": "meat",
-      "odd": -1
+      "odd": -1,
+      "cravings": {
+        "fresh": 4,
+        "sweet": 3,
+        "baked": 2,
+        "boiled": 1
+      }
     },
     "beetle": {
       "name": "Beetle-folk",
@@ -16167,7 +16430,12 @@
         "hearty"
       ],
       "hates": "fish",
-      "odd": 1
+      "odd": 1,
+      "cravings": {
+        "sweet": 4,
+        "fresh": 3,
+        "baked": 3
+      }
     },
     "frog": {
       "name": "Frog-folk",
@@ -16177,7 +16445,12 @@
         "odd"
       ],
       "hates": "warm",
-      "odd": 1
+      "odd": 1,
+      "cravings": {
+        "fresh": 4,
+        "fishy": 3,
+        "boiled": 3
+      }
     },
     "minotaur": {
       "name": "Minotaur",
@@ -16188,13 +16461,19 @@
         "warm"
       ],
       "hates": "sweet",
-      "odd": 0
+      "odd": 0,
+      "cravings": {
+        "meaty": 5,
+        "hearty": 3,
+        "grilled": 2
+      }
     }
   },
   "economy": {
     "starting_coins": 30,
     "bag_slots": 24,
     "stack_size": 20,
+    "bag_weight": 24,
     "sell_ratio": 1.0
   },
   "bar": {

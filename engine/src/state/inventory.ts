@@ -96,12 +96,32 @@ export class Inventory {
   }
 }
 
-/** The player's bag: an inventory and the purse. */
+/**
+ * The player's bag: an inventory and the purse. It holds only so much weight (water is heavy, a mug is
+ * not), so the player can't carry everything at once.
+ */
 export class Bag extends Inventory {
   coins: number;
 
-  constructor(size: number, stackSize: number, coins: number) {
+  constructor(size: number, stackSize: number, coins: number, readonly maxWeight: number, private readonly weightOf: (item: string) => number) {
     super(size, stackSize);
     this.coins = coins;
+  }
+
+  /** The weight carried. */
+  get load(): number {
+    return this.slots.reduce((n, s) => n + (s ? s.count * this.weightOf(s.item) : 0), 0);
+  }
+
+  /** As many as fit by slots, and by weight. */
+  room(item: string): number {
+    const byWeight = Math.floor((this.maxWeight - this.load) / Math.max(0.01, this.weightOf(item)) + 1e-9);
+    return Math.max(0, Math.min(super.room(item), byWeight));
+  }
+
+  /** Why one more of something won't fit: too heavy, or no slot for it (null if it fits). */
+  why(item: string): string | null {
+    if (this.room(item) > 0) return null;
+    return super.room(item) > 0 ? 'Too heavy to carry more' : 'Your bag is full';
   }
 }

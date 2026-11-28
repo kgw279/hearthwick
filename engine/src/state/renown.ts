@@ -17,6 +17,8 @@ export interface Visit {
   content: Content;
   /** What the inn has served lately (latest last), not counting this visit. */
   recent: string[];
+  /** Whether they got what they quietly craved. */
+  craved: boolean;
 }
 
 export type RenownRule = (v: Visit) => Award[];
@@ -30,17 +32,26 @@ const complexity: RenownRule = (v) => served(v)
   .map((s) => ({ why: name(v, s.dish), points: Math.max(0, v.content.complexity(s.dish) - 1) }))
   .filter((a) => a.points > 0);
 
-/** Getting what they asked for: something in particular, more than something of a kind. */
+/**
+ * Getting what they asked for: something in particular, more than something of a kind. Something else
+ * in its place costs a little; the wrong course altogether, more.
+ */
 const asked: RenownRule = (v) => {
   const out: Award[] = [];
   for (const c of COURSES) {
     const w = v.guest.order[c];
-    if (!w || !v.guest.got[c]) continue;
-    if (w.dish) out.push({ why: 'Just what they asked for', points: 2 });
+    const got = v.guest.got[c];
+    if (!w || !got) continue;
+    if (got.fit === 'wrong course') out.push({ why: `${name(v, got.dish)} wasn't the ${c} they wanted`, points: -2 });
+    else if (got.fit === 'not asked') out.push({ why: `Not the ${c} they asked for`, points: -1 });
+    else if (w.dish) out.push({ why: 'Just what they asked for', points: 2 });
     else if (w.trait) out.push({ why: `Just the ${w.trait} ${c} they wanted`, points: 1 });
   }
   return out;
 };
+
+/** What they quietly craved (their folk's tastes): delighted to get it. */
+const craving: RenownRule = (v) => (v.craved ? [{ why: `Loved how ${v.guest.craving} it was`, points: 2 }] : []);
 
 /** A proper meal: several courses together, and things that go together (sharing a taste). */
 const pairing: RenownRule = (v) => {
@@ -86,7 +97,7 @@ const variety: RenownRule = (v) => served(v)
   .map((s) => ({ why: `${name(v, s.dish)} again?`, points: -1 }));
 
 /** Every rule that weighs a visit, in the order their reasons are listed. */
-export const RENOWN_RULES: RenownRule[] = [complexity, asked, pairing, taste, speed, variety];
+export const RENOWN_RULES: RenownRule[] = [complexity, asked, craving, pairing, taste, speed, variety];
 
 /** A visit's renown: the total (not below nothing) and each rule's say. */
 export function renownFor(v: Visit): { total: number; awards: Award[] } {

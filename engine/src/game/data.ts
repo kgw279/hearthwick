@@ -14,6 +14,8 @@ export interface ItemData {
   tableware?: { kind: 'plate' | 'bowl' | 'mug' | 'cutlery'; material: string; tier: number };
   /** Where it can be had: foraged at a spot, bought at a shop... */
   sources?: Array<{ type: string; shop?: string; spot?: string }>;
+  /** How heavy it is to carry. */
+  weight?: number;
   /** Snacks served as they are: their course, traits and complexity (like a dish's). */
   course?: Course;
   traits?: string[];
@@ -37,7 +39,7 @@ export interface DishData {
   /** How interesting it is (the prep behind it), its course, and what a guest might ask for it by. */
   complexity: number; reputation: number; course: Course; traits: string[];
 }
-export interface FolkData { name: string; likes: string[]; hates: string | null }
+export interface FolkData { name: string; likes: string[]; hates: string | null; /** what they quietly crave, by weight */ cravings: Record<string, number> }
 /**
  * The courses a guest orders: a drink, a snack (something small served as it is, or a dish of one thing),
  * a main dish, a dessert (gamedata decides which each dish is).
@@ -59,7 +61,7 @@ export interface ShopData {
   market: boolean; pool: StockEntry[]; always: StockEntry[]; shelf: number;
 }
 export interface ForageNodeData { yields: string; spot: string | null; states: { ready: string; harvested: string } }
-export interface Economy { starting_coins: number; bag_slots: number; stack_size: number; sell_ratio: number }
+export interface Economy { starting_coins: number; bag_slots: number; stack_size: number; bag_weight: number; sell_ratio: number }
 
 export class Content {
   /** Ingredients and prepared items, plus dishes (a bag can hold either). */
