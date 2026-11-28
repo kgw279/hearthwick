@@ -1,8 +1,10 @@
 /**
- * The player's journal (View / M, with no other menu open): the purse, the inn's renown and how it's
- * coming along, how guests have found it, and a history of everything that's happened, newest first:
- * guests arriving and leaving (what they had, what they paid, the renown it earned and why), buying and
- * selling. Up / down scroll the history; B / Esc / View close.
+ * The player's journal (View / M, with no other menu open), in two tabs (LB / RB, Q / C, or a click):
+ *  - Journal: the purse, the inn's renown and how it's coming along, how guests have found it, and a
+ *    history of everything that's happened, newest first: guests arriving and leaving (what they had,
+ *    what they paid, the renown it earned and why), buying and selling. Up / down scroll.
+ *  - Recipe book: everything known, sorted by tag (see bookTab.ts).
+ * B / Esc / View close.
  */
 import type { Assets } from '../core/assets';
 import type { Input } from '../core/input';
@@ -11,6 +13,9 @@ import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Bag } from '../state/inventory';
 import type { Journal } from '../state/journal';
 import type { Reputation } from '../state/reputation';
+import type { Content } from '../game/data';
+import type { Cookbook } from '../state/cookbook';
+import { BookTab } from './bookTab';
 import { drawCoins } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure, wrap } from './text';
@@ -20,16 +25,32 @@ const H = 248;
 const SIDE = 150;
 const LINE = 11;
 
+const TABS = ['Journal', 'Recipe book'] as const;
+
 export class JournalScreen implements Screen {
+  private tab: (typeof TABS)[number] = 'Journal';
   private scroll = 0; // lines from the newest
   private readonly nav = new Nav();
+  private readonly book: BookTab;
 
   constructor(
     private readonly bag: Bag,
     private readonly renown: Reputation,
     private readonly journal: Journal,
+    cookbook: Cookbook,
+    content: Content,
     private readonly assets: Assets,
-  ) {}
+    first: 'Journal' | 'Recipe book' = 'Journal',
+  ) {
+    this.book = new BookTab(cookbook, content, assets);
+    this.tab = first;
+  }
+
+  private tabAt(i: number): { x: number; y: number; w: number } {
+    let x = this.x + 12;
+    for (let k = 0; k < i; k++) x += measure(TABS[k]) + 22;
+    return { x, y: this.y + 6, w: measure(TABS[i]) + 16 };
+  }
 
   private get x(): number {
     return Math.round((VIEW_W - W) / 2);
@@ -57,13 +78,24 @@ export class JournalScreen implements Screen {
 
   update(input: Input, dt: number): boolean {
     if (input.pressed('back') || input.pressed('map') || input.pressed('menu')) return false;
+    if (input.pressed('tab_prev') || input.pressed('tab_next')) this.tab = this.tab === 'Journal' ? 'Recipe book' : 'Journal';
     const d = this.nav.step(input, dt);
+    if (this.tab === 'Recipe book') {
+      this.book.update(input);
+      if (d) this.book.step(d, H - 40);
+      return true;
+    }
     const n = this.lines().length;
     if (d?.y) this.scroll = Math.max(0, Math.min(Math.max(0, n - this.rows), this.scroll + d.y * 3));
     return true;
   }
 
   pointer(px: number, py: number, button: number): boolean {
+    TABS.forEach((t, i) => {
+      const p = this.tabAt(i);
+      if (button === 0 && px >= p.x && px < p.x + p.w && py >= p.y && py < p.y + 18) this.tab = t;
+    });
+    if (this.tab === 'Recipe book' && button === 0) this.book.pointer(px, py, this.x + 12, this.y + 30, H - 40);
     const outside = px < this.x || py < this.y || px >= this.x + W || py >= this.y + H;
     return !(button === 0 && outside);
   }
@@ -71,10 +103,18 @@ export class JournalScreen implements Screen {
   draw(r: Renderer): void {
     const { assets } = this;
     r.nine('panel_dark', this.x, this.y, W, H);
-    drawText(r, assets, 'Journal', this.x + 12, this.y + 10);
+    TABS.forEach((t, i) => {
+      const p = this.tabAt(i);
+      r.nine(t === this.tab ? 'slot_selected' : 'slot', p.x, p.y, p.w, 18);
+      drawText(r, assets, t, p.x + 8, p.y + 4);
+    });
+    if (this.tab === 'Recipe book') {
+      this.book.draw(r, this.x + 12, this.y + 30, W - 24, H - 40);
+      return;
+    }
 
     // the inn at a glance
-    let y = this.y + 30;
+    let y = this.y + 32;
     drawCoins(r, assets, this.bag.coins, this.x + 12, y);
     y += 26;
     const rep = this.renown;
@@ -112,7 +152,7 @@ export class JournalScreen implements Screen {
     if (this.scroll > 0) r.sprite('arrow_up', this.x + W - 18, this.y + 26);
     if (this.scroll + this.rows < lines.length) r.sprite('arrow_down', this.x + W - 18, this.y + H - 24);
     r.ctx.globalAlpha = 0.6;
-    const hint = 'Up / down: scroll';
+    const hint = 'Up / down: scroll   LB / RB: tabs';
     drawText(r, assets, hint, this.x + W - 12 - measure(hint), this.y + 10);
     r.ctx.globalAlpha = 1;
   }

@@ -24,6 +24,7 @@ import { Pops } from './fx';
 import { drawItem, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';
+import { drawTag, TAG_SIZE } from './tags';
 
 const W = 464;
 const H = 248;
@@ -214,11 +215,14 @@ export class TableScreen implements Screen {
       if (got) drawItem(r, assets, content, got.dish, sx, p.y + 3);
       else if (w.dish) drawItem(r, assets, content, w.dish, sx, p.y + 3, 1, true);
       else {
-        // "Any / drink", or "baked / snack"
-        const top = w.trait ?? 'Any';
+        // the course's icon, and beside it the kind they'd like; or the icon alone, for anything
+        if (w.trait) {
+          drawTag(r, c, sx + 3, p.y + 6);
+          drawTag(r, w.trait, sx + SLOT - TAG_SIZE - 3, p.y + 6);
+        } else drawTag(r, c, sx + Math.round((SLOT - TAG_SIZE) / 2), p.y + 6);
         r.ctx.globalAlpha = 0.75;
-        drawText(r, assets, top, sx + Math.round((SLOT - measure(top)) / 2), p.y + 8);
-        drawText(r, assets, c, sx + Math.round((SLOT - measure(c)) / 2), p.y + 19);
+        const label = w.trait ?? 'any';
+        drawText(r, assets, label, sx + Math.round((SLOT - measure(label)) / 2), p.y + 21);
         r.ctx.globalAlpha = 1;
       }
     });

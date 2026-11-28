@@ -11,6 +11,8 @@ const FIRST_DISHES = ['dish_cold_milk', 'dish_cup_of_well_water', 'dish_boiled_e
 
 export class Cookbook {
   private readonly known = new Set<string>();
+  /** Everything the player has come across (had to hand, made, bought...). */
+  private readonly seen = new Set<string>();
 
   constructor(private readonly content: Content) {
     // at each station, the simplest things made straight from raw ingredients
@@ -41,6 +43,28 @@ export class Cookbook {
     if (this.known.has(key)) return false;
     this.known.add(key);
     return true;
+  }
+
+  /** Note something as come across. */
+  see(id: string): void {
+    this.seen.add(id);
+  }
+
+  /** Everything the player knows of: come across, or knows how to make. */
+  everything(): string[] {
+    const made = [...this.known].map((k) => k.split(':')[1]);
+    const food = (id: string) => !!this.content.dishes[id] || ['raw', 'prepared'].includes(this.content.items[id]?.kind);
+    return [...new Set([...this.seen, ...made])].filter(food);
+  }
+
+  /** How the player knows to make something: each known recipe for it (the plating station's included). */
+  ways(id: string): Array<{ station: string; inputs: string[] }> {
+    const out: Array<{ station: string; inputs: string[] }> = [];
+    for (const k of this.known) {
+      const [station, out_, inputs] = k.split(':');
+      if (out_ === id) out.push({ station, inputs: inputs.split('+') });
+    }
+    return out;
   }
 
   /** What's known at a station: each thing made and what goes into it, by name. */

@@ -278,7 +278,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "herbs": {
       "name": "Herbs",
@@ -321,7 +324,11 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "fresh",
+        "savory"
+      ]
     },
     "honey": {
       "name": "Honey",
@@ -383,7 +390,10 @@
           "dish_porridge_and_honey"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "sweet"
+      ]
     },
     "egg": {
       "name": "Egg",
@@ -429,7 +439,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "berries": {
       "name": "Berries",
@@ -472,11 +485,11 @@
         ]
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "fresh",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "mushroom": {
@@ -514,7 +527,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "savory"
+      ]
     },
     "acorns": {
       "name": "Acorns",
@@ -549,7 +565,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "venison": {
       "name": "Venison",
@@ -587,7 +606,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "meaty"
+      ]
     },
     "trout": {
       "name": "Trout",
@@ -625,7 +647,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "fishy"
+      ]
     },
     "cress": {
       "name": "Cress",
@@ -663,10 +688,10 @@
         ]
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "fresh"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "onion": {
@@ -705,7 +730,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "savory"
+      ]
     },
     "milk": {
       "name": "Milk",
@@ -747,7 +775,10 @@
           "dish_toasted_oats_and_milk"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "apple": {
       "name": "Apple",
@@ -787,11 +818,11 @@
         "dishes": []
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "fresh",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "mutton": {
@@ -825,7 +856,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "meaty"
+      ]
     },
     "cheese": {
       "name": "Cheese",
@@ -866,11 +900,11 @@
         ]
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "hearty",
         "savory"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "tomato": {
@@ -910,11 +944,11 @@
         "dishes": []
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "fresh",
         "savory"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "potato": {
@@ -953,7 +987,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "carrot": {
       "name": "Carrot",
@@ -993,11 +1030,11 @@
         "dishes": []
       },
       "store": "pantry",
-      "course": "snack",
       "traits": [
         "fresh",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 0
     },
     "beef": {
@@ -1035,7 +1072,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "meaty"
+      ]
     },
     "ember_pepper": {
       "name": "Ember pepper",
@@ -1069,7 +1109,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "warm"
+      ]
     },
     "water": {
       "name": "Water",
@@ -1128,7 +1171,10 @@
           "dish_cup_of_well_water"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "fresh"
+      ]
     },
     "salt": {
       "name": "Salt",
@@ -1168,7 +1214,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "savory"
+      ]
     },
     "peppercorns": {
       "name": "Peppercorns",
@@ -1199,7 +1248,11 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "savory",
+        "warm"
+      ]
     },
     "chicken": {
       "name": "Chicken",
@@ -1232,7 +1285,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "meaty"
+      ]
     },
     "pork": {
       "name": "Pork",
@@ -1267,7 +1323,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "meaty"
+      ]
     },
     "oats": {
       "name": "Oats",
@@ -1303,7 +1362,10 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "traits": [
+        "hearty"
+      ]
     },
     "toasted_grain": {
       "name": "Toasted grain",
@@ -1340,7 +1402,12 @@
           "dish_crunchy_honey_grain"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "boiled_grain": {
       "name": "Boiled grain",
@@ -1379,7 +1446,12 @@
           "dish_grain_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "flour": {
       "name": "Flour",
@@ -1425,7 +1497,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "nut_meal": {
       "name": "Nut meal",
@@ -1462,7 +1537,11 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty"
+      ]
     },
     "batter": {
       "name": "Batter",
@@ -1500,7 +1579,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "bread_dough": {
       "name": "Bread dough",
@@ -1542,7 +1624,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "pasta_dough": {
       "name": "Pasta dough",
@@ -1576,7 +1661,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "flatbread_dough": {
       "name": "Flatbread dough",
@@ -1612,7 +1700,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "fresh_noodles": {
       "name": "Fresh noodles",
@@ -1646,7 +1737,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "cooked_noodles": {
       "name": "Cooked noodles",
@@ -1687,7 +1781,12 @@
           "dish_cheesy_noodles"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "fried_noodles": {
       "name": "Fried noodles",
@@ -1728,7 +1827,14 @@
           "dish_onion_noodle_pan"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "tortilla": {
       "name": "Tortilla",
@@ -1762,7 +1868,12 @@
           "dish_tavern_wrap"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "flatbread": {
       "name": "Flatbread",
@@ -1804,12 +1915,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "grilled",
         "hearty",
         "warm"
       ],
+      "course": "snack",
       "complexity": 3
     },
     "bread_loaf": {
@@ -1853,7 +1964,12 @@
           "dish_farmhouse_loaf"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "warm"
+      ]
     },
     "bread_slices": {
       "name": "Bread slices",
@@ -1900,11 +2016,11 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "hearty"
       ],
+      "course": "snack",
       "complexity": 4
     },
     "toast": {
@@ -1960,7 +2076,13 @@
           "dish_sausages_and_onions_on_toast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "grilled",
+        "hearty",
+        "warm"
+      ]
     },
     "sponge_cake": {
       "name": "Sponge cake",
@@ -1995,7 +2117,13 @@
           "dish_honey_cake"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "pancakes": {
       "name": "Pancakes",
@@ -2030,7 +2158,13 @@
           "dish_honey_pancakes"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "hard_boiled_egg": {
       "name": "Hard-boiled egg",
@@ -2070,11 +2204,11 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "hearty"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "chopped_egg": {
@@ -2110,7 +2244,12 @@
           "dish_egg_and_herb_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory"
+      ]
     },
     "fried_egg": {
       "name": "Fried egg",
@@ -2151,7 +2290,13 @@
           "dish_bacon_and_eggs"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "whisked_egg": {
       "name": "Whisked egg",
@@ -2190,7 +2335,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "scrambled_eggs": {
       "name": "Scrambled eggs",
@@ -2226,7 +2374,13 @@
           "dish_soft_scramble"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "honey_glaze": {
       "name": "Honey glaze",
@@ -2267,7 +2421,12 @@
           "dish_honey_fritters"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "sweet",
+        "warm"
+      ]
     },
     "honey_syrup": {
       "name": "Honey syrup",
@@ -2316,7 +2475,12 @@
           "dish_bread_pudding"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ]
     },
     "chopped_herbs": {
       "name": "Chopped herbs",
@@ -2380,7 +2544,11 @@
           "dish_honey_glazed_chicken"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh",
+        "savory"
+      ]
     },
     "crispy_herbs": {
       "name": "Crispy herbs",
@@ -2421,7 +2589,12 @@
           "dish_crispy_potatoes_and_herbs"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "herb_broth": {
       "name": "Herb broth",
@@ -2465,7 +2638,12 @@
           "dish_egg_noodle_broth"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "crushed_berries": {
       "name": "Crushed berries",
@@ -2510,11 +2688,11 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fresh",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "berry_compote": {
@@ -2564,12 +2742,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "sweet",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "sliced_mushroom": {
@@ -2606,7 +2784,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "savory"
+      ]
     },
     "sauteed_mushrooms": {
       "name": "Sautéed mushrooms",
@@ -2649,7 +2830,12 @@
           "dish_chicken_in_mushroom_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "grilled_mushroom": {
       "name": "Grilled mushroom",
@@ -2687,7 +2873,12 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "savory",
+        "warm"
+      ]
     },
     "mushroom_broth": {
       "name": "Mushroom broth",
@@ -2730,7 +2921,13 @@
           "dish_mushroom_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "chopped_nuts": {
       "name": "Chopped nuts",
@@ -2772,7 +2969,11 @@
           "dish_orchard_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty"
+      ]
     },
     "toasted_nuts": {
       "name": "Toasted nuts",
@@ -2817,7 +3018,12 @@
           "dish_dwarven_stonebread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "diced_venison": {
       "name": "Diced venison",
@@ -2852,7 +3058,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "grilled_venison": {
       "name": "Grilled venison",
@@ -2887,7 +3096,13 @@
           "dish_honey_glazed_venison"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "roast_venison": {
       "name": "Roast venison",
@@ -2922,7 +3137,13 @@
           "dish_hunters_roast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "braised_venison": {
       "name": "Braised venison",
@@ -2963,7 +3184,13 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "seared_venison": {
       "name": "Seared venison",
@@ -3004,7 +3231,13 @@
           "dish_venison_in_cream_sauce"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "trout_fillet": {
       "name": "Trout fillet",
@@ -3049,7 +3282,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fishy",
+        "fresh"
+      ]
     },
     "grilled_trout": {
       "name": "Grilled trout",
@@ -3090,7 +3327,13 @@
           "dish_grilled_trout"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fishy",
+        "grilled",
+        "savory",
+        "warm"
+      ]
     },
     "pan_fried_trout": {
       "name": "Pan-fried trout",
@@ -3132,7 +3375,13 @@
           "dish_brown_butter_trout"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fishy",
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "fish_stock": {
       "name": "Fish stock",
@@ -3181,7 +3430,12 @@
           "dish_bog_broth"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fishy",
+        "warm"
+      ]
     },
     "chopped_cress": {
       "name": "Chopped cress",
@@ -3226,7 +3480,10 @@
           "dish_oat_crusted_trout_and_cress"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh"
+      ]
     },
     "wilted_cress": {
       "name": "Wilted cress",
@@ -3266,7 +3523,12 @@
           "dish_wilted_greens_and_egg"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "diced_onion": {
       "name": "Diced onion",
@@ -3306,7 +3568,10 @@
           "dish_river_chowder"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "savory"
+      ]
     },
     "caramelized_onion": {
       "name": "Caramelized onion",
@@ -3351,7 +3616,13 @@
           "dish_sausages_and_onions_on_toast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "onion_broth": {
       "name": "Onion broth",
@@ -3395,7 +3666,12 @@
           "dish_hearthwick_onion_soup"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "charred_onion": {
       "name": "Charred onion",
@@ -3427,7 +3703,12 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "savory",
+        "warm"
+      ]
     },
     "warm_milk": {
       "name": "Warm milk",
@@ -3468,7 +3749,12 @@
           "dish_warm_honey_milk"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "whipped_cream": {
       "name": "Whipped cream",
@@ -3518,7 +3804,11 @@
           "dish_berry_crumble_and_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "cheese_sauce": {
       "name": "Cheese sauce",
@@ -3561,7 +3851,13 @@
           "dish_cheesy_noodles"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "sliced_apple": {
       "name": "Sliced apple",
@@ -3603,11 +3899,11 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fresh",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "baked_apple": {
@@ -3641,12 +3937,12 @@
         "dishes": []
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "sweet",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "applesauce": {
@@ -3689,12 +3985,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "sweet",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "grilled_apple": {
@@ -3734,12 +4030,12 @@
         "dishes": []
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "grilled",
         "sweet",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "diced_mutton": {
@@ -3773,7 +4069,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "grilled_mutton_chop": {
       "name": "Grilled mutton chop",
@@ -3806,7 +4105,13 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "braised_mutton": {
       "name": "Braised mutton",
@@ -3849,7 +4154,13 @@
           "dish_mutton_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "roast_mutton": {
       "name": "Roast mutton",
@@ -3885,7 +4196,13 @@
           "dish_stuffed_mutton_roast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "grated_cheese": {
       "name": "Grated cheese",
@@ -3929,7 +4246,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty",
+        "savory"
+      ]
     },
     "melted_cheese": {
       "name": "Melted cheese",
@@ -3972,7 +4293,13 @@
           "dish_hearthwick_onion_soup"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "fried_cheese": {
       "name": "Fried cheese",
@@ -4012,13 +4339,13 @@
         "dishes": []
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fried",
         "hearty",
         "savory",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "minced_pepper": {
@@ -4055,7 +4382,10 @@
           "dish_bog_broth"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "warm"
+      ]
     },
     "charred_pepper": {
       "name": "Charred pepper",
@@ -4090,7 +4420,12 @@
           "dish_ember_honeycomb"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "savory",
+        "warm"
+      ]
     },
     "fire_oil": {
       "name": "Fire oil",
@@ -4128,7 +4463,11 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "warm"
+      ]
     },
     "diced_tomato": {
       "name": "Diced tomato",
@@ -4168,7 +4507,11 @@
           "dish_quiche_and_garden_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh",
+        "savory"
+      ]
     },
     "tomato_sauce": {
       "name": "Tomato sauce",
@@ -4208,7 +4551,12 @@
           "dish_noodles_in_tomato_sauce"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "roasted_tomato": {
       "name": "Roasted tomato",
@@ -4251,7 +4599,13 @@
           "dish_full_hearthwick_breakfast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "diced_potato": {
       "name": "Diced potato",
@@ -4287,7 +4641,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "boiled_potato": {
       "name": "Boiled potato",
@@ -4332,7 +4689,12 @@
           "dish_honey_ham_and_potatoes"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "mashed_potatoes": {
       "name": "Mashed potatoes",
@@ -4369,7 +4731,12 @@
           "dish_bangers_and_mash"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "baked_potato": {
       "name": "Baked potato",
@@ -4405,12 +4772,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "hearty",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "fried_potatoes": {
@@ -4455,13 +4822,13 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fried",
         "hearty",
         "savory",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "sliced_carrot": {
@@ -4502,7 +4869,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "boiled_carrots": {
       "name": "Boiled carrots",
@@ -4545,12 +4916,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "sweet",
         "warm"
       ],
+      "course": "snack",
       "complexity": 1
     },
     "roast_carrots": {
@@ -4595,7 +4966,13 @@
           "dish_roast_pork_supper"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "glazed_carrots": {
       "name": "Glazed carrots",
@@ -4636,7 +5013,13 @@
           "dish_buttered_carrots"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "diced_beef": {
       "name": "Diced beef",
@@ -4671,7 +5054,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "grilled_steak": {
       "name": "Grilled steak",
@@ -4706,7 +5092,13 @@
           "dish_steak_and_potatoes"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "roast_beef": {
       "name": "Roast beef",
@@ -4741,7 +5133,13 @@
           "dish_sunday_roast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "braised_beef": {
       "name": "Braised beef",
@@ -4785,7 +5183,13 @@
           "dish_beef_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "seared_beef": {
       "name": "Seared beef",
@@ -4824,7 +5228,13 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "ground_beef": {
       "name": "Ground beef",
@@ -4865,7 +5275,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "beef_patty": {
       "name": "Beef patty",
@@ -4901,7 +5314,14 @@
           "dish_patty_on_bread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "fried_mince": {
       "name": "Fried mince",
@@ -4936,7 +5356,13 @@
           "dish_tavern_wrap"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "carrot_cake": {
       "name": "Carrot cake",
@@ -4972,7 +5398,13 @@
           "dish_carrot_cake_and_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "venison_pie": {
       "name": "Venison pie",
@@ -5008,7 +5440,13 @@
           "dish_venison_pie"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "apple_pie": {
       "name": "Apple pie",
@@ -5045,7 +5483,13 @@
           "dish_apple_pie_and_custard"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "berry_cake": {
       "name": "Berry cake",
@@ -5088,7 +5532,13 @@
           "dish_berry_cake_and_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dumplings": {
       "name": "Dumplings",
@@ -5124,7 +5574,12 @@
           "dish_chicken_and_dumplings"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "dough_balls": {
       "name": "Dough balls",
@@ -5158,10 +5613,10 @@
         "dishes": []
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "hearty"
       ],
+      "course": "snack",
       "complexity": 3
     },
     "bread_rolls": {
@@ -5204,12 +5659,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "hearty",
         "warm"
       ],
+      "course": "snack",
       "complexity": 4
     },
     "fritters": {
@@ -5245,7 +5700,13 @@
           "dish_honey_fritters"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "crackers": {
       "name": "Crackers",
@@ -5279,7 +5740,12 @@
           "dish_crackers_and_cheese"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory"
+      ]
     },
     "breadcrumbs": {
       "name": "Breadcrumbs",
@@ -5320,7 +5786,12 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "grilled",
+        "hearty"
+      ]
     },
     "croutons": {
       "name": "Croutons",
@@ -5356,7 +5827,14 @@
           "dish_fireside_potato_soup"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "bread_pudding": {
       "name": "Bread pudding",
@@ -5393,7 +5871,14 @@
           "dish_bread_pudding"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "herb_stuffing": {
       "name": "Herb stuffing",
@@ -5430,7 +5915,14 @@
           "dish_stuffed_mutton_roast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "fresh",
+        "grilled",
+        "hearty",
+        "savory"
+      ]
     },
     "crumbed_trout": {
       "name": "Crumbed trout",
@@ -5467,7 +5959,16 @@
           "dish_crumbed_trout"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "fishy",
+        "fried",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "granola": {
       "name": "Granola",
@@ -5503,7 +6004,12 @@
           "dish_granola_and_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet"
+      ]
     },
     "baked_egg": {
       "name": "Baked egg",
@@ -5537,7 +6043,12 @@
           "dish_baked_egg_and_herbs"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "warm"
+      ]
     },
     "egg_mash": {
       "name": "Egg mash",
@@ -5572,7 +6083,12 @@
           "dish_egg_mash_on_toast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory"
+      ]
     },
     "whipped_egg_whites": {
       "name": "Whipped egg whites",
@@ -5605,7 +6121,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fresh"
+      ]
     },
     "meringues": {
       "name": "Meringues",
@@ -5639,7 +6158,11 @@
           "dish_berry_meringue_mess"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "sweet"
+      ]
     },
     "custard": {
       "name": "Custard",
@@ -5678,7 +6201,13 @@
           "dish_apple_crumble_and_custard"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "mushroom_frittata": {
       "name": "Mushroom frittata",
@@ -5715,7 +6244,13 @@
           "dish_frittata_and_greens"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "cheese_omelette": {
       "name": "Cheese omelette",
@@ -5752,7 +6287,13 @@
           "dish_bacon_and_cheese_omelette"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "cheese_quiche": {
       "name": "Cheese quiche",
@@ -5789,7 +6330,13 @@
           "dish_quiche_and_garden_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "scotch_egg": {
       "name": "Scotch egg",
@@ -5827,7 +6374,17 @@
           "dish_tavern_scotch_egg"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "boiled",
+        "fried",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "butter": {
       "name": "Butter",
@@ -5879,7 +6436,10 @@
           "dish_buttered_toast"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "brown_butter": {
       "name": "Brown butter",
@@ -5913,7 +6473,12 @@
           "dish_brown_butter_trout"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "fresh_curds": {
       "name": "Fresh curds",
@@ -5948,7 +6513,12 @@
           "dish_fresh_curds_and_herbs"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty"
+      ]
     },
     "cream_sauce": {
       "name": "Cream sauce",
@@ -5985,7 +6555,13 @@
           "dish_chicken_in_mushroom_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "clotted_cream": {
       "name": "Clotted cream",
@@ -6026,7 +6602,12 @@
           "dish_cream_tea"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet"
+      ]
     },
     "grain_pudding": {
       "name": "Grain pudding",
@@ -6063,7 +6644,14 @@
           "dish_grain_pudding_and_berries"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "potato_soup": {
       "name": "Potato soup",
@@ -6100,7 +6688,13 @@
           "dish_fireside_potato_soup"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "scones": {
       "name": "Scones",
@@ -6137,12 +6731,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "hearty",
         "warm"
       ],
+      "course": "snack",
       "complexity": 4
     },
     "shortbread": {
@@ -6187,13 +6781,13 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "boiled",
         "hearty",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 5
     },
     "boiling_water": {
@@ -6230,7 +6824,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "warm"
+      ]
     },
     "herb_tea": {
       "name": "Herb tea",
@@ -6267,7 +6865,12 @@
           "dish_tea_and_shortbread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fresh",
+        "warm"
+      ]
     },
     "spiced_apple_tea": {
       "name": "Spiced apple tea",
@@ -6303,7 +6906,12 @@
           "dish_spiced_apple_tea"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ]
     },
     "berry_cordial": {
       "name": "Berry cordial",
@@ -6339,7 +6947,11 @@
           "dish_berry_cordial"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "poached_egg": {
       "name": "Poached egg",
@@ -6375,7 +6987,12 @@
           "dish_poached_egg_and_cress"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "poached_trout": {
       "name": "Poached trout",
@@ -6411,7 +7028,12 @@
           "dish_poached_trout_and_greens"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fishy",
+        "warm"
+      ]
     },
     "vegetable_stock": {
       "name": "Vegetable stock",
@@ -6447,7 +7069,12 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "garden_soup": {
       "name": "Garden soup",
@@ -6485,7 +7112,14 @@
           "dish_garden_soup_and_bread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "brine": {
       "name": "Brine",
@@ -6520,7 +7154,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory"
+      ]
     },
     "pickled_onions": {
       "name": "Pickled onions",
@@ -6565,12 +7203,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "fresh",
         "savory"
       ],
+      "course": "snack",
       "complexity": 2
     },
     "pickled_carrots": {
@@ -6614,13 +7252,13 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "boiled",
         "fresh",
         "savory",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 3
     },
     "salt_beef": {
@@ -6665,7 +7303,13 @@
           "dish_salt_beef_sandwich"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory"
+      ]
     },
     "salt_crusted_trout": {
       "name": "Salt-crusted trout",
@@ -6701,7 +7345,13 @@
           "dish_salt_crusted_trout"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "fishy",
+        "savory",
+        "warm"
+      ]
     },
     "salted_acorns": {
       "name": "Salted acorns",
@@ -6737,12 +7387,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fried",
         "hearty",
         "savory"
       ],
+      "course": "snack",
       "complexity": 2
     },
     "cracked_pepper": {
@@ -6783,7 +7433,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "savory",
+        "warm"
+      ]
     },
     "pepper_steak": {
       "name": "Pepper steak",
@@ -6819,7 +7473,13 @@
           "dish_pepper_steak_and_fries"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "chicken_pieces": {
       "name": "Chicken pieces",
@@ -6855,7 +7515,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "grilled_chicken": {
       "name": "Grilled chicken",
@@ -6891,7 +7554,13 @@
           "dish_chicken_and_cress_sandwich"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "roast_chicken": {
       "name": "Roast chicken",
@@ -6927,7 +7596,14 @@
           "dish_roast_chicken_supper"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "pan_fried_chicken": {
       "name": "Pan-fried chicken",
@@ -6963,7 +7639,13 @@
           "dish_chicken_in_mushroom_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "chicken_stock": {
       "name": "Chicken stock",
@@ -7001,7 +7683,12 @@
           "dish_chicken_and_dumplings"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "chicken_noodle_soup": {
       "name": "Chicken noodle soup",
@@ -7039,7 +7726,14 @@
           "dish_chicken_noodle_soup"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "chicken_pie": {
       "name": "Chicken pie",
@@ -7075,7 +7769,13 @@
           "dish_chicken_pie_and_mash"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "honey_glazed_chicken": {
       "name": "Honey-glazed chicken",
@@ -7111,7 +7811,13 @@
           "dish_honey_glazed_chicken"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "sweet",
+        "warm"
+      ]
     },
     "ember_chicken": {
       "name": "Ember chicken",
@@ -7147,7 +7853,12 @@
           "dish_ember_chicken_and_flatbread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "warm"
+      ]
     },
     "diced_pork": {
       "name": "Diced pork",
@@ -7182,7 +7893,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty"
+      ]
     },
     "sausage_meat": {
       "name": "Sausage meat",
@@ -7223,7 +7937,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty",
+        "savory"
+      ]
     },
     "fried_sausages": {
       "name": "Fried sausages",
@@ -7260,7 +7978,13 @@
           "dish_skirlie_and_sausages"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "bacon": {
       "name": "Bacon",
@@ -7301,7 +8025,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "meaty",
+        "savory"
+      ]
     },
     "crispy_bacon": {
       "name": "Crispy bacon",
@@ -7339,13 +8067,13 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "fried",
         "meaty",
         "savory",
         "warm"
       ],
+      "course": "snack",
       "complexity": 2
     },
     "grilled_pork_chop": {
@@ -7381,7 +8109,13 @@
           "dish_pork_chop_and_applesauce"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "roast_pork": {
       "name": "Roast pork",
@@ -7417,7 +8151,14 @@
           "dish_roast_pork_supper"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "honey_baked_ham": {
       "name": "Honey-baked ham",
@@ -7454,7 +8195,13 @@
           "dish_honey_ham_and_potatoes"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "meaty",
+        "savory",
+        "sweet"
+      ]
     },
     "lard": {
       "name": "Lard",
@@ -7487,7 +8234,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty"
+      ]
     },
     "hot_water_pastry": {
       "name": "Hot-water pastry",
@@ -7522,7 +8273,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty"
+      ]
     },
     "pork_pie": {
       "name": "Pork pie",
@@ -7559,7 +8314,14 @@
           "dish_pie_and_a_pint"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory"
+      ]
     },
     "sausage_rolls": {
       "name": "Sausage rolls",
@@ -7595,7 +8357,13 @@
           "dish_sausage_rolls"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "pork_and_apple_stew": {
       "name": "Pork & apple stew",
@@ -7633,7 +8401,14 @@
           "dish_pork_and_apple_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "sweet",
+        "warm"
+      ]
     },
     "rolled_oats": {
       "name": "Rolled oats",
@@ -7677,7 +8452,10 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty"
+      ]
     },
     "toasted_oats": {
       "name": "Toasted oats",
@@ -7713,7 +8491,12 @@
           "dish_toasted_oats_and_milk"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "oat_porridge": {
       "name": "Oat porridge",
@@ -7750,7 +8533,12 @@
           "dish_porridge_and_berries"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "oatcakes": {
       "name": "Oatcakes",
@@ -7794,12 +8582,12 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "hearty",
         "savory"
       ],
+      "course": "snack",
       "complexity": 4
     },
     "honey_flapjacks": {
@@ -7837,13 +8625,13 @@
         ]
       },
       "store": "shelf",
-      "course": "snack",
       "traits": [
         "baked",
         "boiled",
         "hearty",
         "sweet"
       ],
+      "course": "snack",
       "complexity": 5
     },
     "crumble_topping": {
@@ -7881,7 +8669,11 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "hearty",
+        "sweet"
+      ]
     },
     "apple_crumble": {
       "name": "Apple crumble",
@@ -7917,7 +8709,13 @@
           "dish_apple_crumble_and_custard"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "berry_crumble": {
       "name": "Berry crumble",
@@ -7953,7 +8751,13 @@
           "dish_berry_crumble_and_cream"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "skirlie": {
       "name": "Skirlie",
@@ -7989,7 +8793,13 @@
           "dish_skirlie_and_sausages"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "oat_crusted_trout": {
       "name": "Oat-crusted trout",
@@ -8025,7 +8835,13 @@
           "dish_oat_crusted_trout_and_cress"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "traits": [
+        "fishy",
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "apple_juice": {
       "name": "Apple juice",
@@ -8061,7 +8877,11 @@
           "dish_glass_of_apple_juice"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "hearth_ale": {
       "name": "Hearth ale",
@@ -8096,7 +8916,12 @@
           "dish_pie_and_a_pint"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "brewed",
+        "fried",
+        "hearty"
+      ]
     },
     "oat_stout": {
       "name": "Oat stout",
@@ -8131,7 +8956,13 @@
           "dish_pint_of_oat_stout"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "brewed",
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "orchard_cider": {
       "name": "Orchard cider",
@@ -8167,7 +8998,12 @@
           "dish_mug_of_cider"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "brewed",
+        "fresh",
+        "sweet"
+      ]
     },
     "honey_mead": {
       "name": "Honey mead",
@@ -8201,7 +9037,11 @@
           "dish_goblet_of_mead"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "brewed",
+        "sweet"
+      ]
     },
     "berry_wine": {
       "name": "Berry wine",
@@ -8237,7 +9077,11 @@
           "dish_cheese_and_wine_board"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "brewed",
+        "sweet"
+      ]
     },
     "mulled_cider": {
       "name": "Mulled cider",
@@ -8272,7 +9116,13 @@
           "dish_mulled_cider"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "boiled",
+        "brewed",
+        "sweet",
+        "warm"
+      ]
     },
     "mulled_wine": {
       "name": "Mulled wine",
@@ -8307,7 +9157,13 @@
           "dish_mulled_wine"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "boiled",
+        "brewed",
+        "sweet",
+        "warm"
+      ]
     },
     "berry_milk": {
       "name": "Berry milk",
@@ -8342,7 +9198,11 @@
           "dish_berry_milk"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "eggnog": {
       "name": "Eggnog",
@@ -8378,7 +9238,12 @@
           "dish_eggnog"
         ]
       },
-      "store": "cask"
+      "store": "cask",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet"
+      ]
     },
     "wood_plate": {
       "kind": "tableware",

@@ -3,6 +3,7 @@ import type { Assets } from '../core/assets';
 import type { Renderer } from '../core/renderer';
 import type { Content } from '../game/data';
 import { drawText, measure } from './text';
+import { drawTags, tagsOf } from './tags';
 
 export const SLOT = 34;
 
@@ -38,12 +39,7 @@ export function drawItemInfo(r: Renderer, assets: Assets, content: Content, item
   r.ctx.globalAlpha = 0.7;
   drawText(r, assets, kind, x, y + 12);
   r.ctx.globalAlpha = 1;
-  let tx = x;
-  for (const tag of it.tags) {
-    const pill = `tag_pill_${tag}`;
-    if (!assets.has(pill)) continue;
-    r.sprite(pill, tx, y + 25);
-    tx += 18;
-  }
-  return it.tags.length ? 37 : 24;
+  const tags = tagsOf(content, item);
+  drawTags(r, tags, x, y + 24);
+  return tags.length ? 38 : 24;
 }

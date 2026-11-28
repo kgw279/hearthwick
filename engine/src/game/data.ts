@@ -12,6 +12,8 @@ export interface ItemData {
   store?: Store;
   /** Tableware: what piece it is. */
   tableware?: { kind: 'plate' | 'bowl' | 'mug' | 'cutlery'; material: string; tier: number };
+  /** Where it can be had: foraged at a spot, bought at a shop... */
+  sources?: Array<{ type: string; shop?: string; spot?: string }>;
   /** Snacks served as they are: their course, traits and complexity (like a dish's). */
   course?: Course;
   traits?: string[];
@@ -64,6 +66,8 @@ export class Content {
   readonly items: Record<string, ItemData>;
   readonly shops: Record<string, ShopData>;
   readonly forageNodes: Record<string, ForageNodeData>;
+  /** Forage spots' names, by id ("Sunny Meadow"). */
+  readonly spotNames: Record<string, string>;
   readonly economy: Economy;
   readonly stations: Record<string, StationData>;
   /** Dishes as served (food or drink) and what goes on the plate. */
@@ -83,6 +87,7 @@ export class Content {
     };
     this.shops = data.shops as Record<string, ShopData>;
     this.forageNodes = data.forage_nodes as Record<string, ForageNodeData>;
+    this.spotNames = Object.fromEntries(Object.entries(data.forage_spots as Record<string, { name: string }>).map(([k, v]) => [k, v.name]));
     this.economy = data.economy as Economy;
     this.stations = data.stations as Record<string, StationData>;
     this.dishes = dishes as unknown as Record<string, DishData>;

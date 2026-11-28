@@ -86,6 +86,7 @@ export class Game {
   /** Pops (see ui/fx.ts) out in the world, and over the HUD. */
   private readonly worldPops = new Pops();
   private readonly hudPops = new Pops();
+  private seenTimer = 0;
   /** A history of what's happened (the player's journal). */
   readonly journal = new Journal();
   /** The recipes the player knows. */
@@ -224,7 +225,18 @@ export class Game {
   }
 
   /** Guests eat, pay and leave, and new ones arrive (wherever the player is). */
+  /** Note everything to hand (bag, the inn's stores, what's ready to serve) as come across, for the recipe book. */
+  private noteSeen(): void {
+    for (const s of this.bag.slots) if (s) this.cookbook.see(s.item);
+    for (const b of this.kitchen.stores.boxes()) for (const s of b.inv.slots) if (s) this.cookbook.see(s.item);
+    for (const s of this.service.ready) this.cookbook.see(s.dish);
+  }
+
   private tickService(dt: number): void {
+    if ((this.seenTimer -= dt) <= 0) {
+      this.seenTimer = 1;
+      this.noteSeen();
+    }
     this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (l) => this.guestLeft(l));
     this.washing.update(dt, (item) => this.kitchen.put(item));
   }
@@ -406,7 +418,7 @@ export class Game {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
-      if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.journal, this.assets);
+      if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.journal, this.cookbook, this.content, this.assets);
       if (this.input.pressed('menu')) {
         this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id), this.content, this.assets);
       }

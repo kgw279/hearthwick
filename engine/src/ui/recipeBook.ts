@@ -6,7 +6,8 @@
 import type { Assets } from '../core/assets';
 import type { Input } from '../core/input';
 import type { Renderer } from '../core/renderer';
-import { COURSE_NAMES, type Content } from '../game/data';
+import type { Content } from '../game/data';
+import { drawTags, tagsOf } from './tags';
 import { drawItem, SLOT } from './items';
 import { Nav } from './screen';
 import { drawText } from './text';
@@ -71,13 +72,8 @@ export class RecipeBook {
       r.nine(i === this.sel ? 'slot_selected' : 'slot', x, ry, w, ROW - 2);
       drawItem(r, assets, content, e.out, x, ry);
       drawText(r, assets, content.itemName(e.out), x + 36, ry + 6);
-      // what it is: its course (if it's served) and how a guest might ask for it; else its tags
-      const kinds = content.servable(e.out)
-        ? [COURSE_NAMES[content.course(e.out)], ...content.traits(e.out)]
-        : content.items[e.out]?.tags ?? [];
-      r.ctx.globalAlpha = 0.75;
-      drawText(r, assets, kinds.join(', '), x + 36, ry + 19);
-      r.ctx.globalAlpha = 1;
+      // what it is, at a glance: its tags' icons
+      drawTags(r, tagsOf(content, e.out), x + 36, ry + 18);
       e.inputs.forEach((item, k) => drawItem(r, assets, content, item, x + w - (e.inputs.length - k) * (SLOT - 2) - 2, ry, 1, this.have(item) < 1));
     }
     if (this.scroll > 0) r.sprite('arrow_up', x + w - 10, y + 6);

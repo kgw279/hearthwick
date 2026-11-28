@@ -315,6 +315,9 @@ def build():
         d['reputation'] = max(0, d['complexity'] - 1)
         d['course'] = course_of(d)
         d['traits'] = traits_of(d['components'], d['tags'], items)
+    # every food item has traits too (how it was cooked, its tags), so the recipe book can sort by them
+    for iid, it in items.items():
+        if it['kind'] in ('raw', 'prepared'): it['traits'] = traits_of([iid], it['tags'], items)
     # snacks served as they are: a course and traits of their own (and how interesting they are)
     for iid in SNACKS:
         it = items[iid]
