@@ -115,7 +115,7 @@
     {"sprite": "bridge_rail_s", "x": 1488, "y": 760, "collider": null},
     {"sprite": "well", "x": 912, "y": 574, "collider": "well", "behavior": {"type": "draw_water"}},
     {"sprite": "market_stall", "x": 816, "y": 542, "collider": "market_stall", "behavior": {"type": "market", "shop": "market"}},
-    {"sprite": "market_stall", "x": 1008, "y": 542, "collider": "market_stall", "behavior": {"type": "market", "shop": "market"}},
+    {"sprite": "market_stall", "x": 1008, "y": 542, "collider": "market_stall", "behavior": {"type": "market", "shop": "market_east"}},
     {"sprite": "signpost", "x": 1073, "y": 670, "collider": "signpost", "behavior": {"type": "read", "text": "HEARTHWICK. West: Sunny Meadow. North: Mosswood. East: the farmstead. South: Willow River."}},
     {"sprite": "barrel", "x": 784, "y": 638, "collider": "barrel", "behavior": {"type": "storage", "id": "town_barrel_1", "slots": 1}},
     {"sprite": "crate", "x": 1072, "y": 606, "collider": "crate", "behavior": {"type": "storage", "id": "town_crate_1", "slots": 8}},

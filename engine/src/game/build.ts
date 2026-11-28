@@ -35,8 +35,8 @@ export interface SceneHooks {
   openTable(key: string): void;
   /** Open the wash station (washing and drying tableware). */
   wash(): void;
-  /** Read the time off a clock. */
-  clock(): void;
+  /** The hearth's menu: pass the time, see to the guests waiting by it. */
+  hearth(): void;
   /** Name a guest room, on the plaque by its door. */
   nameRoom(plaque: { room: string; name?: string }): void;
   /** What else a way in does (the inn's front door: close the inn, or open it), if anything. */
@@ -113,8 +113,8 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
       return { interaction: () => ({ label: 'Open', use: () => hooks.openStorage(b, art) }) };
     case 'wash':
       return { interaction: () => ({ label: 'Wash up', use: () => hooks.wash() }) };
-    case 'clock':
-      return { interaction: () => ({ label: 'Check the time', use: () => hooks.clock() }) };
+    case 'hearth':
+      return { interaction: () => ({ label: 'Hearth', use: () => hooks.hearth() }) };
     case 'plaque':
       return { interaction: () => ({ label: b.name ? `${b.name}: rename` : 'Name this room', use: () => hooks.nameRoom(b) }) };
     case 'forage': {
@@ -166,7 +166,7 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
 
 const NO_HOOKS: SceneHooks = {
   say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openPlating() {}, openBar() {}, openTable() {},
-  clock() {}, nameRoom() {}, doorAlt: () => undefined,
+  hearth() {}, nameRoom() {}, doorAlt: () => undefined,
 };
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */

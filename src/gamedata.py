@@ -263,6 +263,9 @@ def build():
         shops[sh] = {'name': name, 'stock': [{'item': ids[i], 'price': p} for i, p in stock], 'building': building}
         for i, p in stock:
             items[ids[i]]['sources'].append({'type': 'shop', 'shop': sh, 'price': p})
+    # the market square's stalls: separate shops, each with its own goods out (content_shops.py)
+    for sid, name in content_shops.STALLS.items():
+        shops[sid] = dict(shops['market'], name=name, pool=list(shops['market']['pool']))
     # tableware: bought at the General Store, left dirty by guests, washed back (content_tableware.py)
     for iid, it in content_tableware.items().items():
         if iid in items: raise ValueError(f'tableware {iid} already exists')

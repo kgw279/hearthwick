@@ -7,7 +7,7 @@ is the piece itself. Sold at the Furnisher's.
   price    what the Furnisher charges
   layer    'floor' (rugs), 'wall' (paintings, sconces) or None (stands on the floor)
   extras   how the prop is placed: its art if it's an animation, footprint depth, collider, what it does (a
-           clock tells the time)
+           hearth has its own menu)
 """
 SELLER = 'furnisher'
 SHOP = ('Hearth & Home Furnishings', 'house_red')   # name, building
@@ -21,7 +21,6 @@ FURNITURE = {   # id: (name, price, sheet, frame, layer, prop extras)
     'floor_lamp': ('Floor lamp', 14, 'furniture', 'floor_lamp', None, {'collider': 'small'}),
     'potted_plant': ('Potted plant', 6, 'interior', 'potted_plant', None, {'collider': 'small'}),
     'rug': ('Rug', 10, 'interior', 'rug', 'floor', {}),
-    'hearth': ('Hearth', 60, 'interior', 'fireplace', None, {'sprite': 'anim:fireplace', 'fps': 4}),
     'deco_painting': ('Painting', 15, 'furniture', 'deco_painting', 'wall', {}),
     'deco_sconce': ('Wall sconce', 8, 'furniture', 'deco_sconce', 'wall', {}),
     'bookshelf': ('Bookshelf', 20, 'furniture', 'bookshelf', None, {}),
@@ -29,8 +28,7 @@ FURNITURE = {   # id: (name, price, sheet, frame, layer, prop extras)
     'crate': ('Crate', 6, 'props', 'crate', None, {}),
     'barrel': ('Barrel', 12, 'props', 'barrel', None, {}),
     'keg': ('Keg', 20, 'interior', 'keg', None, {}),
-    'wall_clock': ('Wall clock', 16, 'furniture', 'wall_clock', 'wall', {'behavior': {'type': 'clock'}}),
-    'standing_clock': ('Standing clock', 35, 'furniture', 'standing_clock', None, {'behavior': {'type': 'clock'}}),
+    'hearth': ('Hearth', 60, 'interior', 'fireplace', None, {'sprite': 'anim:fireplace', 'fps': 4, 'behavior': {'type': 'hearth'}}),
 }
 
 

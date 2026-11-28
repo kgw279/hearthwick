@@ -30,7 +30,7 @@ import type { Content } from './data';
 /** How long (s) the button is held before it picks a piece up. */
 const HOLD = 0.4;
 /** Pieces the player can move: anything with no behavior, and furniture that does something in place. */
-const MOVABLE = new Set(['storage', 'wash']);
+const MOVABLE = new Set(['storage', 'wash', 'hearth']);
 const BAD = 'rgba(217, 87, 99, 0.55)';
 const TURN_STEP = 15; // degrees a step (5 with Shift on the wheel)
 const NUDGE_GLIDE = 40; // px per second once a held nudge glides

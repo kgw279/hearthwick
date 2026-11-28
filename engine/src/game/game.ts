@@ -42,6 +42,8 @@ import { WashScreen } from '../ui/washScreen';
 import { barKey, hearthKey, isHearth, platingStations, seating, type Seat } from './seating';
 import { newSeed, seeded, type Rng } from '../core/rng';
 import { NameScreen } from '../ui/nameScreen';
+import { HearthScreen } from '../ui/hearthScreen';
+import { drawClockFace } from '../ui/clockFace';
 import { GuestEntity, ReadyEntity, TopEntity, WalkerEntity } from './serviceView';
 import { TableScreen } from '../ui/tableScreen';
 import { containerOf } from '../world/containers';
@@ -149,7 +151,11 @@ export class Game {
       openPlating: () => (this.screen = new PlatingScreen(this.service.ready, this.kitchen, this.cookbook, () => this.service.changed(), this.content, assets)),
       openBar: () => this.openTable(barKey(this.scene.id), 'The bar'),
       openTable: (key) => this.openTable(`${this.scene.id}:${key}`, 'Table'),
-      clock: () => this.dialog.show(`It's ${this.clock.spoken}.`, 'The clock', this.time),
+      hearth: () => {
+        const key = hearthKey(this.scene.id);
+        const waiting = [...this.service.guests.entries()].filter(([k]) => k.startsWith(key)).length;
+        this.screen = new HearthScreen(this.clock.hour, waiting, (h) => this.passTime(h), () => this.openTable(key, 'By the hearth'), assets);
+      },
       nameRoom: (plaque) => {
         this.screen = new NameScreen(`Name ${this.rooms.name(plaque.room)}`, plaque.name ?? '', (name) => {
           plaque.name = name;
@@ -260,6 +266,21 @@ export class Game {
     if (o.coins) this.worldPops.pop(x, s.art.y + 12, this.time, { text: `+${o.coins} coins` });
     if (g.state !== 'gone') this.floats.pop(`"${o.remark}"`, x, s.art.y - 6, this.time);
     this.emotes.pop(o.mood >= 0.8 ? 'emote_happy' : o.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
+  }
+
+  /**
+   * Sit by the hearth and let the time pass till an hour (the next time it comes round): only while the
+   * inn's quiet (nobody in but guests asleep upstairs). Why not, or null.
+   */
+  private passTime(hour: number): string | null {
+    if (this.service.guests.size) return 'Not while guests are in';
+    const now = this.clock.minutes;
+    let to = Math.floor(now / 1440) * 1440 + hour * 60;
+    if (to <= now) to += 1440;
+    this.clock.minutes = to;
+    this.service.leavers.length = 0;
+    this.transition = { phase: 'in', t: 0, to: this.scene.id, spawn: '' }; // fade back in
+    return null;
   }
 
   /** Morning: guests who stayed the night get up, and come down to the hearth to settle up. */
@@ -387,7 +408,11 @@ export class Game {
     const setting = (group: typeof seats) => {
       const meals = group.filter((s) => this.service.guests.get(s.key)?.state === 'eating')
         .map((s) => ({ meal: this.service.guests.get(s.key)!.got, ...place(s) }));
-      const piles = group.filter((s) => this.service.dirty.get(s.key)?.length).map((s) => ({ items: this.service.dirty.get(s.key)!, ...place(s) }));
+      // dishes left at a seat, and the empty dishes in front of a guest sitting back after their meal
+      const piles = group.map((s) => {
+        const g = this.service.guests.get(s.key);
+        return { items: g?.state === 'relaxing' ? this.service.emptied(g) : this.service.dirty.get(s.key) ?? [], ...place(s) };
+      }).filter((p) => p.items.length);
       return { meals, piles };
     };
     for (const t of tables) {
@@ -625,6 +650,8 @@ export class Game {
       r.nine('panel_dark', 4, 4, 28 + String(this.bag.coins).length * 6, 24);
       drawCoins(r, this.assets, this.bag.coins, 8, 8);
       this.drawReputation(r);
+      // the time of day: a clock face, pale by day and dark by night
+      drawClockFace(r, 18, 70, 12, this.clock.minutes, this.clock.hour >= 20 || this.clock.hour < 6);
       if (this.furnish.carrying) {
         const t = hint(this.input.device, [['interact', 'set down'], ['cook', 'pack away'], ['back', 'put back']]);
         r.nine('panel_dark', Math.round((VIEW_W - measure(t)) / 2) - 8, VIEW_H - 26, measure(t) + 16, 20);

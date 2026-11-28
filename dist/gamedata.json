@@ -13499,35 +13499,6 @@
       "store": "furniture",
       "weight": 0
     },
-    "hearth": {
-      "name": "Hearth",
-      "kind": "furniture",
-      "tags": [],
-      "value": 60,
-      "shelf_life_days": null,
-      "sprite": {
-        "sheet": "interior",
-        "frame": "fireplace"
-      },
-      "made_by": [],
-      "used_in": {
-        "items": [],
-        "dishes": []
-      },
-      "prop": {
-        "sprite": "anim:fireplace",
-        "fps": 4
-      },
-      "sources": [
-        {
-          "type": "shop",
-          "shop": "furnisher",
-          "price": 60
-        }
-      ],
-      "store": "furniture",
-      "weight": 0
-    },
     "deco_painting": {
       "name": "Painting",
       "kind": "furniture",
@@ -13726,15 +13697,15 @@
       "store": "furniture",
       "weight": 0
     },
-    "wall_clock": {
-      "name": "Wall clock",
+    "hearth": {
+      "name": "Hearth",
       "kind": "furniture",
       "tags": [],
-      "value": 16,
+      "value": 60,
       "shelf_life_days": null,
       "sprite": {
-        "sheet": "furniture",
-        "frame": "wall_clock"
+        "sheet": "interior",
+        "frame": "fireplace"
       },
       "made_by": [],
       "used_in": {
@@ -13742,48 +13713,17 @@
         "dishes": []
       },
       "prop": {
-        "sprite": "wall_clock",
+        "sprite": "anim:fireplace",
+        "fps": 4,
         "behavior": {
-          "type": "clock"
-        },
-        "layer": "wall"
-      },
-      "sources": [
-        {
-          "type": "shop",
-          "shop": "furnisher",
-          "price": 16
-        }
-      ],
-      "store": "furniture",
-      "weight": 0
-    },
-    "standing_clock": {
-      "name": "Standing clock",
-      "kind": "furniture",
-      "tags": [],
-      "value": 35,
-      "shelf_life_days": null,
-      "sprite": {
-        "sheet": "furniture",
-        "frame": "standing_clock"
-      },
-      "made_by": [],
-      "used_in": {
-        "items": [],
-        "dishes": []
-      },
-      "prop": {
-        "sprite": "standing_clock",
-        "behavior": {
-          "type": "clock"
+          "type": "hearth"
         }
       },
       "sources": [
         {
           "type": "shop",
           "shop": "furnisher",
-          "price": 35
+          "price": 60
         }
       ],
       "store": "furniture",
@@ -62968,7 +62908,7 @@
       ]
     },
     "market": {
-      "name": "Market Square",
+      "name": "West Market Stall",
       "pool": [
         {
           "item": "egg",
@@ -63103,6 +63043,142 @@
         13
       ]
     },
+    "market_east": {
+      "name": "East Market Stall",
+      "pool": [
+        {
+          "item": "egg",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "onion",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "tomato",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "potato",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "carrot",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "honey",
+          "price": 7,
+          "daily_qty": 3
+        },
+        {
+          "item": "cheese",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "milk",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "apple",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "berries",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "mushroom",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "ember_pepper",
+          "price": 12,
+          "daily_qty": 3
+        },
+        {
+          "item": "acorns",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "herbs",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "cress",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "wheat",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "flour",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "beef",
+          "price": 9,
+          "daily_qty": 3
+        },
+        {
+          "item": "trout",
+          "price": 8,
+          "daily_qty": 3
+        }
+      ],
+      "building": "market_stall",
+      "buys": [
+        "acorns",
+        "apple",
+        "beef",
+        "berries",
+        "carrot",
+        "cheese",
+        "chicken",
+        "cress",
+        "egg",
+        "ember_pepper",
+        "herbs",
+        "honey",
+        "milk",
+        "mushroom",
+        "mutton",
+        "oats",
+        "onion",
+        "peppercorns",
+        "pork",
+        "potato",
+        "salt",
+        "tomato",
+        "trout",
+        "venison",
+        "water",
+        "wheat"
+      ],
+      "market": true,
+      "always": [],
+      "shelf": 6,
+      "hours": [
+        7,
+        14
+      ]
+    },
     "furnisher": {
       "name": "Hearth & Home Furnishings",
       "building": "house_red",
@@ -63122,8 +63198,6 @@
         "nightstand",
         "potted_plant",
         "rug",
-        "standing_clock",
-        "wall_clock",
         "wardrobe"
       ],
       "market": false,
@@ -63169,11 +63243,6 @@
           "daily_qty": 3
         },
         {
-          "item": "hearth",
-          "price": 60,
-          "daily_qty": 3
-        },
-        {
           "item": "deco_painting",
           "price": 15,
           "daily_qty": 3
@@ -63209,13 +63278,8 @@
           "daily_qty": 3
         },
         {
-          "item": "wall_clock",
-          "price": 16,
-          "daily_qty": 3
-        },
-        {
-          "item": "standing_clock",
-          "price": 35,
+          "item": "hearth",
+          "price": 60,
           "daily_qty": 3
         }
       ],

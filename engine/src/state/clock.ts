@@ -71,25 +71,15 @@ export class Clock {
     return 1;
   }
 
-  /** Late evening into the small hours (8 pm to 2 am): when folk look for a bed for the night. */
+  /** From 6 pm into the small hours (to 2 am): when folk at the tables may want a bed for the night. */
   get evening(): boolean {
     const h = this.hour;
-    return h >= 20 || h < 2;
+    return h >= 18 || h < 2;
   }
 
-  /** The chance someone coming in is after just a room (late evening, mostly). */
+  /** How often travellers after just a room come: most from 8 pm to 2 am, now and then the rest of the day. */
   get lodging(): number {
-    return this.evening ? 0.55 : 0.08;
-  }
-
-  /** The time as said aloud: "a quarter past seven in the evening, on day 2". */
-  get spoken(): string {
-    const m = Math.round((this.minutes % 1440) / 5) * 5;
-    const h = Math.floor(m / 60) % 24;
-    const min = m % 60;
-    const h12 = h % 12 || 12;
-    const when = h < 5 ? 'at night' : h < 12 ? 'in the morning' : h < 17 ? 'in the afternoon' : h < 21 ? 'in the evening' : 'at night';
-    const at = min === 0 ? `${h12} o'clock` : `${h12}:${String(min).padStart(2, '0')}`;
-    return `${at} ${when}, on day ${this.day}`;
+    const h = this.hour;
+    return h >= 20 || h < 2 ? 1 : 0.2;
   }
 }

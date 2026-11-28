@@ -35,7 +35,7 @@ export interface ItemData {
   /** Tableware and bedding: what a clean piece becomes once used. */
   dirty?: string;
   /** Furniture: the piece it becomes once set down in the inn (its art, and how it's placed). */
-  prop?: { sprite: string; layer?: 'floor' | 'wall'; depth?: number; collider?: string; fps?: number; behavior?: { type: 'clock' } };
+  prop?: { sprite: string; layer?: 'floor' | 'wall'; depth?: number; collider?: string; fps?: number; behavior?: { type: 'hearth' } };
 }
 export interface StationData { name: string; verb: string; method: string; sprite: { sheet: string; frame: string } }
 export interface DishData {

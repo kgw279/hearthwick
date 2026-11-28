@@ -33,6 +33,7 @@ function placement(name: string): Partial<PlacedProp> {
   if (WALL.test(name)) return { layer: 'wall' };
   if (TOP.test(name)) return { layer: 'top' };
   if (name === 'wash_tub') return { behavior: { type: 'wash' } };
+  if (name === 'fireplace') return { behavior: { type: 'hearth' } }; // guests wait by it; it has its own menu
   if (/^table_\d$/.test(name)) return { collider: name }; // a table blocks its whole top, not just its legs
   if (/^house_/.test(name)) return { collider: 'house' };
   if (/^fence/.test(name)) return { collider: name }; // a fence blocks the line of its rails

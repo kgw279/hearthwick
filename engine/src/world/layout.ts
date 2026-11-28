@@ -36,8 +36,8 @@ export type Behavior =
   | { type: 'storage'; id: string; slots: number; contents?: Array<{ item: string; count: number }> }
   /** Washes the dirty tableware the player carries. */
   | { type: 'wash' }
-  /** A clock: tells the time. */
-  | { type: 'clock' }
+  /** The inn's hearth: guests wait by it, and the player can sit by it a while (pass the time). */
+  | { type: 'hearth' }
   /** A plaque by a guest room's door: the room's map, and the name the player gave it. */
   | { type: 'plaque'; room: string; name?: string };
 
@@ -121,7 +121,7 @@ const FACINGS = new Set(['down', 'up', 'left', 'right']);
 const BEHAVIOR_FIELDS: Record<Behavior['type'], Record<string, 's' | 's?' | 'n' | 'contents?'>> = {
   talk: { who: 's', line: 's' }, read: { text: 's' }, enter: { to: 's', spawn: 's' }, shop: { shop: 's' }, market: { shop: 's' },
   pet: {}, draw_water: {}, forage: { node: 's' }, fish: { item: 's' }, stairs: { to: 's' }, door: { to: 's' },
-  storage: { id: 's', slots: 'n', contents: 'contents?' }, wash: {}, clock: {}, plaque: { room: 's', name: 's?' },
+  storage: { id: 's', slots: 'n', contents: 'contents?' }, wash: {}, hearth: {}, plaque: { room: 's', name: 's?' },
 };
 const PROP_KEYS = new Set(['sprite', 'x', 'y', 'layer', 'rot', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 

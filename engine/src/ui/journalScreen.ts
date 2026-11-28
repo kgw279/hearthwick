@@ -134,7 +134,7 @@ export class JournalScreen implements Screen {
     if (g.state === 'settled') return 'Settled up';
     if (g.stay) return g.stay.mood >= 0.95 ? 'Stayed the night: slept well' : 'Stayed the night';
     if (g.stayingIn) return 'Staying the night';
-    if (g.state !== 'gone') return g.state === 'arriving' ? 'Coming in' : g.state === 'eating' ? 'Eating' : g.had.length ? 'Another round' : 'Waiting';
+    if (g.state !== 'gone') return g.state === 'arriving' ? 'Coming in' : g.state === 'eating' ? 'Eating' : g.state === 'relaxing' ? 'Sitting back after their meal' : g.had.length ? 'Another round' : 'Waiting';
     if (!o) return 'Gone';
     if (o.how === 'no room') return 'No room for them';
     if (o.how === 'unsettled') return 'Left without settling up';
