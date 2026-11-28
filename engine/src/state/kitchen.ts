@@ -14,7 +14,7 @@ import { containerOf, type ContainerSpec } from '../world/containers';
 import type { Layout } from '../world/layout';
 import type { Bag, Inventory, Stack } from './inventory';
 import type { Storage } from './storage';
-import { TRAY_MEALS, type Part, type Tray } from './service';
+import { TRAY_MEALS, type Part, type Served, type Tray } from './service';
 
 /** The inn's maps: every map whose id starts with "inn". */
 export const isInn = (layoutId: string) => layoutId.startsWith('inn');
@@ -191,24 +191,40 @@ export class Kitchen {
     return sets.find(([id]) => this.have(id) > 0)?.[0] ?? null;
   }
 
-  canPlate(dish: string, tray: Tray): Blocker {
+  /** Why a dish can't be plated right now (onto a tray, if one's given), or null if it can. */
+  canPlate(dish: string, tray?: Tray): Blocker {
     const short = this.missing(this.content.dish(dish).components);
     if (short) return short;
     if (!this.ware(dish)) return this.content.dish(dish).kind === 'drink' ? 'No clean mugs' : 'No clean plates';
-    if (tray.freeMeal(this.content.dish(dish).kind) < 0) return `The tray is full (${TRAY_MEALS} meals)`;
+    if (tray && tray.freeMeal(this.content.dish(dish).kind) < 0) return `The tray is full (${TRAY_MEALS} meals)`;
     return null;
+  }
+
+  /** Plate a dish: its components and a clean plate (or mug) are used up. */
+  private serveUp(dish: string): Served {
+    const ware = this.ware(dish)!;
+    this.use([...this.content.dish(dish).components, ware]);
+    return { dish, ware };
   }
 
   /** Plate a dish onto a tray: into the first meal still without one of its kind (food or drink). */
   plate(dish: string, tray: Tray): Blocker {
     const why = this.canPlate(dish, tray);
     if (why) return why;
-    const ware = this.ware(dish)!;
     const part = this.content.dish(dish).kind;
-    this.use([...this.content.dish(dish).components, ware]);
     const i = tray.freeMeal(part);
-    tray.meals[i] = { ...(tray.meals[i] ?? {}), [part]: { dish, ware } };
+    tray.meals[i] = { ...(tray.meals[i] ?? {}), [part]: this.serveUp(dish) };
     return null;
+  }
+
+  /** Get something ready to hand over the bar: a dish plated, or a raw snack as it is. */
+  barServe(what: string): Served | Blocker {
+    if (!this.content.dishes[what]) {
+      if (this.have(what) < 1) return `Need ${this.content.itemName(what)}`;
+      this.use([what]);
+      return { dish: what, ware: '' };
+    }
+    return this.canPlate(what) ?? this.serveUp(what);
   }
 
   /** Lay a set of cutlery on a tray, with the first meal that hasn't any. */
@@ -230,7 +246,7 @@ export class Kitchen {
     const m = tray.meals[meal];
     const got = m?.[part];
     if (!m || !got) return null;
-    const back = typeof got === 'string' ? [got] : [...this.content.dish(got.dish).components, got.ware];
+    const back = typeof got === 'string' ? [got] : [...this.content.dish(got.dish).components, got.ware].filter(Boolean);
     const need = this.needs(back);
     if (need.some((n) => this.stores.room(n.item) + this.bag.room(n.item) < n.count)) return 'No room to put it back';
     for (const n of need) {
@@ -248,19 +264,17 @@ export class Kitchen {
     return (this.content.items[item]?.made_by ?? []).some((m) => m.inputs.every((i) => this.have(i) > 0));
   }
 
-  /** What guests can order: dishes whose components are all to hand or one step away. */
-  menu(): { food: string[]; drink: string[] } {
+  /**
+   * What a guest could order: dishes whose components are all to hand or one step away. At the bar,
+   * only drinks, dishes of a component or so, and raw snacks to hand.
+   */
+  menu(bar: boolean): { food: string[]; drink: string[] } {
     const out = { food: [] as string[], drink: [] as string[] };
     for (const [id, d] of Object.entries(this.content.dishes)) {
+      if (bar && d.kind === 'food' && d.components.length > this.content.bar.max_components) continue;
       if (d.components.every((c) => this.soon(c))) out[d.kind].push(id);
     }
+    if (bar) out.food.push(...this.content.bar.snacks.filter((s) => this.have(s) > 0));
     return out;
-  }
-
-  /** Dishes that could be plated from what's to hand (ignoring tableware and counter room), by name. */
-  plateable(): string[] {
-    return Object.keys(this.content.dishes)
-      .filter((d) => !this.missing(this.content.dish(d).components))
-      .sort((a, b) => this.content.itemName(a).localeCompare(this.content.itemName(b)));
   }
 }

@@ -43,7 +43,7 @@ function placement(name: string): Partial<PlacedProp> {
 const GROUPS: Array<{ name: string; sheets: string[]; template: Template; living?: boolean }> = [
   { name: 'Furniture', sheets: ['furniture', 'interior', 'stairs', 'tableware'], template: {} },
   { name: 'Tables', sheets: ['tables', 'chairs'], template: {} },
-  { name: 'Kitchen', sheets: ['stations', 'animated'], template: {} },
+  { name: 'Kitchen', sheets: ['stations', 'plating', 'animated'], template: {} },
   { name: 'Town', sheets: ['props', 'buildings', 'farm', 'carts', 'wagons', 'wagons_ns'], template: {} },
   { name: 'Animals', sheets: ['animals', 'ambient'], template: {}, living: true },
   { name: 'Food', sheets: ['food'], template: { collider: null } },

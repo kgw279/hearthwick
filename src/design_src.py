@@ -162,7 +162,7 @@ STATIONS = {   # legacy id: (name, verb, method, sprite in stations sheet)
     'pot': ('Stock pot', 'Boil', 'boil', 'cauldron'),
     'grill': ('Grill', 'Grill', 'grill', 'grill'),
     'oven': ('Hearth oven', 'Bake', 'bake', 'oven'),
-    'plate': ('Plate', 'Serve up', 'serve', 'dining_table'),
+    'plate': ('Plating station', 'Plate', 'serve', 'plating_station'),
 }
 
 # Dishes: (legacy id, name, components, explicit tags or None, value, origin folk or None)

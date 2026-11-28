@@ -2,8 +2,9 @@
  * Where guests sit and trays rest, worked out from a map's pieces (so moving furniture in the editor or
  * in play moves them too):
  *  - a seat is a chair facing a table: the chair's art is just short of a table's in the way it faces,
- *    and overlaps it across that way;
- *  - a tray spot is the top of a serving counter piece (a bar counter that isn't a shop's).
+ *    and overlaps it across that way; or a stool just in front of the bar (a bar counter that isn't a
+ *    shop's), facing it. Everyone at the bar is at one "table", the bar;
+ *  - tray spots are the top of a plating station: room for two trays side by side.
  * Keys name a seat or table by its map and position.
  */
 import type { Assets } from '../core/assets';
@@ -16,6 +17,8 @@ import type { Content } from './data';
 export interface Seat {
   key: string;
   layout: string;
+  /** At a table (on a chair), or at the bar (on a stool). */
+  bar: boolean;
   /** The chair: its index in the layout, its art, which way the sitter faces. */
   chair: number;
   art: Rect;
@@ -32,6 +35,11 @@ const REACH = 14; // px a chair can be from its table
 const CHAIR = /^chair_(down|up|left|right)$/;
 const TABLE = /^table_\d$/;
 const COUNTER = /^bar_counter/;
+const STOOL = /^stool$/;
+const PLATING = /^plating_station$/;
+
+/** The key all the bar's seats share as their "table". */
+export const barKey = (layout: string) => `${layout}:bar`;
 
 const keyOf = (layout: string, p: PlacedProp) => `${layout}:${Math.round(p.x)},${Math.round(p.y)}`;
 
@@ -41,14 +49,20 @@ export function seating(layout: Layout, assets: Assets, content: Content): { sea
   layout.props.forEach((p, i) => {
     if (typeof p.sprite === 'string' && TABLE.test(p.sprite)) tables.push({ key: keyOf(layout.id, p), layout: layout.id, prop: i, art: art(p) });
   });
+  const counters = layout.props.filter((p) => !p.behavior && typeof p.sprite === 'string' && COUNTER.test(p.sprite)).map(art);
   const seats: Seat[] = [];
   layout.props.forEach((p, i) => {
-    const m = typeof p.sprite === 'string' ? CHAIR.exec(p.sprite) : null;
-    if (!m) return;
-    const facing = m[1] as Facing;
-    const c = art(p);
-    const t = tables.find((t) => faces(c, t.art, facing));
-    if (t) seats.push({ key: keyOf(layout.id, p), layout: layout.id, chair: i, art: c, facing, table: t.key });
+    if (typeof p.sprite !== 'string') return;
+    const m = CHAIR.exec(p.sprite);
+    const c = m || STOOL.test(p.sprite) ? art(p) : null;
+    if (!c) return;
+    if (m) {
+      const facing = m[1] as Facing;
+      const t = tables.find((t) => faces(c, t.art, facing));
+      if (t) seats.push({ key: keyOf(layout.id, p), layout: layout.id, bar: false, chair: i, art: c, facing, table: t.key });
+    } else if (counters.some((k) => faces(c, k, 'up'))) {
+      seats.push({ key: keyOf(layout.id, p), layout: layout.id, bar: true, chair: i, art: c, facing: 'up', table: barKey(layout.id) });
+    }
   });
   return { seats, tables };
 }
@@ -64,13 +78,18 @@ function faces(c: Rect, t: Rect, facing: Facing): boolean {
   }
 }
 
-/** Spots for trays: the top of each serving counter piece, in map order. */
+/** Spots for trays: two on top of each plating station, in map order. */
 export function traySpots(layout: Layout, assets: Assets, content: Content): Spot[] {
   const out: Spot[] = [];
   layout.props.forEach((p, i) => {
-    if (p.behavior || typeof p.sprite !== 'string' || !COUNTER.test(p.sprite)) return;
+    if (typeof p.sprite !== 'string' || !PLATING.test(p.sprite)) return;
     const a = artRect(p, propFrames(p, assets, content)[0], assets);
-    out.push({ layout: layout.id, prop: i, x: Math.round(a.x + a.w / 2), y: a.y + 8 });
+    for (const k of [0.25, 0.75]) out.push({ layout: layout.id, prop: i, x: Math.round(a.x + a.w * k), y: a.y + 11 });
   });
   return out;
+}
+
+/** Which tray spots belong to the plating station at prop index `prop`. */
+export function spotsAt(spots: Spot[], prop: number): number[] {
+  return spots.map((s, i) => (s.prop === prop ? i : -1)).filter((i) => i >= 0);
 }

@@ -19,6 +19,7 @@ import revisions
 import content_animals
 import content_tableware
 import content_supplies
+import art_kitchen
 import art_supplies
 import art_tableware
 
@@ -167,7 +168,8 @@ def build():
             if sid in all_stations: raise ValueError(f'{pname}: station {sid} already exists')
             all_stations[sid] = v
     for sid, (name, verb, method, sprite) in all_stations.items():
-        stations[sid] = {'name': name, 'verb': verb, 'method': method, 'sprite': {'sheet': 'stations', 'frame': sprite}}
+        sheet = 'plating' if any(n == sprite for n, _ in art_kitchen.PLATING) else 'stations'   # the wide plating station has its own sheet
+        stations[sid] = {'name': name, 'verb': verb, 'method': method, 'sprite': {'sheet': sheet, 'frame': sprite}}
 
     for st, table in TX.items():
         for src, out in table.items():
@@ -298,11 +300,16 @@ def build():
         'shops': shops,
         'folk': {f: {'name': n, 'likes': l, 'hates': h, 'odd': o} for f, (n, l, h, o) in D.FOLK.items()},
         'economy': {k: v for k, v in content_economy.ECONOMY.items() if not k.startswith('market_')},
+        # guests at the bar order drinks, simple dishes (this few components at most) and raw snacks, served
+        # straight over the counter; at the tables they order anything
+        'bar': {'snacks': BAR_SNACKS, 'max_components': 1},
         'rules': {'odd_tag': D.ODD_RULE,
                   'recipe_match': 'a dish is made on the plate station from exactly its components, in any order'},
     }
     return data
 
+
+BAR_SNACKS = ['apple', 'berries', 'carrot', 'cress', 'tomato', 'cheese']   # raw things a bar guest might nibble
 
 STORES = {
     'pantry': 'raw ingredients: crates, chests and cupboards',
@@ -335,6 +342,7 @@ def validate(data):
             errs.append(f'{iid}: raw item has no source')
         if it['kind'] == 'prepared' and not it['made_by']:
             errs.append(f'{iid}: prepared item has no recipe')
+        if iid in BAR_SNACKS and it['kind'] != 'raw': errs.append(f'{iid}: a bar snack must be raw')
         if it.get('store') not in STORES: errs.append(f'{iid}: unknown store {it.get("store")}')
         if it['kind'] == 'supply':
             if not art_supplies.has(iid): errs.append(f'{iid}: missing sprite')
@@ -346,6 +354,8 @@ def validate(data):
         if not it['used_in']['items'] and not it['used_in']['dishes']:
             warns.append(f'{iid}: not used in anything (sell-only / future content)')
         if not has_sprite(iid): errs.append(f'{iid}: missing sprite')
+    for sn in data['bar']['snacks']:
+        if sn not in items: errs.append(f'bar snack {sn} is not an item')
     for did, d in dishes.items():
         for c in d['components']:
             if c not in items: errs.append(f'{did}: unknown component {c}')

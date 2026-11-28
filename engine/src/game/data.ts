@@ -48,6 +48,8 @@ export class Content {
   /** Dishes as served (food or drink) and what goes on the plate. */
   readonly dishes: Record<string, DishData>;
   readonly folk: Record<string, FolkData>;
+  /** What the bar serves: raw snacks, and dishes of at most this many components. */
+  readonly bar: { snacks: string[]; max_components: number };
   private readonly recipes = new Map<string, Recipe[]>();
 
   constructor(data: GameData) {
@@ -62,6 +64,7 @@ export class Content {
     this.stations = data.stations as Record<string, StationData>;
     this.dishes = dishes as unknown as Record<string, DishData>;
     this.folk = data.folk as Record<string, FolkData>;
+    this.bar = data.bar as { snacks: string[]; max_components: number };
     for (const [id, it] of Object.entries(this.items)) {
       for (const m of it.made_by ?? []) {
         const list = this.recipes.get(m.station) ?? [];
@@ -82,6 +85,22 @@ export class Content {
     return this.recipes.get(station)?.find((r) => [...r.inputs].sort().join('+') === key);
   }
 
+  /** The dish made from exactly these components (in any order), if any. */
+  dishFor(components: string[]): string | undefined {
+    const key = [...components].sort().join('+');
+    return Object.keys(this.dishes).find((d) => [...this.dishes[d].components].sort().join('+') === key);
+  }
+
+  /** Everything that goes into some dish. */
+  dishComponents(): Set<string> {
+    return new Set(Object.values(this.dishes).flatMap((d) => d.components));
+  }
+
+  /** The most components any dish has. */
+  mostComponents(): number {
+    return Math.max(1, ...Object.values(this.dishes).map((d) => d.components.length));
+  }
+
   /** Everything that goes into something at a station. */
   ingredientsAt(station: string): Set<string> {
     return new Set((this.recipes.get(station) ?? []).flatMap((r) => r.inputs));
@@ -92,10 +111,10 @@ export class Content {
     return Math.max(1, ...(this.recipes.get(station) ?? []).map((r) => r.inputs.length));
   }
 
-  /** The cooking station a piece of art is (its frame, or its animation's), if it's one. The plate is the serving counter's. */
+  /** The station a piece of art is (its frame, or its animation's), if it's one ('plate' is the plating station). */
   stationOfArt(art: string): string | undefined {
     const frame = art.replace(/^anim:/, '').replace(/_f\d+$/, '');
-    return Object.keys(this.stations).find((k) => k !== 'plate' && this.stations[k].sprite.frame === frame);
+    return Object.keys(this.stations).find((k) => this.stations[k].sprite.frame === frame);
   }
 
   dishTags(id: string): string[] {

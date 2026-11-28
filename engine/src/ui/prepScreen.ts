@@ -6,11 +6,13 @@
  * stays filled, so pressing again makes another. What's made goes straight into the inn's stores
  * (prepped food onto shelves, drinks into barrels), or isn't made if there's no room.
  *
- * D-pad / stick / arrows move (across from the grid's right edge into the tray and back); choose (A / E
- * / click) puts an ingredient in, or takes one out of the tray; B / Esc leave.
+ * D-pad / stick / arrows move (across from the grid's right edge into the tray and back). A (E, click)
+ * puts the chosen ingredient in; B (Esc, right-click) takes one of it back out (in the tray: the chosen
+ * one); RT (X key, click the result) makes one; Y (R) empties the tray; X (F) leaves the station.
  */
 import type { Assets } from '../core/assets';
-import type { Input } from '../core/input';
+import type { Device, Input } from '../core/input';
+import { hint } from './buttons';
 import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content, Recipe } from '../game/data';
@@ -41,6 +43,7 @@ export class PrepScreen implements Screen {
   private readonly nav = new Nav();
   private message = { text: '', until: 0 };
   private time = 0;
+  private device: Device = 'keyboard';
 
   constructor(
     private readonly station: string,
@@ -81,11 +84,14 @@ export class PrepScreen implements Screen {
 
   update(input: Input, dt: number): boolean {
     this.time += dt;
-    if (input.pressed('back') || input.pressed('menu')) return false;
+    this.device = input.device;
+    if (input.pressed('cook') || input.pressed('menu')) return false;
     const d = this.nav.step(input, dt);
     if (d) this.move(d);
-    if (input.pressed('interact')) this.choose();
-    if (input.pressed('cook')) this.make();
+    if (input.pressed('interact')) this.add();
+    if (input.pressed('back')) this.takeOut();
+    if (input.pressed('cat_next')) this.make();
+    if (input.pressed('recipes')) this.tray = [];
     return true;
   }
 
@@ -112,18 +118,26 @@ export class PrepScreen implements Screen {
     if (d.x) this.sel.tray = Math.max(0, Math.min(this.size - 1, this.sel.tray + d.x));
   }
 
-  /** In the grid, put one of the chosen ingredient into the tray; in the tray, take the chosen one out. */
-  private choose(): void {
-    if (this.pane === 'tray') {
-      if (this.sel.tray < this.tray.length) this.tray.splice(this.sel.tray, 1);
-      return;
-    }
+  /** Put one of the chosen ingredient into the tray. */
+  private add(): void {
+    if (this.pane === 'tray') return;
     const s = this.stock()[this.sel.grid];
     if (!s) return;
     if (s.count <= 0) return this.say(`No more ${this.content.itemName(s.item)}`);
     if (this.tray.length >= this.size) return this.say('The tray is full: take something out first');
     this.tray.push(s.item);
     this.keepSelection();
+  }
+
+  /** Take one of the chosen ingredient back out of the tray (in the tray: the chosen one). */
+  private takeOut(): void {
+    if (this.pane === 'tray') {
+      if (this.sel.tray < this.tray.length) this.tray.splice(this.sel.tray, 1);
+      return;
+    }
+    const s = this.stock()[this.sel.grid];
+    const i = s ? this.tray.lastIndexOf(s.item) : -1;
+    if (i >= 0) this.tray.splice(i, 1);
   }
 
   /** Make one of what the tray holds; the tray stays filled for the next. */
@@ -166,14 +180,15 @@ export class PrepScreen implements Screen {
       if (!hit(this.cellAt(i))) continue;
       this.pane = 'grid';
       this.sel.grid = i;
-      if (button === 0) this.choose();
+      if (button === 0) this.add();
+      if (button === 2) this.takeOut();
       return true;
     }
     for (let i = 0; i < this.size; i++) {
       if (!hit(this.traySlot(i))) continue;
       this.pane = 'tray';
       this.sel.tray = i;
-      if (button === 0) this.choose();
+      if (button === 0 || button === 2) this.takeOut();
       return true;
     }
     if (hit(this.resultSlot())) {
@@ -234,9 +249,10 @@ export class PrepScreen implements Screen {
     }
 
     const msg = this.time < this.message.until;
-    const hint = msg ? this.message.text : 'Choose: put in / take out   X: make one';
+    const help = msg ? this.message.text
+      : hint(this.device, [['interact', 'add'], ['back', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['cook', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
-    drawText(r, assets, hint, this.x + PAD, this.y + H - 18);
+    drawText(r, assets, help, this.x + PAD, this.y + H - 18);
     r.ctx.globalAlpha = 1;
   }
 }

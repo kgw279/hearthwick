@@ -225,12 +225,12 @@
       }
     },
     "plate": {
-      "name": "Plate",
-      "verb": "Serve up",
+      "name": "Plating station",
+      "verb": "Plate",
       "method": "serve",
       "sprite": {
-        "sheet": "stations",
-        "frame": "dining_table"
+        "sheet": "plating",
+        "frame": "plating_station"
       }
     },
     "cask": {
@@ -13027,6 +13027,17 @@
     "bag_slots": 24,
     "stack_size": 20,
     "sell_ratio": 1.0
+  },
+  "bar": {
+    "snacks": [
+      "apple",
+      "berries",
+      "carrot",
+      "cress",
+      "tomato",
+      "cheese"
+    ],
+    "max_components": 1
   },
   "rules": {
     "odd_tag": "a dish gains the odd tag when it mixes sweet+fish or fish+meat",

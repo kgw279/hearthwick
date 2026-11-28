@@ -27,8 +27,10 @@ export interface SceneHooks {
   openStorage(box: { id: string; slots: number; contents?: Array<{ item: string; count: number }> }, art: string): void;
   /** Work at a cooking station (by its gamedata id). */
   openStation(station: string): void;
-  /** The serving counter: set a carried tray down on it, or load the trays there. */
-  openCounter(): void;
+  /** A plating station (by its position in this map): set a carried tray down on it, or plate onto its trays. */
+  openPlating(at: string): void;
+  /** The bar: serve the guests sat at it. */
+  openBar(): void;
   /** Serve a table (by its key in this map: see seating.ts). */
   openTable(key: string): void;
   /** Whether the player is carrying a serving tray (what the counter and tables offer depends on it). */
@@ -124,23 +126,25 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
   }
 }
 
-/** The serving counter's art (a bar counter with no shop on it), and tables. */
+/** The bar (a bar counter with no shop on it), and tables. */
 const COUNTER = /^bar_counter/;
 const TABLE = /^table_\d$/;
 
 /**
  * Kitchen and dining pieces work by what they are, wherever they're placed: a cooking station's art
- * opens that station, a bar counter (that isn't a shop's) is the serving counter, a table is served at.
+ * opens that station (the plating station, plating and the serving trays), a bar counter that isn't a
+ * shop's serves the guests at the bar, a table serves its guests.
  */
 function workplace(p: PlacedProp, frame: string, content: Content, hooks: SceneHooks): Interaction | null {
+  const at = `${Math.round(p.x)},${Math.round(p.y)}`;
   const station = content.stationOfArt(frame);
-  if (station) return { label: content.stations[station].verb, use: () => hooks.openStation(station) };
-  if (COUNTER.test(frame)) {
-    return { get label() { return hooks.carryingTray() ? 'Set tray down' : 'Load trays'; }, use: () => hooks.openCounter() };
+  if (station === 'plate') {
+    return { get label() { return hooks.carryingTray() ? 'Set tray down' : content.stations.plate.verb; }, use: () => hooks.openPlating(at) };
   }
+  if (station) return { label: content.stations[station].verb, use: () => hooks.openStation(station) };
+  if (COUNTER.test(frame)) return { label: 'Serve', use: () => hooks.openBar() };
   if (TABLE.test(frame)) {
-    const key = `${Math.round(p.x)},${Math.round(p.y)}`;
-    return { get label() { return hooks.carryingTray() ? 'Serve' : 'Table'; }, use: () => hooks.openTable(key) };
+    return { get label() { return hooks.carryingTray() ? 'Serve' : 'Table'; }, use: () => hooks.openTable(at) };
   }
   return null;
 }
@@ -157,7 +161,7 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
 }
 
 const NO_HOOKS: SceneHooks = {
-  say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openCounter() {}, openTable() {}, carryingTray: () => false,
+  say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openPlating() {}, openBar() {}, openTable() {}, carryingTray: () => false,
 };
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
