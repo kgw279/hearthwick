@@ -68,7 +68,7 @@ export class PlatingScreen implements Screen {
     private readonly assets: Assets,
   ) {
     this.size = content.mostComponents();
-    this.usable = new Set([...content.dishComponents(), ...content.bar.snacks]);
+    this.usable = new Set([...content.dishComponents(), ...content.snacks]);
     this.book = new RecipeBook(() => cookbook.at('plate'), (i) => kitchen.have(i), content, assets);
   }
 

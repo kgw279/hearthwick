@@ -12,6 +12,10 @@ export interface ItemData {
   store?: Store;
   /** Tableware: what piece it is. */
   tableware?: { kind: 'plate' | 'bowl' | 'mug' | 'cutlery'; material: string; tier: number };
+  /** Snacks served as they are: their course, traits and complexity (like a dish's). */
+  course?: Course;
+  traits?: string[];
+  complexity?: number;
   /** Prepared items: how they're made (a station and its inputs; an input listed twice is needed twice). */
   made_by?: Array<{ station: string; inputs: string[] }>;
   tags: string[];
@@ -28,13 +32,17 @@ export interface ItemData {
 export interface StationData { name: string; verb: string; method: string; sprite: { sheet: string; frame: string } }
 export interface DishData {
   name: string; components: string[]; kind: 'food' | 'drink'; value: number; tags: string[];
-  /** How interesting it is (the prep behind it), and the reputation serving it earns. */
-  complexity: number; reputation: number;
+  /** How interesting it is (the prep behind it), its course, and what a guest might ask for it by. */
+  complexity: number; reputation: number; course: Course; traits: string[];
 }
 export interface FolkData { name: string; likes: string[]; hates: string | null }
-/** The courses a guest orders: a drink, a snack (a raw snack or a one-ingredient dish), a main dish. */
-export type Course = 'drink' | 'snack' | 'main';
-export const COURSES: Course[] = ['drink', 'snack', 'main'];
+/**
+ * The courses a guest orders: a drink, a snack (something small served as it is, or a dish of one thing),
+ * a main dish, a dessert (gamedata decides which each dish is).
+ */
+export type Course = 'drink' | 'snack' | 'main' | 'dessert';
+export const COURSES: Course[] = ['drink', 'snack', 'main', 'dessert'];
+export const COURSE_NAMES: Record<Course, string> = { drink: 'drink', snack: 'snack', main: 'main dish', dessert: 'dessert' };
 
 /** One way to make something: what goes in, what comes out. */
 export interface Recipe { out: string; inputs: string[] }
@@ -63,6 +71,8 @@ export class Content {
   readonly folk: Record<string, FolkData>;
   /** What the bar serves: raw snacks, and dishes of at most this many components. */
   readonly bar: { snacks: string[]; max_components: number };
+  /** Things served just as they are (plated on their own): raw snacks and small prepped things. */
+  readonly snacks: string[];
   private readonly recipes = new Map<string, Recipe[]>();
 
   constructor(data: GameData) {
@@ -78,6 +88,7 @@ export class Content {
     this.dishes = dishes as unknown as Record<string, DishData>;
     this.folk = data.folk as Record<string, FolkData>;
     this.bar = data.bar as { snacks: string[]; max_components: number };
+    this.snacks = data.snacks as string[];
     for (const [id, it] of Object.entries(this.items)) {
       for (const m of it.made_by ?? []) {
         const list = this.recipes.get(m.station) ?? [];
@@ -130,16 +141,29 @@ export class Content {
     return Object.keys(this.stations).find((k) => this.stations[k].sprite.frame === frame);
   }
 
-  /** Which course something served is: a drink, a snack (a raw snack, or a dish of one thing), or a main. */
+  /** Which course something served is (a dish's, or a snack served as it is). */
   course(id: string): Course {
-    const d = this.dishes[id];
-    if (!d) return 'snack';
-    if (d.kind === 'drink') return 'drink';
-    return d.components.length <= 1 ? 'snack' : 'main';
+    return this.dishes[id]?.course ?? this.items[id]?.course ?? 'snack';
   }
 
+  /** What a guest might ask for something by: how it was cooked, and its tags ("baked", "meaty"...). */
+  traits(id: string): string[] {
+    return this.dishes[id]?.traits ?? this.items[id]?.traits ?? [];
+  }
+
+  /** How much prep is behind something served. */
+  complexity(id: string): number {
+    return this.dishes[id]?.complexity ?? this.items[id]?.complexity ?? 0;
+  }
+
+  /** Whether something can be served: a dish, or a snack served as it is. */
+  servable(id: string): boolean {
+    return !!this.dishes[id] || this.snacks.includes(id);
+  }
+
+  /** The tags of something served: a dish's, or a snack's own. */
   dishTags(id: string): string[] {
-    return this.dish(id).tags ?? [];
+    return this.dishes[id]?.tags ?? this.items[id]?.tags ?? [];
   }
 
   /** A dish plated: its components, and what it's served on. */

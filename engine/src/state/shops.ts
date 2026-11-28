@@ -19,6 +19,8 @@ interface ShopState { shelf: Shelf[]; checked: number; emptySince: Map<string, n
 
 export class Shops {
   private readonly shops = new Map<string, ShopState>();
+  /** Told of every purchase and sale: the shop, the item, how many, coins gained (below nought: spent). */
+  onTrade?: (shop: string, item: string, n: number, coins: number) => void;
 
   /** clock: game seconds. */
   constructor(private readonly content: Content, private readonly clock: () => number, private readonly rng = Math.random) {
@@ -99,6 +101,7 @@ export class Shops {
     bag.coins -= line.price * n;
     line.left -= n;
     if (line.left === 0 && !line.always) s.emptySince.set(item, this.clock());
+    this.onTrade?.(shop, item, n, -line.price * n);
     return { ok: true };
   }
 
@@ -106,6 +109,7 @@ export class Shops {
     if (!this.buys(shop, item)) return { ok: false, reason: "They don't buy that" };
     if (!bag.remove(item, n)) return { ok: false, reason: "You don't have that many" };
     bag.coins += this.content.sellPrice(item) * n;
+    this.onTrade?.(shop, item, n, this.content.sellPrice(item) * n);
     return { ok: true };
   }
 }

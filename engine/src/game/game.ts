@@ -28,6 +28,9 @@ import { PlatingScreen } from '../ui/platingScreen';
 import { accepts, InnStores, isInn, Kitchen } from '../state/kitchen';
 import { Service, type Leaving } from '../state/service';
 import { Cookbook } from '../state/cookbook';
+import { Journal } from '../state/journal';
+import { JournalScreen } from '../ui/journalScreen';
+import { COURSES } from './data';
 import { Reputation } from '../state/reputation';
 import { Pops } from '../ui/fx';
 import { Washing } from '../state/washing';
@@ -83,6 +86,8 @@ export class Game {
   /** Pops (see ui/fx.ts) out in the world, and over the HUD. */
   private readonly worldPops = new Pops();
   private readonly hudPops = new Pops();
+  /** A history of what's happened (the player's journal). */
+  readonly journal = new Journal();
   /** The recipes the player knows. */
   readonly cookbook: Cookbook;
   /** The wash station's tub and drying rack. */
@@ -146,6 +151,17 @@ export class Game {
     this.reputation = new Reputation();
     this.service = new Service(this.content, looks, this.reputation);
     this.cookbook = new Cookbook(this.content);
+    this.service.onArrive = (seat, g) => {
+      const who = this.content.folk[g.folk]?.name ?? g.folk;
+      const where = seat.bar ? 'at the bar' : 'at a table';
+      const wants = this.service.wants(g).map((c) => this.service.describe(c, g.order[c]!)).join(', ');
+      this.journal.add({ kind: 'arrive', text: `${who} sat down ${where}, wanting ${wants}` });
+    };
+    this.shops.onTrade = (shop, item, n, coins) => {
+      const name = this.content.itemName(item);
+      const where = this.content.shop(shop).name;
+      this.journal.add({ kind: coins < 0 ? 'buy' : 'sell', text: `${coins < 0 ? 'Bought' : 'Sold'} ${n} ${name} ${coins < 0 ? 'at' : 'to'} ${where}`, coins });
+    };
     this.washing = new Washing(this.content);
     this.editor = new Editor(this);
     this.enter('town', 'start');
@@ -172,15 +188,26 @@ export class Game {
     return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => seating(l, this.assets, this.content).seats);
   }
 
-  /** A guest has left: their coins and the reputation they earn the inn, and how they felt, over where they sat. */
+  /** A guest has left: their coins and the renown they earn the inn, how they felt (over where they sat), the journal. */
   private guestLeft(l: Leaving): void {
     this.bag.coins += l.coins;
     const levels = l.reputation ? this.reputation.add(l.reputation) : 0;
     if (levels) {
       this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
+      this.journal.add({ kind: 'renown', text: `The inn's renown grew to ${this.reputation.level}` });
     } else if (l.reputation) {
-      this.hudPops.pop(70, 34, this.time, { text: `+${l.reputation} reputation` });
+      this.hudPops.pop(70, 34, this.time, { text: `+${l.reputation} renown` });
     }
+    const who = this.content.folk[l.guest.folk]?.name ?? l.guest.folk;
+    const had = COURSES.map((c) => l.guest.got[c]?.dish).filter((d): d is string => !!d).map((d) => this.content.itemName(d));
+    const felt = l.how === 'paid' ? 'left happy' : l.how === 'gave up' ? 'gave up waiting and left' : l.mood >= 0.8 ? 'was sent on their way, and didn\'t mind' : 'was sent on their way, a little put out';
+    this.journal.add({
+      kind: 'leave',
+      text: `${who} ${felt}${had.length ? `, having had ${had.join(', ')}` : ''}`,
+      detail: l.awards.length ? l.awards.map((a) => `${a.why} ${a.points > 0 ? '+' : ''}${a.points}`).join(', ') : undefined,
+      coins: l.coins || undefined,
+      renown: l.reputation || undefined,
+    });
     if (l.seat.layout !== this.scene.id) return;
     const s = this.seats().find((x) => x.key === l.seat.key);
     if (!s) return;
@@ -192,7 +219,7 @@ export class Game {
   /** Serving a table (key: map and position), or the bar: its seats, from what's ready at the plating station. */
   private openTable(key: string, title: string): void {
     const seats = seating(this.layouts.get(this.scene.id)!, this.assets, this.content).seats.filter((s) => s.table === key);
-    this.screen = new TableScreen(title, key, seats, this.service, (item) => this.bag.add(item, 1) === 1,
+    this.screen = new TableScreen(title, seats, this.service, (item) => this.bag.add(item, 1) === 1,
       () => this.kitchen.takeCutlery(), (l) => this.guestLeft(l), this.content, this.assets);
   }
 
@@ -213,33 +240,40 @@ export class Game {
       const g = this.service.guests.get(seat.key);
       if (g && props[seat.chair]) out.push(new GuestEntity(g, seat, props[seat.chair], this.assets));
     }
-    const eating = (key: string) => seats.filter((s) => s.table === key && this.service.guests.get(s.key)?.state === 'eating');
+    // on each table and along the bar: each guest's meal in front of them while they eat, and the
+    // dishes left at each seat once they've gone
+    const barPieces = l.props.filter((p) => !p.behavior && typeof p.sprite === 'string' && /^bar_counter/.test(p.sprite))
+      .map((p) => artRect(p, propFrames(p, this.assets, this.content)[0], this.assets));
+    const barRight = Math.max(...barPieces.map((a) => a.x + a.w));
+    const place = (seat: (typeof seats)[number]): { x: number; y: number } => {
+      if (seat.bar) {
+        // on the counter beside their head (they sit in front of the bar)
+        const cx = seat.art.x + seat.art.w / 2;
+        return { x: cx + 16 < barRight ? cx + 6 : cx - 18, y: seat.art.y - 10 };
+      }
+      const a = tables.find((t) => t.key === seat.table)!.art;
+      return {
+        x: seat.facing === 'right' ? a.x + 2 : seat.facing === 'left' ? a.x + a.w - 12 : a.x + a.w / 2 - 5,
+        y: a.y + (seat.facing === 'down' ? 6 : seat.facing === 'up' ? 14 : 10),
+      };
+    };
+    const setting = (group: typeof seats) => {
+      const meals = group.filter((s) => this.service.guests.get(s.key)?.state === 'eating')
+        .map((s) => ({ meal: this.service.guests.get(s.key)!.got, ...place(s) }));
+      const piles = group.filter((s) => this.service.dirty.get(s.key)?.length).map((s) => ({ items: this.service.dirty.get(s.key)!, ...place(s) }));
+      return { meals, piles };
+    };
     for (const t of tables) {
-      const a = t.art;
-      const meals = eating(t.key).map((s) => ({
-        meal: this.service.guests.get(s.key)!.got,
-        x: s.facing === 'right' ? a.x + 2 : s.facing === 'left' ? a.x + a.w - 12 : a.x + a.w / 2 - 5,
-        y: a.y + (s.facing === 'down' ? 6 : s.facing === 'up' ? 14 : 10),
-      }));
-      const pile = { items: this.service.dirty.get(t.key) ?? [], x: a.x + a.w / 2, y: a.y + 8 };
-      if ((meals.length || pile.items.length) && props[t.prop]) out.push(new TopEntity(props[t.prop], meals, pile, this.content));
+      const { meals, piles } = setting(seats.filter((s) => s.table === t.key));
+      if ((meals.length || piles.length) && props[t.prop]) out.push(new TopEntity(props[t.prop], meals, piles, this.content));
     }
-    // the bar: each eater's meal on the counter in front of them, what's left at the bar's left end
     const counter = l.props.findIndex((p) => !p.behavior && typeof p.sprite === 'string' && /^bar_counter/.test(p.sprite));
     if (counter >= 0 && props[counter]) {
       const barSeats = seats.filter((s) => s.bar);
-      const top = Math.min(...barSeats.map((s) => s.art.y), Infinity) - 22;
-      // beside each eater's head (they sit in front of the bar, so it's drawn in front of them)
-      const barRight = Math.max(...l.props.filter((p) => !p.behavior && typeof p.sprite === 'string' && /^bar_counter/.test(p.sprite))
-        .map((p) => { const a = artRect(p, propFrames(p, this.assets, this.content)[0], this.assets); return a.x + a.w; }));
-      const meals = eating(barKey(l.id)).map((s) => {
-        const cx = s.art.x + s.art.w / 2;
-        return { meal: this.service.guests.get(s.key)!.got, x: cx + 16 < barRight ? cx + 6 : cx - 18, y: s.art.y - 10 };
-      });
-      const first = barSeats[0];
-      const pile = { items: this.service.dirty.get(barKey(l.id)) ?? [], x: first ? first.art.x + 4 : 0, y: Number.isFinite(top) ? top + 10 : 0 };
+      const { meals, piles } = setting(barSeats);
+      // drawn in front of the guests at the bar
       const front = Math.max(props[counter].sortY, ...barSeats.map((s) => (props[s.chair]?.sortY ?? 0) + 0.2));
-      if (meals.length || pile.items.length) out.push(new TopEntity({ sortY: front }, meals, pile, this.content));
+      if (meals.length || piles.length) out.push(new TopEntity({ sortY: front }, meals, piles, this.content));
     }
     // what's ready to serve, on top of the plating station
     const station = platingStations(l, this.assets, this.content)[0];
@@ -372,6 +406,7 @@ export class Game {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
+      if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.journal, this.assets);
       if (this.input.pressed('menu')) {
         this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id), this.content, this.assets);
       }

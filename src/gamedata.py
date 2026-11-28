@@ -313,6 +313,14 @@ def build():
     for d in dishes.values():
         d['complexity'] = dish_steps(d, items) + len(d['components']) - 1
         d['reputation'] = max(0, d['complexity'] - 1)
+        d['course'] = course_of(d)
+        d['traits'] = traits_of(d['components'], d['tags'], items)
+    # snacks served as they are: a course and traits of their own (and how interesting they are)
+    for iid in SNACKS:
+        it = items[iid]
+        it['course'] = 'snack'
+        it['traits'] = traits_of([iid], it['tags'], items)
+        it['complexity'] = item_steps(iid, items)
     data = {
         'schema': SCHEMA,
         'animals': animals,
@@ -329,6 +337,7 @@ def build():
         # guests at the bar order drinks, simple dishes (this few components at most) and raw snacks, served
         # straight over the counter; at the tables they order anything
         'bar': {'snacks': BAR_SNACKS, 'max_components': 1},
+        'snacks': SNACKS,
         'rules': {'odd_tag': D.ODD_RULE,
                   'recipe_match': 'a dish is made on the plate station from exactly its components, in any order'},
     }
@@ -336,6 +345,31 @@ def build():
 
 
 BAR_SNACKS = ['apple', 'berries', 'carrot', 'cress', 'tomato', 'cheese']   # raw things a bar guest might nibble
+# things served just as they are, plated on their own: the raw snacks, and small prepped things
+SNACKS = BAR_SNACKS + ['baked_apple', 'crushed_berries', 'grilled_apple', 'sliced_apple', 'bread_rolls', 'bread_slices',
+                       'flatbread', 'oatcakes', 'shortbread', 'scones', 'salted_acorns', 'hard_boiled_egg', 'fried_cheese',
+                       'crispy_bacon', 'boiled_carrots', 'pickled_onions', 'pickled_carrots', 'fried_potatoes', 'baked_potato',
+                       'berry_compote', 'applesauce', 'honey_flapjacks', 'dough_balls']
+# how a guest might describe what they'd like: a cooking method (anywhere in what went into it) or a tag
+METHOD_TRAITS = {'bake': 'baked', 'fry': 'fried', 'grill': 'grilled', 'boil': 'boiled', 'ferment': 'brewed'}
+TAG_TRAITS = {'meat': 'meaty', 'fish': 'fishy', 'sweet': 'sweet', 'savory': 'savory', 'fresh': 'fresh', 'hearty': 'hearty', 'warm': 'warm'}
+
+
+def course_of(d):
+    """A dish's course: a drink; a dessert (sweet, and not savoury, meaty, fishy or fresh); a snack (a dish of
+    one thing); else a main."""
+    if d['kind'] == 'drink': return 'drink'
+    if 'sweet' in d['tags'] and not set(d['tags']) & {'meat', 'fish', 'savory', 'fresh'}: return 'dessert'
+    return 'snack' if len(d['components']) == 1 else 'main'
+
+
+def traits_of(things, tags, items):
+    """What a guest could ask for it by: how it was cooked (anywhere in what went into it), and its tags."""
+    methods = set()
+    for t in things:
+        for i in ancestors(t, items) | {t}:
+            if items[i].get('method') in METHOD_TRAITS: methods.add(METHOD_TRAITS[items[i]['method']])
+    return sorted(methods | {TAG_TRAITS[t] for t in tags if t in TAG_TRAITS})
 
 STORES = {
     'pantry': 'raw ingredients: crates, chests and cupboards',
@@ -381,8 +415,8 @@ def validate(data):
         if not it['used_in']['items'] and not it['used_in']['dishes']:
             warns.append(f'{iid}: not used in anything (sell-only / future content)')
         if not has_sprite(iid): errs.append(f'{iid}: missing sprite')
-    for sn in data['bar']['snacks']:
-        if sn not in items: errs.append(f'bar snack {sn} is not an item')
+    for sn in data['bar']['snacks'] + data['snacks']:
+        if sn not in items: errs.append(f'snack {sn} is not an item')
     for did, d in dishes.items():
         for c in d['components']:
             if c not in items: errs.append(f'{did}: unknown component {c}')

@@ -193,7 +193,7 @@ export class Kitchen {
 
   /** The dish (or bar snack, plated as it is) these exact things make, if any. */
   plated(things: string[]): string | undefined {
-    if (things.length === 1 && this.content.bar.snacks.includes(things[0])) return things[0];
+    if (things.length === 1 && this.content.snacks.includes(things[0])) return things[0];
     return this.content.dishFor(things);
   }
 
@@ -265,11 +265,11 @@ export class Kitchen {
    * step away, and raw snacks to hand.
    */
   menu(bar: boolean): Record<Course, string[]> {
-    const out: Record<Course, string[]> = { drink: [], snack: [], main: [] };
+    const out: Record<Course, string[]> = { drink: [], snack: [], main: [], dessert: [] };
     for (const [id, d] of Object.entries(this.content.dishes)) {
-      if (d.components.every((c) => this.soon(c))) out[this.content.course(id)].push(id);
+      if (d.components.every((c) => this.soon(c))) out[d.course].push(id);
     }
-    out.snack.push(...this.content.bar.snacks.filter((s) => this.have(s) > 0));
+    out.snack.push(...this.content.snacks.filter((s) => this.soon(s)));
     if (bar) out.main = [];
     return out;
   }

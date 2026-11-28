@@ -471,7 +471,13 @@
           "dish_porridge_and_berries"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "sweet"
+      ],
+      "complexity": 0
     },
     "mushroom": {
       "name": "Mushroom",
@@ -656,7 +662,12 @@
           "dish_meadow_salad"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "fresh"
+      ],
+      "complexity": 0
     },
     "onion": {
       "name": "Onion",
@@ -775,7 +786,13 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "sweet"
+      ],
+      "complexity": 0
     },
     "mutton": {
       "name": "Mutton",
@@ -848,7 +865,13 @@
           "dish_cheese_and_wine_board"
         ]
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "hearty",
+        "savory"
+      ],
+      "complexity": 0
     },
     "tomato": {
       "name": "Tomato",
@@ -886,7 +909,13 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "savory"
+      ],
+      "complexity": 0
     },
     "potato": {
       "name": "Potato",
@@ -963,7 +992,13 @@
         ],
         "dishes": []
       },
-      "store": "pantry"
+      "store": "pantry",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "sweet"
+      ],
+      "complexity": 0
     },
     "beef": {
       "name": "Beef",
@@ -1768,7 +1803,14 @@
           "dish_ember_chicken_and_flatbread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "grilled",
+        "hearty",
+        "warm"
+      ],
+      "complexity": 3
     },
     "bread_loaf": {
       "name": "Bread loaf",
@@ -1857,7 +1899,13 @@
           "dish_bacon_sandwich"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty"
+      ],
+      "complexity": 4
     },
     "toast": {
       "name": "Toast",
@@ -2021,7 +2069,13 @@
           "dish_egg_noodle_broth"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "hearty"
+      ],
+      "complexity": 1
     },
     "chopped_egg": {
       "name": "Chopped egg",
@@ -2455,7 +2509,13 @@
           "dish_grain_pudding_and_berries"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "sweet"
+      ],
+      "complexity": 1
     },
     "berry_compote": {
       "name": "Berry compote",
@@ -2503,7 +2563,14 @@
           "dish_cream_tea"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ],
+      "complexity": 1
     },
     "sliced_mushroom": {
       "name": "Sliced mushroom",
@@ -3535,7 +3602,13 @@
           "dish_orchard_salad"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fresh",
+        "sweet"
+      ],
+      "complexity": 1
     },
     "baked_apple": {
       "name": "Baked apple",
@@ -3567,7 +3640,14 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "sweet",
+        "warm"
+      ],
+      "complexity": 1
     },
     "applesauce": {
       "name": "Applesauce",
@@ -3608,7 +3688,14 @@
           "dish_roast_pork_supper"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ],
+      "complexity": 1
     },
     "grilled_apple": {
       "name": "Grilled apple",
@@ -3646,7 +3733,14 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "grilled",
+        "sweet",
+        "warm"
+      ],
+      "complexity": 1
     },
     "diced_mutton": {
       "name": "Diced mutton",
@@ -3917,7 +4011,15 @@
         "items": [],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ],
+      "complexity": 1
     },
     "minced_pepper": {
       "name": "Minced pepper",
@@ -4302,7 +4404,14 @@
           "dish_roast_chicken_supper"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty",
+        "warm"
+      ],
+      "complexity": 1
     },
     "fried_potatoes": {
       "name": "Fried potatoes",
@@ -4345,7 +4454,15 @@
           "dish_fried_chicken_and_fries"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ],
+      "complexity": 1
     },
     "sliced_carrot": {
       "name": "Sliced carrot",
@@ -4427,7 +4544,14 @@
           "dish_beef_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ],
+      "complexity": 1
     },
     "roast_carrots": {
       "name": "Roast carrots",
@@ -5033,7 +5157,12 @@
         ],
         "dishes": []
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "hearty"
+      ],
+      "complexity": 3
     },
     "bread_rolls": {
       "name": "Bread rolls",
@@ -5074,7 +5203,14 @@
           "dish_pork_and_apple_stew"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty",
+        "warm"
+      ],
+      "complexity": 4
     },
     "fritters": {
       "name": "Fritters",
@@ -6000,7 +6136,14 @@
           "dish_cream_tea"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty",
+        "warm"
+      ],
+      "complexity": 4
     },
     "shortbread": {
       "name": "Shortbread",
@@ -6043,7 +6186,15 @@
           "dish_tea_and_shortbread"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet"
+      ],
+      "complexity": 5
     },
     "boiling_water": {
       "name": "Boiling water",
@@ -6413,7 +6564,14 @@
           "dish_pork_pie_and_pickles"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "fresh",
+        "savory"
+      ],
+      "complexity": 2
     },
     "pickled_carrots": {
       "name": "Pickled carrots",
@@ -6455,7 +6613,15 @@
           "dish_pickled_carrots_and_cress"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "fresh",
+        "savory",
+        "sweet"
+      ],
+      "complexity": 3
     },
     "salt_beef": {
       "name": "Salt beef",
@@ -6570,7 +6736,14 @@
           "dish_salted_acorns"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory"
+      ],
+      "complexity": 2
     },
     "cracked_pepper": {
       "name": "Cracked pepper",
@@ -7165,7 +7338,15 @@
           "dish_bacon_and_cheese_omelette"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "fried",
+        "meaty",
+        "savory",
+        "warm"
+      ],
+      "complexity": 2
     },
     "grilled_pork_chop": {
       "name": "Grilled pork chop",
@@ -7612,7 +7793,14 @@
           "dish_cheese_and_wine_board"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory"
+      ],
+      "complexity": 4
     },
     "honey_flapjacks": {
       "name": "Honey flapjacks",
@@ -7648,7 +7836,15 @@
           "dish_honey_flapjacks"
         ]
       },
-      "store": "shelf"
+      "store": "shelf",
+      "course": "snack",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet"
+      ],
+      "complexity": 5
     },
     "crumble_topping": {
       "name": "Crumble topping",
@@ -9358,7 +9554,11 @@
       "pack": "milk",
       "kind": "drink",
       "complexity": 0,
-      "reputation": 0
+      "reputation": 0,
+      "course": "drink",
+      "traits": [
+        "hearty"
+      ]
     },
     "dish_cup_of_well_water": {
       "name": "Cup of Well Water",
@@ -9380,7 +9580,11 @@
       "pack": "water",
       "kind": "drink",
       "complexity": 0,
-      "reputation": 0
+      "reputation": 0,
+      "course": "drink",
+      "traits": [
+        "fresh"
+      ]
     },
     "dish_berries_and_honey": {
       "name": "Berries & Honey",
@@ -9404,7 +9608,12 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_sunny_fried_egg": {
       "name": "Sunny Fried Egg",
@@ -9428,7 +9637,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_boiled_egg": {
       "name": "Boiled Egg",
@@ -9450,7 +9666,12 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "hearty"
+      ]
     },
     "dish_meadow_herb_broth": {
       "name": "Meadow Herb Broth",
@@ -9473,7 +9694,13 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "dish_cup_of_chicken_broth": {
       "name": "Cup of Chicken Broth",
@@ -9496,7 +9723,13 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "savory",
+        "warm"
+      ]
     },
     "dish_glass_of_apple_juice": {
       "name": "Glass of Apple Juice",
@@ -9519,7 +9752,12 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "drink",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_goblet_of_mead": {
       "name": "Goblet of Mead",
@@ -9541,7 +9779,12 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 1,
-      "reputation": 0
+      "reputation": 0,
+      "course": "drink",
+      "traits": [
+        "brewed",
+        "sweet"
+      ]
     },
     "dish_meadow_salad": {
       "name": "Meadow Salad",
@@ -9565,7 +9808,12 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_honey_grain_bowl": {
       "name": "Honey Grain Bowl",
@@ -9590,7 +9838,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "dessert",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_warm_honey_milk": {
       "name": "Warm Honey Milk",
@@ -9615,7 +9870,14 @@
       "pack": "simple_meals",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_toasted_oats_and_milk": {
       "name": "Toasted Oats & Milk",
@@ -9639,7 +9901,13 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_soft_scramble": {
       "name": "Soft Scramble",
@@ -9663,7 +9931,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_herb_tea": {
       "name": "Herb Tea",
@@ -9686,7 +9961,13 @@
       "pack": "water",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "fresh",
+        "warm"
+      ]
     },
     "dish_berry_cordial": {
       "name": "Berry Cordial",
@@ -9709,7 +9990,12 @@
       "pack": "water",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_salted_acorns": {
       "name": "Salted Acorns",
@@ -9732,7 +10018,13 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "snack",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_bowl_of_porridge": {
       "name": "Bowl of Porridge",
@@ -9755,7 +10047,13 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_berry_milk": {
       "name": "Berry Milk",
@@ -9778,7 +10076,12 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_tankard_of_ale": {
       "name": "Tankard of Ale",
@@ -9800,7 +10103,13 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "brewed",
+        "fried",
+        "hearty"
+      ]
     },
     "dish_mug_of_cider": {
       "name": "Mug of Cider",
@@ -9823,7 +10132,13 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "brewed",
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_pint_of_oat_stout": {
       "name": "Pint of Oat Stout",
@@ -9846,7 +10161,14 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "brewed",
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_goblet_of_berry_wine": {
       "name": "Goblet of Berry Wine",
@@ -9868,7 +10190,12 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 2,
-      "reputation": 1
+      "reputation": 1,
+      "course": "drink",
+      "traits": [
+        "brewed",
+        "sweet"
+      ]
     },
     "dish_mushroom_stew": {
       "name": "Mushroom Stew",
@@ -9893,7 +10220,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_grilled_trout": {
       "name": "Grilled Trout",
@@ -9919,7 +10254,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fishy",
+        "fresh",
+        "grilled",
+        "savory",
+        "warm"
+      ]
     },
     "dish_berries_and_cream": {
       "name": "Berries & Cream",
@@ -9943,7 +10286,12 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_honey_glazed_venison": {
       "name": "Honey-Glazed Venison",
@@ -9969,7 +10317,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fried",
+        "grilled",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_hunters_roast": {
       "name": "Hunter's Roast",
@@ -9995,7 +10352,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_mutton_stew": {
       "name": "Mutton Stew",
@@ -10021,7 +10387,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_steak_and_potatoes": {
       "name": "Steak & Potatoes",
@@ -10047,7 +10421,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_crispy_potatoes_and_herbs": {
       "name": "Crispy Potatoes & Herbs",
@@ -10072,7 +10455,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_ember_honeycomb": {
       "name": "Ember Honeycomb",
@@ -10098,7 +10488,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fried",
+        "grilled",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_herb_fried_egg": {
       "name": "Herb Fried Egg",
@@ -10124,7 +10522,15 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_crunchy_honey_grain": {
       "name": "Crunchy Honey Grain",
@@ -10149,7 +10555,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "dessert",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_wilted_greens_and_egg": {
       "name": "Wilted Greens & Egg",
@@ -10174,7 +10587,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_pan_fried_trout": {
       "name": "Pan-Fried Trout",
@@ -10200,7 +10620,15 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fishy",
+        "fresh",
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "dish_baked_egg_and_herbs": {
       "name": "Baked Egg & Herbs",
@@ -10226,7 +10654,15 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_curds_and_honey": {
       "name": "Curds & Honey",
@@ -10251,7 +10687,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_berries_and_clotted_cream": {
       "name": "Berries & Clotted Cream",
@@ -10276,7 +10719,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_honey_herb_tea": {
       "name": "Honey Herb Tea",
@@ -10301,7 +10751,14 @@
       "pack": "water",
       "kind": "drink",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "fresh",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_pickled_onions_and_cheese": {
       "name": "Pickled Onions & Cheese",
@@ -10326,7 +10783,14 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_salt_crusted_trout": {
       "name": "Salt-Crusted Trout",
@@ -10352,7 +10816,15 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fishy",
+        "fresh",
+        "savory",
+        "warm"
+      ]
     },
     "dish_grilled_chicken_and_cress": {
       "name": "Grilled Chicken & Cress",
@@ -10378,7 +10850,15 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "grilled",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_pork_chop_and_applesauce": {
       "name": "Pork Chop & Applesauce",
@@ -10404,7 +10884,16 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "grilled",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_honey_ham_and_potatoes": {
       "name": "Honey Ham & Potatoes",
@@ -10431,7 +10920,17 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_porridge_and_honey": {
       "name": "Porridge & Honey",
@@ -10456,7 +10955,14 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "dessert",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_porridge_and_berries": {
       "name": "Porridge & Berries",
@@ -10482,7 +10988,15 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_meringue_kisses": {
       "name": "Meringue Kisses",
@@ -10504,7 +11018,12 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "sweet"
+      ]
     },
     "dish_spiced_apple_tea": {
       "name": "Spiced Apple Tea",
@@ -10527,7 +11046,13 @@
       "pack": "water",
       "kind": "drink",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_mulled_cider": {
       "name": "Mulled Cider",
@@ -10550,7 +11075,14 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "brewed",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_eggnog": {
       "name": "Eggnog",
@@ -10573,7 +11105,13 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_mulled_wine": {
       "name": "Mulled Wine",
@@ -10596,7 +11134,14 @@
       "pack": "drinks",
       "kind": "drink",
       "complexity": 3,
-      "reputation": 2
+      "reputation": 2,
+      "course": "drink",
+      "traits": [
+        "boiled",
+        "brewed",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_herb_omelette": {
       "name": "Herb Omelette",
@@ -10622,7 +11167,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_egg_and_herb_salad": {
       "name": "Egg & Herb Salad",
@@ -10647,7 +11200,14 @@
       "pack": "simple_meals",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_crackers_and_cheese": {
       "name": "Crackers & Cheese",
@@ -10671,7 +11231,13 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_stuffed_eggs": {
       "name": "Stuffed Eggs",
@@ -10696,7 +11262,14 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_fresh_curds_and_herbs": {
       "name": "Fresh Curds & Herbs",
@@ -10721,7 +11294,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_buttered_carrots": {
       "name": "Buttered Carrots",
@@ -10747,7 +11327,15 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_creamy_mushrooms": {
       "name": "Creamy Mushrooms",
@@ -10772,7 +11360,15 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_grain_pudding_and_berries": {
       "name": "Grain Pudding & Berries",
@@ -10798,7 +11394,16 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_venison_in_cream_sauce": {
       "name": "Venison in Cream Sauce",
@@ -10824,7 +11429,16 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_poached_egg_and_cress": {
       "name": "Poached Egg & Cress",
@@ -10849,7 +11463,14 @@
       "pack": "water",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_salt_beef_and_mash": {
       "name": "Salt Beef & Mash",
@@ -10875,7 +11496,15 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_pepper_steak_and_fries": {
       "name": "Pepper Steak & Fries",
@@ -10901,7 +11530,15 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_fried_chicken_and_fries": {
       "name": "Fried Chicken & Fries",
@@ -10927,7 +11564,15 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_bacon_and_eggs": {
       "name": "Bacon & Eggs",
@@ -10953,7 +11598,15 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_foragers_plate": {
       "name": "Forager's Plate",
@@ -10980,7 +11633,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_river_chowder": {
       "name": "River Chowder",
@@ -11007,7 +11668,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fishy",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_honeyed_porridge": {
       "name": "Honeyed Porridge",
@@ -11033,7 +11702,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_orchard_salad": {
       "name": "Orchard Salad",
@@ -11059,7 +11735,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_beef_stew": {
       "name": "Beef Stew",
@@ -11086,7 +11769,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_bog_broth": {
       "name": "Bog Broth",
@@ -11113,7 +11804,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fishy",
+        "fresh",
+        "warm"
+      ]
     },
     "dish_elven_nectar_bowl": {
       "name": "Elven Nectar Bowl",
@@ -11139,7 +11837,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_grain_salad": {
       "name": "Grain Salad",
@@ -11166,7 +11871,15 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_roast_chicken_supper": {
       "name": "Roast Chicken Supper",
@@ -11194,7 +11907,16 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_roast_pork_supper": {
       "name": "Roast Pork Supper",
@@ -11222,7 +11944,17 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_sausage_rolls": {
       "name": "Sausage Rolls",
@@ -11246,7 +11978,14 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 4,
-      "reputation": 3
+      "reputation": 3,
+      "course": "snack",
+      "traits": [
+        "baked",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "dish_farmhouse_loaf": {
       "name": "Farmhouse Loaf",
@@ -11271,7 +12010,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_berry_cake_and_cream": {
       "name": "Berry Cake & Cream",
@@ -11297,7 +12044,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_honey_cake": {
       "name": "Honey Cake",
@@ -11322,7 +12077,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_honey_pancakes": {
       "name": "Honey Pancakes",
@@ -11347,7 +12110,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_bread_and_honey": {
       "name": "Bread & Honey",
@@ -11371,7 +12141,13 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_dumpling_broth": {
       "name": "Dumpling Broth",
@@ -11396,7 +12172,14 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_honey_fritters": {
       "name": "Honey Fritters",
@@ -11421,7 +12204,14 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "fried",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_warm_rolls": {
       "name": "Warm Rolls",
@@ -11446,7 +12236,14 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_granola_and_cream": {
       "name": "Granola & Cream",
@@ -11471,7 +12268,14 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_cheesy_omelette": {
       "name": "Cheesy Omelette",
@@ -11497,7 +12301,15 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_pickled_carrots_and_cress": {
       "name": "Pickled Carrots & Cress",
@@ -11522,7 +12334,14 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "savory",
+        "sweet"
+      ]
     },
     "dish_honey_glazed_chicken": {
       "name": "Honey-Glazed Chicken",
@@ -11549,7 +12368,16 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_chicken_and_dumplings": {
       "name": "Chicken & Dumplings",
@@ -11574,7 +12402,14 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_bangers_and_mash": {
       "name": "Bangers & Mash",
@@ -11600,7 +12435,16 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_oatcakes_and_cheese": {
       "name": "Oatcakes & Cheese",
@@ -11624,7 +12468,13 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "baked",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_oat_crusted_trout_and_cress": {
       "name": "Oat-Crusted Trout & Cress",
@@ -11650,7 +12500,15 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "main",
+      "traits": [
+        "fishy",
+        "fresh",
+        "fried",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_garden_greens": {
       "name": "Garden Greens",
@@ -11676,7 +12534,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_sunday_roast": {
       "name": "Sunday Roast",
@@ -11703,7 +12568,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_honey_flapjacks": {
       "name": "Honey Flapjacks",
@@ -11726,7 +12600,14 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 5,
-      "reputation": 4
+      "reputation": 4,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_venison_pie": {
       "name": "Venison Pie",
@@ -11752,7 +12633,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_apple_pie_and_cream": {
       "name": "Apple Pie & Cream",
@@ -11778,7 +12668,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_cheese_toast": {
       "name": "Cheese Toast",
@@ -11803,7 +12701,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_noodles_in_tomato_sauce": {
       "name": "Noodles in Tomato Sauce",
@@ -11828,7 +12734,14 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_carrot_cake_and_cream": {
       "name": "Carrot Cake & Cream",
@@ -11854,7 +12767,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_egg_on_toast": {
       "name": "Egg on Toast",
@@ -11879,7 +12800,16 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_custard_and_compote": {
       "name": "Custard & Compote",
@@ -11904,7 +12834,14 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "dessert",
+      "traits": [
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_frittata_and_greens": {
       "name": "Frittata & Greens",
@@ -11930,7 +12867,15 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_shortbread_and_milk": {
       "name": "Shortbread & Milk",
@@ -11954,7 +12899,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet"
+      ]
     },
     "dish_cheesy_noodles": {
       "name": "Cheesy Noodles",
@@ -11979,7 +12931,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_poached_trout_and_greens": {
       "name": "Poached Trout & Greens",
@@ -12004,7 +12963,14 @@
       "pack": "water",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fishy",
+        "fresh",
+        "warm"
+      ]
     },
     "dish_ember_chicken_and_flatbread": {
       "name": "Ember Chicken & Flatbread",
@@ -12030,7 +12996,14 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "grilled",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "dish_bacon_and_cheese_omelette": {
       "name": "Bacon & Cheese Omelette",
@@ -12056,7 +13029,15 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_skirlie_and_sausages": {
       "name": "Skirlie & Sausages",
@@ -12082,7 +13063,15 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 6,
-      "reputation": 5
+      "reputation": 5,
+      "course": "main",
+      "traits": [
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_tomato_flatbread": {
       "name": "Tomato Flatbread",
@@ -12109,7 +13098,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "grilled",
+        "hearty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_berry_meringue_mess": {
       "name": "Berry Meringue Mess",
@@ -12134,7 +13131,13 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "sweet"
+      ]
     },
     "dish_brown_butter_trout": {
       "name": "Brown Butter Trout",
@@ -12161,7 +13164,15 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "fishy",
+        "fresh",
+        "fried",
+        "savory",
+        "warm"
+      ]
     },
     "dish_chicken_in_mushroom_cream": {
       "name": "Chicken in Mushroom Cream",
@@ -12188,7 +13199,16 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_egg_mash_on_toast": {
       "name": "Egg Mash on Toast",
@@ -12213,7 +13233,16 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_buttered_toast": {
       "name": "Buttered Toast",
@@ -12237,7 +13266,14 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "grilled",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_poached_egg_on_toast": {
       "name": "Poached Egg on Toast",
@@ -12261,7 +13297,15 @@
       "pack": "water",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "grilled",
+        "hearty",
+        "warm"
+      ]
     },
     "dish_chicken_pie_and_mash": {
       "name": "Chicken Pie & Mash",
@@ -12286,7 +13330,15 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "warm"
+      ]
     },
     "dish_bacon_sandwich": {
       "name": "Bacon Sandwich",
@@ -12312,7 +13364,16 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_beef_noodle_soup": {
       "name": "Beef Noodle Soup",
@@ -12339,7 +13400,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_tavern_wrap": {
       "name": "Tavern Wrap",
@@ -12367,7 +13436,16 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "fresh",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_dwarven_stonebread": {
       "name": "Dwarven Stonebread",
@@ -12393,7 +13471,15 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_shepherds_supper": {
       "name": "Shepherd's Supper",
@@ -12420,7 +13506,17 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_onion_noodle_pan": {
       "name": "Onion Noodle Pan",
@@ -12448,7 +13544,17 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "fresh",
+        "fried",
+        "hearty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_egg_noodle_broth": {
       "name": "Egg Noodle Broth",
@@ -12474,7 +13580,14 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "boiled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_ploughmans_lunch": {
       "name": "Ploughman's Lunch",
@@ -12500,7 +13613,15 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory"
+      ]
     },
     "dish_chicken_and_cress_sandwich": {
       "name": "Chicken & Cress Sandwich",
@@ -12528,7 +13649,17 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_cheese_and_wine_board": {
       "name": "Cheese & Wine Board",
@@ -12554,7 +13685,15 @@
       "pack": "drinks",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "brewed",
+        "hearty",
+        "savory",
+        "sweet"
+      ]
     },
     "dish_chicken_noodle_soup": {
       "name": "Chicken Noodle Soup",
@@ -12579,7 +13718,15 @@
       "pack": "chicken",
       "kind": "food",
       "complexity": 7,
-      "reputation": 6
+      "reputation": 6,
+      "course": "snack",
+      "traits": [
+        "boiled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_bread_pudding": {
       "name": "Bread Pudding",
@@ -12604,7 +13751,15 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_tea_and_shortbread": {
       "name": "Tea & Shortbread",
@@ -12630,7 +13785,16 @@
       "pack": "water",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_pork_and_apple_stew": {
       "name": "Pork & Apple Stew",
@@ -12656,7 +13820,16 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "meaty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_berry_crumble_and_cream": {
       "name": "Berry Crumble & Cream",
@@ -12682,7 +13855,15 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 8,
-      "reputation": 7
+      "reputation": 7,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_patty_on_bread": {
       "name": "Patty on Bread",
@@ -12710,7 +13891,17 @@
       "pack": "prototype",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_hearthwick_onion_soup": {
       "name": "Hearthwick Onion Soup",
@@ -12736,7 +13927,17 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fried",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_quiche_and_garden_salad": {
       "name": "Quiche & Garden Salad",
@@ -12763,7 +13964,15 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_cream_tea": {
       "name": "Cream Tea",
@@ -12789,7 +13998,15 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_salt_beef_sandwich": {
       "name": "Salt Beef Sandwich",
@@ -12816,7 +14033,16 @@
       "pack": "seasoning",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "meaty",
+        "savory"
+      ]
     },
     "dish_sausages_and_onions_on_toast": {
       "name": "Sausages & Onions on Toast",
@@ -12844,7 +14070,18 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_full_hearthwick_breakfast": {
       "name": "Full Hearthwick Breakfast",
@@ -12872,7 +14109,17 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 10,
-      "reputation": 9
+      "reputation": 9,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fried",
+        "grilled",
+        "hearty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_crumbed_trout": {
       "name": "Crumbed Trout",
@@ -12899,7 +14146,18 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fishy",
+        "fresh",
+        "fried",
+        "grilled",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_apple_pie_and_custard": {
       "name": "Apple Pie & Custard",
@@ -12924,7 +14182,15 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_pork_pie_and_pickles": {
       "name": "Pork Pie & Pickles",
@@ -12950,7 +14216,16 @@
       "pack": "pork",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "meaty",
+        "savory"
+      ]
     },
     "dish_pie_and_a_pint": {
       "name": "Pie & a Pint",
@@ -12975,7 +14250,17 @@
       "pack": "drinks",
       "kind": "food",
       "complexity": 9,
-      "reputation": 8
+      "reputation": 8,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "brewed",
+        "fried",
+        "hearty",
+        "meaty",
+        "savory"
+      ]
     },
     "dish_tavern_scotch_egg": {
       "name": "Tavern Scotch Egg",
@@ -13002,7 +14287,19 @@
       "pack": "eggs",
       "kind": "food",
       "complexity": 10,
-      "reputation": 9
+      "reputation": 9,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fried",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_fireside_potato_soup": {
       "name": "Fireside Potato Soup",
@@ -13027,7 +14324,16 @@
       "pack": "milk",
       "kind": "food",
       "complexity": 10,
-      "reputation": 9
+      "reputation": 9,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fried",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_garden_soup_and_bread": {
       "name": "Garden Soup & Bread",
@@ -13053,7 +14359,16 @@
       "pack": "water",
       "kind": "food",
       "complexity": 11,
-      "reputation": 10
+      "reputation": 10,
+      "course": "main",
+      "traits": [
+        "baked",
+        "boiled",
+        "fresh",
+        "hearty",
+        "savory",
+        "warm"
+      ]
     },
     "dish_stuffed_mutton_roast": {
       "name": "Stuffed Mutton Roast",
@@ -13082,7 +14397,18 @@
       "pack": "wheat",
       "kind": "food",
       "complexity": 12,
-      "reputation": 11
+      "reputation": 11,
+      "course": "main",
+      "traits": [
+        "baked",
+        "fresh",
+        "grilled",
+        "hearty",
+        "meaty",
+        "savory",
+        "sweet",
+        "warm"
+      ]
     },
     "dish_apple_crumble_and_custard": {
       "name": "Apple Crumble & Custard",
@@ -13107,7 +14433,15 @@
       "pack": "oats",
       "kind": "food",
       "complexity": 12,
-      "reputation": 11
+      "reputation": 11,
+      "course": "dessert",
+      "traits": [
+        "baked",
+        "boiled",
+        "hearty",
+        "sweet",
+        "warm"
+      ]
     }
   },
   "forage_spots": {
@@ -14009,6 +15343,37 @@
     ],
     "max_components": 1
   },
+  "snacks": [
+    "apple",
+    "berries",
+    "carrot",
+    "cress",
+    "tomato",
+    "cheese",
+    "baked_apple",
+    "crushed_berries",
+    "grilled_apple",
+    "sliced_apple",
+    "bread_rolls",
+    "bread_slices",
+    "flatbread",
+    "oatcakes",
+    "shortbread",
+    "scones",
+    "salted_acorns",
+    "hard_boiled_egg",
+    "fried_cheese",
+    "crispy_bacon",
+    "boiled_carrots",
+    "pickled_onions",
+    "pickled_carrots",
+    "fried_potatoes",
+    "baked_potato",
+    "berry_compote",
+    "applesauce",
+    "honey_flapjacks",
+    "dough_balls"
+  ],
   "rules": {
     "odd_tag": "a dish gains the odd tag when it mixes sweet+fish or fish+meat",
     "recipe_match": "a dish is made on the plate station from exactly its components, in any order"

@@ -25,8 +25,9 @@ function mini(content: Content, item: string, part: 'food' | 'drink' | 'cutlery'
 /** A meal's pieces, small, with the top-left of the plate at (x, y). */
 export function drawMeal(r: Renderer, content: Content, m: Meal, x: number, y: number): void {
   if (m.cutlery) r.sprite(mini(content, m.cutlery, 'cutlery'), x + 4, y - 2);
-  if (m.snack) r.sprite(mini(content, m.snack.ware, 'food'), x - 4, y + 1);
+  if (m.snack?.ware) r.sprite(mini(content, m.snack.ware, 'food'), x - 4, y + 1);
   if (m.main) r.sprite(mini(content, m.main.ware, 'food'), x, y);
+  if (m.dessert) r.sprite(mini(content, m.dessert.ware, 'food'), x + 5, y + 2);
   if (m.drink) r.sprite(mini(content, m.drink.ware, 'drink'), x + 3, y - 6);
 }
 
@@ -76,16 +77,16 @@ export class GuestEntity extends Entity {
   }
 }
 
-/** What's on a table or the bar: each eater's meal in front of them, and a pile of what's been left. */
+/** What's on a table or the bar: each eater's meal in front of them, and the dishes left at each seat. */
 export class TopEntity extends Entity {
   /** under: what it sits on (it draws just after that). */
   constructor(
     private readonly under: { readonly sortY: number },
     private readonly meals: Array<{ meal: Meal; x: number; y: number }>,
-    private readonly pile: { items: string[]; x: number; y: number },
+    private readonly piles: Array<{ items: string[]; x: number; y: number }>,
     private readonly content: Content,
   ) {
-    super(pile.x, pile.y);
+    super(0, 0);
   }
 
   get sortY(): number {
@@ -94,8 +95,8 @@ export class TopEntity extends Entity {
 
   draw(r: Renderer, camX: number, camY: number): void {
     for (const m of this.meals) drawMeal(r, this.content, m.meal, m.x - camX, m.y - camY);
-    this.pile.items.forEach((item, i) => {
-      r.sprite(mini(this.content, item, 'dirty'), Math.round(this.pile.x - 8 + (i % 3) * 5) - camX, this.pile.y + Math.floor(i / 3) * 3 - camY);
-    });
+    for (const p of this.piles) {
+      p.items.forEach((item, i) => r.sprite(mini(this.content, item, 'dirty'), p.x - 2 + (i % 2) * 5 - camX, p.y - 2 + Math.floor(i / 2) * 3 - camY));
+    }
   }
 }
