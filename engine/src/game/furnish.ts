@@ -9,6 +9,11 @@
  * (not stairs, doors, shop counters or people). A tap that isn't a pick-up is an ordinary "use".
  *
  * Moving a piece changes the map's layout (the editor saves it with everything else).
+ *
+ * Furniture bought (an item in the bag) is set down the same way: chosen in the bag, it's carried in front
+ * of the player till it's set down (Back puts it back in the bag). And while carrying a piece that's
+ * furniture, X (F) packs it away into the bag, to set down somewhere else, upstairs or down (a container
+ * has to be empty first).
  */
 import type { Assets } from '../core/assets';
 import { overlaps, type Rect } from '../core/geom';
@@ -45,11 +50,16 @@ export interface FurnishWorld {
   /** Note the map needs saving. */
   changed(id: string): void;
   say(text: string): void;
+  /** Pack a piece up into the bag: why not, or null once it's in. */
+  pack(prop: PlacedProp): string | null;
+  /** Put a bought piece that wasn't set down back in the bag. */
+  unpack(item: string): void;
 }
 
 export class Furnish {
   /** The piece being carried, and where it came from (its place in the layout, its old spot). */
-  private carried: { prop: PlacedProp; from: number; was: PlacedProp } | null = null;
+  /** A piece out of the bag has no place it was (and goes back in the bag). */
+  private carried: { prop: PlacedProp; from: number; was: PlacedProp | null; item?: string } | null = null;
   private stick = 0; // time until the right stick turns again
   private readonly nudger = new Nudge();
   private offset = { x: 0, y: 0, facing: '' }; // nudged from the spot in front of the player
@@ -62,6 +72,26 @@ export class Furnish {
 
   get carrying(): boolean {
     return this.carried !== null;
+  }
+
+  /** Start carrying a piece out of the bag (item: the furniture), to set down here. Why not, or null. */
+  place(item: string, prop: PlacedProp): string | null {
+    if (this.carried) return "You're already carrying something";
+    const l = this.w.layout();
+    if (l.ground.type !== 'room') return 'Furniture goes indoors';
+    this.carried = { prop, from: l.props.length, was: null, item };
+    this.offset = { x: 0, y: 0, facing: '' };
+    return null;
+  }
+
+  /** Pack the carried piece away into the bag. */
+  private packAway(): void {
+    const c = this.carried!;
+    const why = this.w.pack(c.prop);
+    if (why) return this.w.say(why);
+    this.carried = null;
+    this.w.rebuild();
+    if (c.was) this.w.changed(this.w.layout().id);
   }
 
   /** Handle the use button for this step; returns true if it was tapped (an ordinary "use"). */
@@ -79,6 +109,10 @@ export class Furnish {
         this.turnBy(Math.sign(x) * TURN_STEP);
       }
       this.nudgeBy(this.nudger.update(input.nudge(), dt, 1, NUDGE_GLIDE));
+      if (input.pressed('cook')) {
+        this.packAway();
+        return false;
+      }
     }
     if (input.pressed('interact')) {
       this.pressed = true;
@@ -174,9 +208,10 @@ export class Furnish {
   putBack(): void {
     const c = this.carried;
     if (!c) return;
+    this.carried = null;
+    if (!c.was) return this.w.unpack(c.item!);
     const l = this.w.layout();
     l.props.splice(Math.min(c.from, l.props.length), 0, c.was);
-    this.carried = null;
     this.w.rebuild();
   }
 

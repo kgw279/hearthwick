@@ -10543,20 +10543,20 @@
       "weight": 0.25
     },
     "pillow": {
-      "name": "Pillow",
       "kind": "supply",
       "tags": [],
-      "value": 6,
       "shelf_life_days": null,
-      "sprite": {
-        "sheet": "supply_items",
-        "frame": "pillow"
-      },
       "made_by": [],
       "used_in": {
         "items": [],
         "dishes": []
       },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "pillow"
+      },
+      "name": "Pillow",
+      "value": 6,
       "sources": [
         {
           "type": "shop",
@@ -10564,24 +10564,75 @@
           "price": 6
         }
       ],
-      "store": "supply",
+      "dirty": "used_pillow",
+      "store": "bedding",
       "weight": 1
     },
-    "bed_linens": {
-      "name": "Bed linens",
+    "used_pillow": {
       "kind": "supply",
       "tags": [],
-      "value": 8,
       "shelf_life_days": null,
-      "sprite": {
-        "sheet": "supply_items",
-        "frame": "bed_linens"
-      },
       "made_by": [],
       "used_in": {
         "items": [],
         "dishes": []
       },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "used_pillow"
+      },
+      "name": "Used pillow",
+      "value": 0,
+      "washes_to": "wet_pillow",
+      "sources": [
+        {
+          "type": "used",
+          "note": "slept on by a guest"
+        }
+      ],
+      "store": "bedding",
+      "weight": 1
+    },
+    "wet_pillow": {
+      "kind": "supply",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "wet_pillow"
+      },
+      "name": "Wet pillow",
+      "value": 0,
+      "dries_to": "pillow",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
+        }
+      ],
+      "store": "bedding",
+      "weight": 1
+    },
+    "bed_linens": {
+      "kind": "supply",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "bed_linens"
+      },
+      "name": "Bed linens",
+      "value": 8,
       "sources": [
         {
           "type": "shop",
@@ -10589,24 +10640,75 @@
           "price": 8
         }
       ],
-      "store": "supply",
+      "dirty": "used_bed_linens",
+      "store": "bedding",
       "weight": 1.5
     },
-    "candles": {
-      "name": "Candles",
+    "used_bed_linens": {
       "kind": "supply",
       "tags": [],
-      "value": 3,
       "shelf_life_days": null,
-      "sprite": {
-        "sheet": "supply_items",
-        "frame": "candles"
-      },
       "made_by": [],
       "used_in": {
         "items": [],
         "dishes": []
       },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "used_bed_linens"
+      },
+      "name": "Used bed linens",
+      "value": 0,
+      "washes_to": "wet_bed_linens",
+      "sources": [
+        {
+          "type": "used",
+          "note": "slept on by a guest"
+        }
+      ],
+      "store": "bedding",
+      "weight": 1.5
+    },
+    "wet_bed_linens": {
+      "kind": "supply",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "wet_bed_linens"
+      },
+      "name": "Wet bed linens",
+      "value": 0,
+      "dries_to": "bed_linens",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
+        }
+      ],
+      "store": "bedding",
+      "weight": 1.5
+    },
+    "candles": {
+      "kind": "supply",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "candles"
+      },
+      "name": "Candles",
+      "value": 3,
       "sources": [
         {
           "type": "shop",
@@ -10618,20 +10720,20 @@
       "weight": 1
     },
     "soap": {
-      "name": "Soap",
       "kind": "supply",
       "tags": [],
-      "value": 2,
       "shelf_life_days": null,
-      "sprite": {
-        "sheet": "supply_items",
-        "frame": "soap"
-      },
       "made_by": [],
       "used_in": {
         "items": [],
         "dishes": []
       },
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "soap"
+      },
+      "name": "Soap",
+      "value": 2,
       "sources": [
         {
           "type": "shop",
@@ -10641,6 +10743,462 @@
       ],
       "store": "supply",
       "weight": 1
+    },
+    "bed": {
+      "name": "Bed",
+      "kind": "furniture",
+      "tags": [],
+      "value": 40,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "bed"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "bed",
+        "depth": 26
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 40
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "nightstand": {
+      "name": "Nightstand",
+      "kind": "furniture",
+      "tags": [],
+      "value": 12,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "nightstand"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "nightstand"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 12
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "wardrobe": {
+      "name": "Wardrobe",
+      "kind": "furniture",
+      "tags": [],
+      "value": 30,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "wardrobe"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "wardrobe"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 30
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "chest": {
+      "name": "Chest",
+      "kind": "furniture",
+      "tags": [],
+      "value": 18,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "chest"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "chest",
+        "collider": "small"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 18
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "armchair": {
+      "name": "Armchair",
+      "kind": "furniture",
+      "tags": [],
+      "value": 22,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "armchair"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "armchair"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 22
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "floor_lamp": {
+      "name": "Floor lamp",
+      "kind": "furniture",
+      "tags": [],
+      "value": 14,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "floor_lamp"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "floor_lamp",
+        "collider": "small"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 14
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "potted_plant": {
+      "name": "Potted plant",
+      "kind": "furniture",
+      "tags": [],
+      "value": 6,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "potted_plant"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "potted_plant",
+        "collider": "small"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 6
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "rug": {
+      "name": "Rug",
+      "kind": "furniture",
+      "tags": [],
+      "value": 10,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "rug"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "rug",
+        "layer": "floor"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 10
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "hearth": {
+      "name": "Hearth",
+      "kind": "furniture",
+      "tags": [],
+      "value": 60,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "fireplace"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "anim:fireplace",
+        "fps": 4
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 60
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "deco_painting": {
+      "name": "Painting",
+      "kind": "furniture",
+      "tags": [],
+      "value": 15,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "deco_painting"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "deco_painting",
+        "layer": "wall"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 15
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "deco_sconce": {
+      "name": "Wall sconce",
+      "kind": "furniture",
+      "tags": [],
+      "value": 8,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "deco_sconce"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "deco_sconce",
+        "layer": "wall"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 8
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "bookshelf": {
+      "name": "Bookshelf",
+      "kind": "furniture",
+      "tags": [],
+      "value": 20,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "bookshelf"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "bookshelf"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 20
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "cupboard": {
+      "name": "Cupboard",
+      "kind": "furniture",
+      "tags": [],
+      "value": 20,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "cupboard"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "cupboard"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 20
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "crate": {
+      "name": "Crate",
+      "kind": "furniture",
+      "tags": [],
+      "value": 6,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "props",
+        "frame": "crate"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "crate"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 6
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "barrel": {
+      "name": "Barrel",
+      "kind": "furniture",
+      "tags": [],
+      "value": 12,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "props",
+        "frame": "barrel"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "barrel"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 12
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "keg": {
+      "name": "Keg",
+      "kind": "furniture",
+      "tags": [],
+      "value": 20,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "interior",
+        "frame": "keg"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "keg"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 20
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
     }
   },
   "dishes": {
@@ -15850,7 +16408,11 @@
           "daily_qty": 3
         }
       ],
-      "shelf": 5
+      "shelf": 5,
+      "hours": [
+        6,
+        14
+      ]
     },
     "grocer": {
       "name": "General Store",
@@ -16031,7 +16593,11 @@
           "daily_qty": 10
         }
       ],
-      "shelf": 5
+      "shelf": 5,
+      "hours": [
+        8,
+        18
+      ]
     },
     "dairy": {
       "name": "Clover Dairy",
@@ -16084,7 +16650,11 @@
           "daily_qty": 6
         }
       ],
-      "shelf": 4
+      "shelf": 4,
+      "hours": [
+        6,
+        13
+      ]
     },
     "butcher": {
       "name": "Hollin's Butchery",
@@ -16145,7 +16715,11 @@
           "daily_qty": 3
         }
       ],
-      "shelf": 4
+      "shelf": 4,
+      "hours": [
+        8,
+        16
+      ]
     },
     "fish": {
       "name": "The Fishmonger",
@@ -16174,7 +16748,11 @@
           "daily_qty": 3
         }
       ],
-      "shelf": 3
+      "shelf": 3,
+      "hours": [
+        6,
+        12
+      ]
     },
     "spice": {
       "name": "Zephra's Spices",
@@ -16235,7 +16813,11 @@
           "daily_qty": 6
         }
       ],
-      "shelf": 4
+      "shelf": 4,
+      "hours": [
+        9,
+        17
+      ]
     },
     "market": {
       "name": "Market Square",
@@ -16367,7 +16949,122 @@
       ],
       "market": true,
       "always": [],
-      "shelf": 6
+      "shelf": 6,
+      "hours": [
+        7,
+        13
+      ]
+    },
+    "furnisher": {
+      "name": "Hearth & Home Furnishings",
+      "building": "house_red",
+      "buys": [
+        "armchair",
+        "barrel",
+        "bed",
+        "bookshelf",
+        "chest",
+        "crate",
+        "cupboard",
+        "deco_painting",
+        "deco_sconce",
+        "floor_lamp",
+        "hearth",
+        "keg",
+        "nightstand",
+        "potted_plant",
+        "rug",
+        "wardrobe"
+      ],
+      "market": false,
+      "always": [
+        {
+          "item": "bed",
+          "price": 40,
+          "daily_qty": 3
+        },
+        {
+          "item": "nightstand",
+          "price": 12,
+          "daily_qty": 3
+        },
+        {
+          "item": "wardrobe",
+          "price": 30,
+          "daily_qty": 3
+        },
+        {
+          "item": "chest",
+          "price": 18,
+          "daily_qty": 3
+        },
+        {
+          "item": "armchair",
+          "price": 22,
+          "daily_qty": 3
+        },
+        {
+          "item": "floor_lamp",
+          "price": 14,
+          "daily_qty": 3
+        },
+        {
+          "item": "potted_plant",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "rug",
+          "price": 10,
+          "daily_qty": 3
+        },
+        {
+          "item": "hearth",
+          "price": 60,
+          "daily_qty": 3
+        },
+        {
+          "item": "deco_painting",
+          "price": 15,
+          "daily_qty": 3
+        },
+        {
+          "item": "deco_sconce",
+          "price": 8,
+          "daily_qty": 3
+        },
+        {
+          "item": "bookshelf",
+          "price": 20,
+          "daily_qty": 3
+        },
+        {
+          "item": "cupboard",
+          "price": 20,
+          "daily_qty": 3
+        },
+        {
+          "item": "crate",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "barrel",
+          "price": 12,
+          "daily_qty": 3
+        },
+        {
+          "item": "keg",
+          "price": 20,
+          "daily_qty": 3
+        }
+      ],
+      "pool": [],
+      "shelf": 0,
+      "hours": [
+        9,
+        17
+      ]
     }
   },
   "folk": {
@@ -16518,6 +17215,131 @@
     "honey_flapjacks",
     "dough_balls"
   ],
+  "rooms": {
+    "comforts": {
+      "two_pillows": {
+        "want": "two pillows",
+        "level": 1,
+        "item": "pillow",
+        "count": 2,
+        "in": "bed"
+      },
+      "rug": {
+        "want": "a rug",
+        "level": 1,
+        "props": [
+          "rug"
+        ]
+      },
+      "plant": {
+        "want": "a plant",
+        "level": 1,
+        "props": [
+          "potted_plant"
+        ]
+      },
+      "nightstand": {
+        "want": "a nightstand",
+        "level": 1,
+        "props": [
+          "nightstand"
+        ]
+      },
+      "lamp": {
+        "want": "a lamp",
+        "level": 1,
+        "props": [
+          "floor_lamp",
+          "deco_sconce"
+        ]
+      },
+      "soap": {
+        "want": "a bar of soap",
+        "level": 2,
+        "item": "soap",
+        "count": 1,
+        "in": "room",
+        "uses": true
+      },
+      "wardrobe": {
+        "want": "a wardrobe",
+        "level": 2,
+        "props": [
+          "wardrobe"
+        ]
+      },
+      "chest": {
+        "want": "a chest for their things",
+        "level": 2,
+        "props": [
+          "chest"
+        ]
+      },
+      "candles": {
+        "want": "candles",
+        "level": 2,
+        "item": "candles",
+        "count": 1,
+        "in": "room",
+        "uses": true
+      },
+      "armchair": {
+        "want": "an armchair",
+        "level": 3,
+        "props": [
+          "armchair"
+        ]
+      },
+      "painting": {
+        "want": "something on the walls",
+        "level": 3,
+        "props": [
+          "deco_painting"
+        ]
+      },
+      "hearth": {
+        "want": "a hearth",
+        "level": 3,
+        "props": [
+          "fireplace"
+        ]
+      },
+      "books": {
+        "want": "something to read",
+        "level": 3,
+        "props": [
+          "bookshelf"
+        ]
+      }
+    },
+    "bed": {
+      "prop": "bed",
+      "linens": "bed_linens",
+      "pillow": "pillow"
+    },
+    "price": {
+      "base": 8,
+      "per_comfort": 3
+    },
+    "asks": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        2,
+        4
+      ]
+    ]
+  },
   "rules": {
     "odd_tag": "a dish gains the odd tag when it mixes sweet+fish or fish+meat",
     "recipe_match": "a dish is made on the plate station from exactly its components, in any order"

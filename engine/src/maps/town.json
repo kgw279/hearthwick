@@ -133,7 +133,7 @@
     {"sprite": "house_blue", "x": 400, "y": 957, "collider": "house"},
     {"sprite": "house_red", "x": 496, "y": 957, "collider": "house"},
     {"sprite": "house_green", "x": 624, "y": 957, "collider": "house"},
-    {"sprite": "house_red", "x": 1008, "y": 957, "collider": "house"},
+    {"x": 1008, "y": 957, "collider": {"x": 4, "y": 30, "w": 56, "h": 30}, "sortOffset": 60, "use": {"x": 16, "y": 54, "w": 32, "h": 22}, "behavior": {"type": "shop", "shop": "furnisher"}},
     {"sprite": "house_blue", "x": 1104, "y": 957, "collider": "house"},
     {"sprite": "house_green", "x": 368, "y": 1149, "collider": "house"},
     {"sprite": "house_red", "x": 464, "y": 1149, "collider": "house"},

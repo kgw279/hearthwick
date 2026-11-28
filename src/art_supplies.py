@@ -41,7 +41,31 @@ def soap():
     return s
 
 
-ITEMS = [('pillow', pillow), ('bed_linens', bed_linens), ('candles', candles), ('soap', soap)]
+def slept_in(draw):
+    """Used: rumpled and grubby, a few smudges on it (washing turns it back)."""
+    s = draw()
+    for cx, cy, rx, ry in ((11, 15, 3, 2), (20, 20, 4, 2), (17, 12, 2, 1.5)):
+        stain = Sprite(); stain.ellipse(cx, cy, rx, ry, 'H')
+        for y in range(32):
+            for x in range(32):
+                if stain.px[y][x] and s.px[y][x] not in (None, 'O'): s.px[y][x] = 'u' if (x + y) % 3 else 'H'
+    return s
+
+
+def damp(draw):
+    """Washed, not yet dry: beads of water on it, and a drip below."""
+    s = draw()
+    for x, y in ((10, 14), (19, 17), (14, 21), (23, 13)):
+        s.set(x, y, 'p'); s.set(x, y + 1, 'c')
+    lo = max(y for y in range(32) for x in range(32) if s.px[y][x] is not None)
+    s.set(16, min(31, lo + 2), 'c')
+    return s
+
+
+BEDDING = ['pillow', 'bed_linens']   # what makes up a bed: used by a guest, then washed and dried
+ITEMS = ([('pillow', pillow), ('bed_linens', bed_linens), ('candles', candles), ('soap', soap)]
+         + [(f'used_{b}', (lambda f=f: slept_in(f))) for b, f in (('pillow', pillow), ('bed_linens', bed_linens))]
+         + [(f'wet_{b}', (lambda f=f: damp(f))) for b, f in (('pillow', pillow), ('bed_linens', bed_linens))])
 
 
 def has(iid):

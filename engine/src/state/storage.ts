@@ -10,6 +10,11 @@ export class Storage {
 
   constructor(private readonly stackSize: number) {}
 
+  /** Whether a container by this id has been looked in (and so holds something, or has held). */
+  has(id: string): boolean {
+    return this.boxes.has(id);
+  }
+
   /** accepts: what the container takes (from its art, see world/containers.ts). */
   get(id: string, slots: number, contents: Stack[] = [], accepts?: (item: string) => boolean, kinds?: number): Inventory {
     let box = this.boxes.get(id);

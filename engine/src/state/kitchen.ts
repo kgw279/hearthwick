@@ -56,14 +56,15 @@ export class InnStores {
     return this.boxes().reduce((n, b) => n + b.inv.count(item), 0);
   }
 
+  /** Room for something, in the containers things are put away in (not beds or nightstands: those are by hand). */
   room(item: string): number {
-    return this.boxes().reduce((n, b) => n + b.inv.room(item), 0);
+    return this.boxes().filter((b) => !b.spec.byHand).reduce((n, b) => n + b.inv.room(item), 0);
   }
 
   /** Put up to n away, container by container; returns how many went in. */
   add(item: string, n: number): number {
     let left = n;
-    for (const b of this.boxes()) if (left > 0) left -= b.inv.add(item, left);
+    for (const b of this.boxes()) if (left > 0 && !b.spec.byHand) left -= b.inv.add(item, left);
     return n - left;
   }
 
@@ -108,7 +109,7 @@ export class InnStores {
 
   /** Where a store's things go, for messages ("No room on the shelves"). */
   static placeFor(store: Store | undefined): string {
-    return ({ pantry: 'in the crates', shelf: 'on the shelves', cask: 'in the barrels', tableware: 'in the crates', supply: 'in the chests' } as Record<string, string>)[store ?? ''] ?? 'anywhere';
+    return ({ pantry: 'in the crates', shelf: 'on the shelves', cask: 'in the barrels', tableware: 'in the crates', supply: 'in the chests', bedding: 'in the wardrobes' } as Record<string, string>)[store ?? ''] ?? 'anywhere';
   }
 }
 

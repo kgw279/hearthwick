@@ -14,6 +14,11 @@
  * a less happy guest). With every slot filled, they eat a while, pay, earn the inn renown (renown.ts),
  * and walk out, leaving their dishes at their seat: nobody sits there till they're cleared.
  *
+ * Most meals come with a drink, and a guest who orders just one thing mostly wants a drink (more often
+ * than not something brewed). A guest who's finished their drink may stay for another round (some folk
+ * more than others), and of an evening may ask for a room for the night: given one (rooms.ts), they go
+ * up to bed and settle up in the morning, for the room and for the comforts they asked for in it.
+ *
  * Patience is gentle, not a race: a guest waits a good while, longer each time something arrives, and if
  * nothing comes they leave without paying. The player can also politely dismiss a guest: they pay nothing,
  * and mind less the sooner it's done. Every visit is kept, for the journal.
@@ -21,6 +26,7 @@
 import { COURSE_NAMES, COURSES, type Content, type Course } from '../game/data';
 import { renownFor, type Award } from './renown';
 import type { Reputation } from './reputation';
+import type { Rooms } from './rooms';
 
 /**
  * Something served: the dish (or snack served as it is) and what it's on (a plate or bowl, or a mug).
@@ -42,9 +48,9 @@ export const READY_MAX = 4;
 export interface Want { dish?: string; trait?: string }
 export type Order = Partial<Record<Course, Want>>;
 
-/** How a visit ended. */
+/** How a visit (or a round of it, or a night's stay) went. */
 export interface Outcome {
-  how: 'paid' | 'gave up' | 'dismissed';
+  how: 'paid' | 'gave up' | 'dismissed' | 'no room';
   coins: number;
   renown: number;
   awards: Award[];
@@ -64,7 +70,8 @@ export interface Guest {
   craving: string;
   /** What's been brought so far. */
   got: Meal;
-  state: 'arriving' | 'waiting' | 'eating' | 'gone';
+  /** Coming in, waiting to be served, eating, asking for a room, gone (home, or up to bed). */
+  state: 'arriving' | 'waiting' | 'eating' | 'room' | 'gone';
   /** Seconds left walking in (of how long, all told). */
   walk: number;
   walkTotal: number;
@@ -80,9 +87,24 @@ export interface Guest {
   seated: number;
   /** Where they sat (a seat key). */
   seat: string;
-  /** Once they've gone: how it went. */
+  /** Earlier rounds: what they had in each before ordering another. */
+  had: Served[][];
+  /** Dirty pieces from earlier rounds, left at their seat when they go. */
+  leftovers: string[];
+  /** What they've said when the player stopped to talk (food: about a dish from home). */
+  said: Array<{ line: string; food: boolean }>;
+  /** Asking for a room: the comforts they'd like in it. */
+  room?: { wants: string[] };
+  /** Given a room: which (they're up there till morning). */
+  stayingIn?: string;
+  /** How it's gone so far, all rounds together; once they've gone, how it went. */
   outcome?: Outcome;
+  /** Their night's stay, once they've settled up in the morning. */
+  stay?: Outcome & { room: string; wants: string[]; met: string[] };
 }
+
+/** When it is, as the service needs it: how busy the inn is now, whether it's evening, if there are rooms. */
+export interface Hours { busy: number; evening: boolean; rooms: boolean }
 
 /**
  * A seat, as the service needs it: its key (map and chair), its map, the key of its table (or bar), and
@@ -103,6 +125,16 @@ const FIRST_GUESTS = 1; // seated at the start
 const EXTRA_GUEST = 0.08; // past the usual number of guests, the chance another drops in (for each one more)
 const MESSY = 10; // seconds sat beside dirty dishes before a guest minds
 const RECENT = 12; // dishes remembered, for whether the inn serves the same thing over and over
+const ONLY_DRINK = 0.65; // a guest ordering one thing: the chance it's a drink
+const WITH_DRINK = 0.85; // a guest ordering a meal: the chance it comes with a drink
+const BREWED = 0.55; // a drink asked for: the chance it's something brewed
+/** Another round: by folk, the chance a guest who's had a drink orders another, and the most rounds. */
+const ANOTHER: Record<string, { chance: number; rounds: number }> = {
+  minotaur: { chance: 0.6, rounds: 3 }, dwarf: { chance: 0.5, rounds: 3 },
+};
+const ANOTHER_ELSE = { chance: 0.25, rounds: 2 };
+const ROOM_ASK = 0.45; // of an evening, the chance a guest who's eaten asks for a room
+const ROOM_PATIENCE = 240; // seconds they wait for a room
 
 export class Service {
   /** The ready slots: plated and waiting, or cleared and on the way to be washed. */
@@ -117,6 +149,8 @@ export class Service {
   readonly leavers: Leaver[] = [];
   /** What's been served lately, latest last. */
   readonly recent: string[] = [];
+  /** Guests upstairs for the night. */
+  readonly lodgers: Guest[] = [];
   /** Bumped on every change, so views know to rebuild. */
   version = 0;
   private arrive = 0;
@@ -142,12 +176,12 @@ export class Service {
 
   /** How far a guest's patience has gone, 0 (just sat down) to 1 (about to leave). */
   restless(g: Guest): number {
-    return g.state === 'waiting' ? Math.max(0, Math.min(1, 1 - g.patience / g.patienceMax)) : 0;
+    return g.state === 'waiting' || g.state === 'room' ? Math.max(0, Math.min(1, 1 - g.patience / g.patienceMax)) : 0;
   }
 
   /** How many patience chits a waiting guest has left. */
   chits(g: Guest): number {
-    return g.state === 'waiting' ? Math.max(0, Math.ceil((g.patience / g.patienceMax) * CHITS)) : CHITS;
+    return g.state === 'waiting' || g.state === 'room' ? Math.max(0, Math.ceil((g.patience / g.patienceMax) * CHITS)) : CHITS;
   }
 
   /** The courses a guest wants, in serving order. */
@@ -166,7 +200,7 @@ export class Service {
    * Advance time: guests walk in, wait (losing patience), eat; leavers walk out; new guests come to seats
    * that are free (nobody there, no dishes left). menu(bar): what could be asked for, by course.
    */
-  update(dt: number, seats: SeatRef[], menu: (bar: boolean) => Record<Course, string[]>, left: (g: Guest) => void): void {
+  update(dt: number, seats: SeatRef[], menu: (bar: boolean) => Record<Course, string[]>, left: (g: Guest, o: Outcome) => void, hours: Hours): void {
     const here = new Map(seats.map((s) => [s.key, s]));
     for (const key of [...this.guests.keys()]) {
       if (!here.has(key)) {
@@ -190,8 +224,9 @@ export class Service {
         continue;
       }
       g.waited += dt;
-      if (g.state === 'waiting' && (g.patience -= dt) <= 0) left(this.leave(seat, 'gave up'));
-      else if (g.state === 'eating' && (g.eating -= dt) <= 0) left(this.leave(seat, 'paid'));
+      if (g.state === 'waiting' && (g.patience -= dt) <= 0) this.leave(seat, 'gave up', left);
+      else if (g.state === 'room' && (g.patience -= dt) <= 0) this.leave(seat, 'no room', left);
+      else if (g.state === 'eating' && (g.eating -= dt) <= 0) this.finished(seat, menu(seat.bar), left, hours);
     }
     const free = seats.filter((s) => !this.guests.has(s.key) && !this.dirty.get(s.key)?.length);
     if (!free.length) return;
@@ -201,7 +236,8 @@ export class Service {
       this.arrive = this.reputation.arriveEvery;
       return;
     }
-    if ((this.arrive -= dt) > 0) return;
+    // guests come oftener at mealtimes, and not at all in the small hours
+    if ((this.arrive -= dt * hours.busy) > 0) return;
     this.arrive = this.reputation.arriveEvery;
     const over = this.guests.size - this.reputation.usualGuests;
     if (over >= 0 && this.rng() >= EXTRA_GUEST ** (over + 1)) return; // the inn's as busy as its name allows
@@ -210,9 +246,114 @@ export class Service {
   }
 
   /** Politely send a guest on their way: they pay nothing. Returns them, or null if nobody's there. */
-  dismiss(seat: SeatRef): Guest | null {
+  dismiss(seat: SeatRef, left: (g: Guest, o: Outcome) => void): Guest | null {
     const g = this.guests.get(seat.key);
-    return g && g.state !== 'arriving' ? this.leave(seat, 'dismissed') : null;
+    return g && g.state !== 'arriving' ? this.leave(seat, g.state === 'room' ? 'no room' : 'dismissed', left) : null;
+  }
+
+  /** Add a round's (or a night's) outcome to how the visit's gone. */
+  private tally(g: Guest, o: Outcome): void {
+    const t = g.outcome;
+    g.outcome = t
+      ? { how: o.how, coins: t.coins + o.coins, renown: t.renown + o.renown, awards: [...t.awards, ...o.awards], mood: o.mood, remark: o.remark }
+      : o;
+  }
+
+  /**
+   * A guest's done with what they had: they pay for it (and the inn's renown with it), then order
+   * another round, ask for a room, or go.
+   */
+  private finished(seat: SeatRef, menu: Record<Course, string[]>, left: (g: Guest, o: Outcome) => void, hours: Hours): void {
+    const g = this.guests.get(seat.key)!;
+    const o = this.settle(g);
+    const served = COURSES.map((c) => g.got[c]).filter((s): s is Served => !!s);
+    const again = ANOTHER[g.folk] ?? ANOTHER_ELSE;
+    const rounds = 1 + g.had.length;
+    if (g.got.drink && rounds < again.rounds && this.rng() < again.chance) {
+      o.remark = `That hit the spot! Same again?`;
+      this.nextRound(g, served, { drink: this.want(menu.drink, g.folk, 'drink') });
+    } else if (hours.evening && hours.rooms && this.rng() < ROOM_ASK) {
+      o.remark = 'Have you a room for the night?';
+      this.nextRound(g, served, {});
+      g.state = 'room';
+      g.room = { wants: this.comforts() };
+      g.patience = g.patienceMax = ROOM_PATIENCE;
+    } else {
+      this.tally(g, o);
+      left(g, o);
+      this.go(seat, g);
+      return;
+    }
+    this.tally(g, o);
+    left(g, o);
+    this.changed();
+  }
+
+  /** Clear the table for another round: what they had is kept (and its dishes left by them for later). */
+  private nextRound(g: Guest, served: Served[], order: Order): void {
+    g.had.push(served);
+    g.leftovers.push(...this.pile(g));
+    g.got = {};
+    g.order = order;
+    g.state = 'waiting';
+    g.patience = g.patienceMax = PATIENCE;
+    g.waited = 0;
+    g.mess = 0;
+  }
+
+  /** The comforts a guest staying the night asks for: a few, more as the inn's name grows. */
+  private comforts(): string[] {
+    const { asks, comforts } = this.content.rooms;
+    const [lo, hi] = asks[Math.min(asks.length, this.reputation.level) - 1];
+    const n = lo + Math.floor(this.rng() * (hi - lo + 1));
+    const can = Object.keys(comforts).filter((c) => comforts[c].level <= this.reputation.level);
+    return [...can].sort(() => this.rng() - 0.5).slice(0, n);
+  }
+
+  /** Whether a room's had someone in it tonight. */
+  taken(room: string): boolean {
+    return this.lodgers.some((g) => g.stayingIn === room);
+  }
+
+  /** Give a guest asking for one a room: they go up to bed (out of the hall), and settle up in the morning. */
+  lodge(seat: SeatRef, room: string): string | null {
+    const g = this.guests.get(seat.key);
+    if (!g || g.state !== 'room') return "They're not after a room";
+    if (this.taken(room)) return 'Someone is already staying there';
+    g.stayingIn = room;
+    g.outcome!.remark = 'Goodnight!';
+    this.lodgers.push(g);
+    this.go(seat, g);
+    return null;
+  }
+
+  /**
+   * Morning: everyone staying the night settles up, for the room and the comforts they asked for that
+   * it had (and are a little put out by the ones it hadn't). The bedding they slept in is left used.
+   */
+  checkout(rooms: Rooms, paid: (g: Guest, o: Outcome) => void): void {
+    const { comforts, price } = this.content.rooms;
+    for (const g of this.lodgers.splice(0)) {
+      const room = g.stayingIn!;
+      const wants = g.room?.wants ?? [];
+      const met = wants.filter((w) => rooms.has(room, w));
+      const awards: Award[] = [
+        ...met.map((w) => ({ why: `Had ${comforts[w].want}`, points: 1 })),
+        ...wants.filter((w) => !met.includes(w)).map((w) => ({ why: `Wanted ${comforts[w].want}`, points: -1 })),
+      ];
+      if (met.length === wants.length) awards.push({ why: 'A restful night', points: 1 });
+      const missed = wants.length - met.length;
+      const remark = !missed ? 'I slept like a log!' : met.length ? 'A fair night, though I missed ' + comforts[wants.find((w) => !met.includes(w))!].want + '.'
+        : `I'd have liked ${comforts[wants[0]].want}...`;
+      const o: Outcome = {
+        how: 'paid', coins: price.base + met.length * price.per_comfort, renown: awards.reduce((n, a) => n + a.points, 0),
+        awards, mood: Math.max(0.2, 1 - missed * 0.25), remark,
+      };
+      rooms.sleptIn(room, wants);
+      g.stay = { ...o, room, wants, met };
+      paid(g, o);
+    }
+    this.changed();
   }
 
   /** Whether what they had included what they were craving. */
@@ -220,18 +361,35 @@ export class Service {
     return COURSES.some((c) => g.got[c] && this.content.traits(g.got[c]!.dish).includes(g.craving));
   }
 
+  /** The dirty pieces from what's in front of a guest now. */
+  private pile(g: Guest): string[] {
+    const served = COURSES.map((c) => g.got[c]).filter((s): s is Served => !!s);
+    const pile = served.filter((s) => s.ware).map((s) => this.content.item(s.ware).dirty ?? s.ware);
+    if (g.got.cutlery) pile.push(this.content.item(g.got.cutlery).dirty ?? g.got.cutlery);
+    return pile;
+  }
+
+  /** A guest gets up and goes (out the door, or up to bed), leaving their dishes at their seat. */
+  private go(seat: SeatRef, g: Guest): void {
+    g.state = 'gone';
+    const pile = [...g.leftovers, ...this.pile(g)];
+    if (pile.length) this.dirty.set(seat.key, pile);
+    this.guests.delete(seat.key);
+    this.leavers.push({ guest: g, seat: seat.key, layout: seat.layout, t: 0, total: Math.max(1, g.walkTotal) });
+    this.changed();
+  }
+
   /**
-   * A guest gets up: paying if they ate (a coin less for a main without cutlery), earning the inn renown,
-   * saying how it was, and walking out; what they had (eaten or not) is left dirty at their seat.
+   * What a round comes to: paying for what they had (a coin less for a main without cutlery), the inn's
+   * renown for it, and what they say about it.
    */
-  private leave(seat: SeatRef, how: Outcome['how']): Guest {
-    const g = this.guests.get(seat.key)!;
+  private settle(g: Guest): Outcome {
     const served = COURSES.map((c) => g.got[c]).filter((s): s is Served => !!s);
     let coins = 0;
     let awards: Award[] = [];
     let mood: number;
     let remark: string;
-    if (how === 'paid') {
+    {
       coins = Math.max(1, served.reduce((n, s) => n + this.worth(s), 0) - (g.got.main && !g.got.cutlery ? 1 : 0));
       awards = renownFor({ guest: g, content: this.content, recent: this.recent, craved: this.satisfied(g) }).awards;
       for (const s of served) {
@@ -244,26 +402,34 @@ export class Service {
       remark = this.satisfied(g) ? `I loved how ${g.craving} that was!`
         : misses ? 'Not quite what I asked for...'
         : messy ? 'Someone ought to clear those dishes...' : `That was good, but could have been more ${g.craving}.`;
-    } else if (how === 'gave up') {
+    }
+    // a very bad visit takes renown away
+    return { how: 'paid', coins, renown: awards.reduce((n, a) => n + a.points, 0), awards, mood, remark };
+  }
+
+  /** A guest leaves without what they wanted (gave up waiting, sent away, no room for them). */
+  private leave(seat: SeatRef, how: Exclude<Outcome['how'], 'paid'>, left: (g: Guest, o: Outcome) => void): Guest {
+    const g = this.guests.get(seat.key)!;
+    let mood: number;
+    let remark: string;
+    let awards: Award[] = [];
+    if (how === 'gave up') {
       mood = 0;
       remark = "I couldn't wait any longer.";
       awards = [{ why: 'Left hungry', points: -2 }];
+    } else if (how === 'no room') {
+      mood = 0.4;
+      remark = 'No room tonight? Another time, then.';
     } else {
       const prompt = g.waited < PROMPT;
       mood = prompt ? 0.8 : Math.max(0.2, 0.8 - this.restless(g) * 0.6);
       remark = prompt ? 'Another time, then!' : 'After all that waiting...';
       if (!prompt) awards = [{ why: 'Sent away after a long wait', points: -1 }];
     }
-    // a very bad visit takes renown away
-    const renown = awards.reduce((n, a) => n + a.points, 0);
-    g.outcome = { how, coins, renown, awards, mood, remark };
-    g.state = 'gone';
-    const pile = served.filter((s) => s.ware).map((s) => this.content.item(s.ware).dirty ?? s.ware);
-    if (g.got.cutlery) pile.push(this.content.item(g.got.cutlery).dirty ?? g.got.cutlery);
-    if (pile.length) this.dirty.set(seat.key, pile);
-    this.guests.delete(seat.key);
-    this.leavers.push({ guest: g, seat: seat.key, layout: seat.layout, t: 0, total: Math.max(1, g.walkTotal) });
-    this.changed();
+    const o: Outcome = { how, coins: 0, renown: awards.reduce((n, a) => n + a.points, 0), awards, mood, remark };
+    this.tally(g, o);
+    left(g, o);
+    this.go(seat, g);
     return g;
   }
 
@@ -272,13 +438,18 @@ export class Service {
     const folk = this.content.folk[look] ? look : 'human';
     // how many courses: just one, mostly, while the inn is little known; more as its name grows
     const allowed: Course[] = seat.bar ? ['drink', 'snack'] : [...COURSES];
-    const most = this.reputation.level <= 2 ? (this.rng() < 0.8 ? 1 : 2) : 1 + Math.floor(this.rng() * Math.min(3, allowed.length));
-    const courses = [...allowed].sort(() => this.rng() - 0.5).slice(0, Math.max(1, Math.min(most, allowed.length)));
+    const most = Math.max(1, Math.min(allowed.length,
+      this.reputation.level <= 2 ? (this.rng() < 0.8 ? 1 : 2) : 1 + Math.floor(this.rng() * Math.min(3, allowed.length))));
+    // mostly a drink, alone or with the meal; the rest of the meal at random
+    const food = allowed.filter((c) => c !== 'drink').sort(() => this.rng() - 0.5);
+    const drink = this.rng() < (most === 1 ? ONLY_DRINK : WITH_DRINK);
+    const courses = drink ? ['drink' as Course, ...food.slice(0, most - 1)] : food.slice(0, most);
     const order: Order = {};
-    for (const c of courses) order[c] = this.want(menu[c], folk);
+    for (const c of courses) order[c] = this.want(menu[c], folk, c);
     const g: Guest = {
       look, folk, bar: seat.bar, order, craving: this.craving(folk), got: {}, state: 'arriving', walk: seat.walk ?? 3, walkTotal: seat.walk ?? 3,
       patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0, mess: 0, seated: this.seatedCount++, seat: seat.key,
+      had: [], leftovers: [], said: [],
     };
     this.guests.set(seat.key, g);
     this.visits.push(g);
@@ -297,7 +468,12 @@ export class Service {
    * What a guest wants for a course: anything (most, early on); else something of a kind (a trait of
    * something they could be served) or, as the inn's name grows, something in particular.
    */
-  private want(options: string[], folk: string): Want {
+  private want(options: string[], folk: string, course: Course): Want {
+    // a drink: more often than not, something brewed (whether or not there's any to hand)
+    if (course === 'drink' && this.rng() < BREWED) {
+      const brewed = options.filter((d) => this.content.traits(d).includes('brewed'));
+      return brewed.length && this.rng() < 0.5 ? { dish: this.favourite(brewed, folk, (d) => this.content.dishTags(d)) } : { trait: 'brewed' };
+    }
     const r = this.rng();
     if (!options.length || r < this.reputation.anything) return {};
     if (r < this.reputation.anything + (1 - this.reputation.anything) * 0.6) {

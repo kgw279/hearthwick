@@ -2,9 +2,11 @@
 import type { GameData } from '../core/assets';
 
 /** Where an item is kept in the inn (see world/containers.ts); dishes are kept on the serving counter. */
-export type Store = 'pantry' | 'shelf' | 'cask' | 'tableware' | 'supply';
+export type Store = 'pantry' | 'shelf' | 'cask' | 'tableware' | 'supply' | 'bedding' | 'furniture';
 /** Which inventory tab a store's things show under. */
-export const SECTION: Record<Store, 'kitchen' | 'inn'> = { pantry: 'kitchen', shelf: 'kitchen', cask: 'kitchen', tableware: 'kitchen', supply: 'inn' };
+export const SECTION: Record<Store, 'kitchen' | 'inn'> = {
+  pantry: 'kitchen', shelf: 'kitchen', cask: 'kitchen', tableware: 'kitchen', supply: 'inn', bedding: 'inn', furniture: 'inn',
+};
 
 export interface ItemData {
   name: string;
@@ -30,8 +32,10 @@ export interface ItemData {
   washes_to?: string;
   /** Tableware: the clean piece a wet one dries to. */
   dries_to?: string;
-  /** Tableware: what a clean piece becomes once used. */
+  /** Tableware and bedding: what a clean piece becomes once used. */
   dirty?: string;
+  /** Furniture: the piece it becomes once set down in the inn (its art, and how it's placed). */
+  prop?: { sprite: string; layer?: 'floor' | 'wall'; depth?: number; collider?: string; fps?: number };
 }
 export interface StationData { name: string; verb: string; method: string; sprite: { sheet: string; frame: string } }
 export interface DishData {
@@ -59,6 +63,26 @@ export interface StockEntry { item: string; price: number; daily_qty: number }
 export interface ShopData {
   name: string; building: string | null; buys: string[];
   market: boolean; pool: StockEntry[]; always: StockEntry[]; shelf: number;
+  /** Open from the first hour to the second (a 24-hour clock). */
+  hours: [number, number];
+}
+
+/**
+ * A comfort a guest staying the night may ask for in their room: a piece of furniture there (by art
+ * name), or something kept in the bed or anywhere in the room (used up, if `uses`).
+ */
+export interface ComfortData {
+  want: string; level: number;
+  props?: string[];
+  item?: string; count?: number; in?: 'bed' | 'room'; uses?: boolean;
+}
+export interface RoomsData {
+  comforts: Record<string, ComfortData>;
+  /** What every room needs before it can be given: a bed made up with clean linens and a pillow. */
+  bed: { prop: string; linens: string; pillow: string };
+  price: { base: number; per_comfort: number };
+  /** How many comforts a guest asks for, by renown level (fewest, most); past the list, the last. */
+  asks: Array<[number, number]>;
 }
 export interface ForageNodeData { yields: string; spot: string | null; states: { ready: string; harvested: string } }
 export interface Economy { starting_coins: number; bag_slots: number; stack_size: number; bag_weight: number; sell_ratio: number }
@@ -79,6 +103,8 @@ export class Content {
   readonly bar: { snacks: string[]; max_components: number };
   /** Things served just as they are (plated on their own): raw snacks and small prepped things. */
   readonly snacks: string[];
+  /** Guest rooms: what they need, and what a guest staying might ask for. */
+  readonly rooms: RoomsData;
   private readonly recipes = new Map<string, Recipe[]>();
 
   constructor(data: GameData) {
@@ -96,6 +122,7 @@ export class Content {
     this.folk = data.folk as Record<string, FolkData>;
     this.bar = data.bar as { snacks: string[]; max_components: number };
     this.snacks = data.snacks as string[];
+    this.rooms = data.rooms as RoomsData;
     for (const [id, it] of Object.entries(this.items)) {
       for (const m of it.made_by ?? []) {
         const list = this.recipes.get(m.station) ?? [];
@@ -199,6 +226,11 @@ export class Content {
     const s = this.shops[id];
     if (!s) throw new Error(`Unknown shop "${id}"`);
     return s;
+  }
+
+  /** The furniture item a placed piece is (by its art), if it's one that can be packed up. */
+  furnitureOf(sprite: string): string | undefined {
+    return Object.keys(this.items).find((id) => this.items[id].prop?.sprite === sprite);
   }
 
   forageNode(id: string): ForageNodeData {

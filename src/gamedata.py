@@ -19,6 +19,8 @@ import revisions
 import content_animals
 import content_tableware
 import content_supplies
+import content_furniture
+import content_rooms
 import content_shops
 import art_kitchen
 import art_supplies
@@ -254,6 +256,14 @@ def build():
         items[iid] = it
     for iid, p in content_supplies.stock():
         shops[content_supplies.SELLER]['stock'].append({'item': iid, 'price': p})
+    # furniture: sold at the Furnisher's, placed in the inn (content_furniture.py)
+    name, building = content_furniture.SHOP
+    shops[content_furniture.SELLER] = {'name': name, 'stock': [], 'building': building}
+    for iid, it in content_furniture.items().items():
+        if iid in items: raise ValueError(f'furniture {iid} already exists')
+        items[iid] = it
+    for iid, p in content_furniture.stock():
+        shops[content_furniture.SELLER]['stock'].append({'item': iid, 'price': p})
     for pname, P in PACKS.items():   # packs may add stock to existing shops
         for sh, stock in getattr(P, 'SHOP_STOCK', {}).items():
             for i, p in stock:
@@ -296,6 +306,7 @@ def build():
         sh['always'] = [e for e in base if items[e['item']]['kind'] in kinds]
         sh['pool'] = [e for e in base if items[e['item']]['kind'] not in kinds]
         sh['shelf'] = content_shops.SHELF[sid]
+        sh['hours'] = list(content_shops.HOURS[sid])
         if not sh['market']: sh['buys'] = sorted(set(sh['buys']) | {e['item'] for e in base})
         for k in ('stock', 'daily_items'): sh.pop(k, None)
 
@@ -343,6 +354,8 @@ def build():
         # straight over the counter; at the tables they order anything
         'bar': {'snacks': BAR_SNACKS, 'max_components': 1},
         'snacks': SNACKS,
+        # guest rooms: what a room needs, and the comforts a guest staying the night may ask for
+        'rooms': content_rooms.data(),
         'rules': {'odd_tag': D.ODD_RULE,
                   'recipe_match': 'a dish is made on the plate station from exactly its components, in any order'},
     }
@@ -359,7 +372,8 @@ KIND_WEIGHT = {'tableware': 0.5, 'supply': 1}
 def weight_of(iid, it):
     if iid in HEAVY: return HEAVY[iid]
     if it['kind'] == 'tableware': return 0.25 if it.get('tableware', {}).get('kind') == 'cutlery' else KIND_WEIGHT['tableware']
-    if it['kind'] == 'supply': return 1.5 if iid == 'bed_linens' else KIND_WEIGHT['supply']
+    if it['kind'] == 'supply': return 1.5 if iid.endswith('bed_linens') else KIND_WEIGHT['supply']
+    if it['kind'] == 'furniture': return 0   # packed up flat: carried, but no burden
     return 1
 
 
@@ -407,6 +421,8 @@ STORES = {
     'cask': 'liquids (water, milk) and drinks: barrels and kegs, one kind to a barrel',
     'tableware': 'plates, bowls, mugs, cutlery: crates, chests and cupboards',
     'supply': "the inn's supplies: crates, chests and wardrobes",
+    'bedding': 'pillows and linens: in the beds, wardrobes and chests',
+    'furniture': 'furniture: set down in the inn, or carried packed up',
 }
 
 
@@ -416,7 +432,8 @@ LIQUIDS = ['water', 'milk']   # raw things kept in barrels (with every drink)
 def store_class(it, dishes, iid=None):
     """Where an item is kept in the inn (STORES). A prepared item is a drink if it's brewed, or every dish
     it goes into is a drink."""
-    if it['kind'] in ('tableware', 'supply'): return it['kind']
+    if it['kind'] == 'supply' and any(iid.endswith(b) for b in art_supplies.BEDDING): return 'bedding'
+    if it['kind'] in ('tableware', 'supply', 'furniture'): return it['kind']
     if it['kind'] == 'raw': return 'cask' if iid in LIQUIDS else 'pantry'
     into = [dishes[d]['kind'] for d in it['used_in']['dishes']]
     if it.get('method') == 'ferment' or (into and all(k == 'drink' for k in into)): return 'cask'
@@ -439,7 +456,10 @@ def validate(data):
         if it.get('store') not in STORES: errs.append(f'{iid}: unknown store {it.get("store")}')
         if it['kind'] == 'supply':
             if not art_supplies.has(iid): errs.append(f'{iid}: missing sprite')
+            for k in ('washes_to', 'dries_to', 'dirty'):
+                if it.get(k) and it[k] not in items: errs.append(f'{iid}: {k} unknown {it[k]}')
             continue
+        if it['kind'] == 'furniture': continue
         if it['kind'] == 'tableware':
             if not art_tableware.has(iid): errs.append(f'{iid}: missing sprite')
             for k in ('washes_to', 'dries_to'):

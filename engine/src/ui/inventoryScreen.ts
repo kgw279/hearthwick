@@ -47,6 +47,8 @@ export class InventoryScreen implements Screen {
     private readonly stores: InnStores,
     private readonly ready: ReadySlot[],
     private readonly inInn: boolean,
+    /** Set a piece of furniture from the bag down here: why not, or null (then the bag closes). */
+    private readonly place: (item: string) => string | null,
     private readonly content: Content,
     private readonly assets: Assets,
   ) {}
@@ -64,9 +66,19 @@ export class InventoryScreen implements Screen {
     if (input.pressed('tab_next')) this.switchTab(1);
     const d = this.nav.step(input, dt);
     if (d) this.move(d);
+    if (input.pressed('interact') && this.placing()) return false;
     if (input.pressed('interact')) this.transfer(Infinity);
     if (input.pressed('cook')) this.transfer(1);
     return true;
+  }
+
+  /** Furniture chosen in the bag is taken out to set down: true if it was (the bag closes). */
+  private placing(): boolean {
+    const s = this.cells()[this.sel];
+    if (this.tab !== 'Bag' || !s || this.content.items[s.item]?.kind !== 'furniture') return false;
+    const why = this.place(s.item);
+    if (why) this.say(why);
+    return !why;
   }
 
   private switchTab(d: number): void {
@@ -138,6 +150,7 @@ export class InventoryScreen implements Screen {
       const p = this.cellAt(i);
       if (px < p.x || py < p.y || px >= p.x + SLOT || py >= p.y + SLOT) continue;
       this.sel = i;
+      if (button === 0 && this.placing()) return false;
       if (button === 0) this.transfer(Infinity);
       if (button === 2) this.transfer(1);
       return true;
@@ -201,6 +214,7 @@ export class InventoryScreen implements Screen {
     }
     const msg = this.time < this.message.until;
     const hint = msg ? this.message.text
+      : this.tab === 'Bag' && s && content.items[s.item]?.kind === 'furniture' ? 'Choose: take it out and set it down here'
       : !this.inInn ? 'Tabs: LB / RB (Q / C)'
       : this.tab === 'Bag' ? 'Choose: put the stack away in the inn   X: just one'
       : 'Choose: take the stack   X: just one   Tabs: LB / RB';

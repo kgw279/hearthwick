@@ -11,7 +11,9 @@ import type { LoopStats } from '../core/loop';
 import { Renderer, VIEW_W, VIEW_H } from '../core/renderer';
 import type { Entity } from '../world/entity';
 import type { Scene } from '../world/scene';
-import { drawText } from '../ui/text';
+import { drawText, measure } from '../ui/text';
+import { hint } from '../ui/buttons';
+import { RoomMap } from '../world/room';
 import { DialogBox, drawPrompt, Emotes, FloatTexts } from '../ui/widgets';
 import { loadLayouts, type Layout } from '../world/layout';
 import { artRect, buildScene, layoutSpawns, propFrames, titleOf, type SceneHooks } from './build';
@@ -26,7 +28,11 @@ import { InventoryScreen } from '../ui/inventoryScreen';
 import { PrepScreen } from '../ui/prepScreen';
 import { PlatingScreen } from '../ui/platingScreen';
 import { accepts, InnStores, isInn, Kitchen } from '../state/kitchen';
-import { isSetting, Service, type Guest } from '../state/service';
+import { isSetting, Service, type Guest, type Outcome } from '../state/service';
+import { Clock } from '../state/clock';
+import { Rooms } from '../state/rooms';
+import { talk } from '../state/gossip';
+import type { PlacedProp } from '../world/layout';
 import { Cookbook } from '../state/cookbook';
 import { JournalScreen } from '../ui/journalScreen';
 import { Reputation } from '../state/reputation';
@@ -82,6 +88,11 @@ export class Game {
   readonly service: Service;
   /** The inn's reputation: filled by serving guests, it brings more of them. */
   readonly reputation: Reputation;
+  /** The time of day. */
+  readonly clock = new Clock();
+  private day = this.clock.day;
+  /** The inn's guest rooms. */
+  readonly rooms: Rooms;
   /** Pops (see ui/fx.ts) out in the world, and over the HUD. */
   private readonly worldPops = new Pops();
   private readonly hudPops = new Pops();
@@ -117,6 +128,7 @@ export class Game {
         return got === n;
       },
       openShop: (shop) => {
+        if (!this.shops.open(shop)) return this.dialog.show(`Closed. ${this.shops.hoursText(shop)}.`, this.content.shop(shop).name, this.time);
         this.shops.visit(shop);
         this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets);
       },
@@ -134,7 +146,7 @@ export class Game {
     };
     const e = this.content.economy;
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins, e.bag_weight, (item) => this.content.items[item]?.weight ?? 1);
-    this.shops = new Shops(this.content, () => this.time);
+    this.shops = new Shops(this.content, this.clock);
     this.storage = new Storage(e.stack_size);
     this.furnish = new Furnish({
       assets, content: this.content, player: this.player,
@@ -143,10 +155,13 @@ export class Game {
       rebuild: () => this.rebuildScene(false),
       changed: (id) => this.editor.markChanged(id),
       say: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
+      pack: (prop) => this.pack(prop),
+      unpack: (item) => void this.bag.add(item, 1),
     });
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
     this.kitchen = new Kitchen(new InnStores(this.storage, this.layouts, this.content), this.bag, this.content);
+    this.rooms = new Rooms(this.layouts, this.storage, this.content);
     const looks = (assets.sheets.find((sh) => sh.name === 'guests')?.frames ?? []).filter((f) => f.endsWith('_down_idle')).map((f) => f.replace(/_down_idle$/, ''));
     this.reputation = new Reputation();
     this.service = new Service(this.content, looks, this.reputation);
@@ -172,6 +187,13 @@ export class Game {
     for (let i = 1; i < 10; i++) r.rect(bx + Math.round((bw * i) / 10), by, 1, 4, '#45283c', true);
   }
 
+  /** The day and the time, under the reputation meter. */
+  private drawClock(r: Renderer): void {
+    const t = `Day ${this.clock.day}   ${this.clock.time}`;
+    r.nine('panel_dark', 4, 56, measure(t) + 14, 20);
+    drawText(r, this.assets, t, 10, 62);
+  }
+
   /** Every seat in the inn, with how long a guest takes to walk there from the door. */
   private seats(): Array<Seat & { walk: number }> {
     return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => {
@@ -190,29 +212,95 @@ export class Game {
     return { x: s.x + 16, y: s.y + 28 };
   }
 
+  /** The foot of the stairs up, in a map (where guests go up to bed), if it has some. */
+  private stairsOf(layout: string): { x: number; y: number } | null {
+    const p = this.layouts.get(layout)!.props.find((q) => q.behavior?.type === 'stairs' && typeof q.sprite === 'string' && q.sprite.includes('up'));
+    return p ? { x: p.x, y: p.y + 4 } : null;
+  }
+
   /** Where a guest sitting in a seat has their feet. */
   private seatSpot(s: Seat): { x: number; y: number } {
     return { x: s.art.x + s.art.w / 2, y: s.art.y + s.art.h - 6 };
   }
 
-  /** A guest has left: their coins and the renown they earn the inn, and what they say (over where they sat). */
-  private guestLeft(g: Guest): void {
-    const o = g.outcome!;
+  /** Coins and renown from a guest: paid into the purse, and the inn's reputation. */
+  private earn(o: Outcome): void {
     this.bag.coins += o.coins;
     const levels = o.renown ? this.reputation.add(o.renown) : 0;
     if (levels) this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
     else if (o.renown) this.hudPops.pop(70, 34, this.time, { text: `${o.renown > 0 ? '+' : ''}${o.renown} renown` });
+  }
+
+  /**
+   * A guest has finished a round, or left: their coins and the renown they earn the inn, and how they
+   * feel. Staying on (another round, or asking for a room), what they say shows over their seat; leaving,
+   * it goes out the door with them.
+   */
+  private guestLeft(g: Guest, o: Outcome): void {
+    this.earn(o);
     const s = this.seats().find((x) => x.key === g.seat);
     if (!s || s.layout !== this.scene.id) return;
     const x = s.art.x + s.art.w / 2;
     if (o.coins) this.worldPops.pop(x, s.art.y + 12, this.time, { text: `+${o.coins} coins` });
+    if (g.state !== 'gone') this.floats.pop(`"${o.remark}"`, x, s.art.y - 6, this.time);
     this.emotes.pop(o.mood >= 0.8 ? 'emote_happy' : o.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
+  }
+
+  /** Morning: guests who stayed the night settle up for their rooms. */
+  private morning(): void {
+    this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `Day ${this.clock.day}`, big: true });
+    this.service.checkout(this.rooms, (g, o) => {
+      this.earn(o);
+      this.hudPops.pop(VIEW_W / 2, 92, this.time, { text: `${this.rooms.name(g.stayingIn!)}: +${o.coins} coins. "${o.remark}"` });
+    });
+  }
+
+  /** Pack a piece of furniture up into the bag: why not, or null once it's in. */
+  private pack(prop: PlacedProp): string | null {
+    const sprite = typeof prop.sprite === 'string' ? prop.sprite : '';
+    const item = this.content.furnitureOf(sprite);
+    if (!item) return "That can't be packed up";
+    const b = prop.behavior;
+    const spec = containerOf(sprite);
+    if (b?.type === 'storage' && this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content), spec?.kinds).contents().length) {
+      return 'Empty it out first';
+    }
+    if (this.service.lodgers.some((g) => g.stayingIn === this.scene.id) && item === 'bed') return 'Someone is sleeping in it!';
+    if (this.bag.add(item, 1) !== 1) return this.bag.why(item) ?? 'Your bag is full';
+    return null;
+  }
+
+  /** Take a piece of furniture out of the bag to set down here (a container gets its own storage). */
+  private placeFromBag(item: string): string | null {
+    const it = this.content.item(item);
+    if (!it.prop) return "That isn't furniture";
+    if (!isInn(this.scene.id)) return 'Furniture goes in the inn';
+    const { sprite, ...rest } = it.prop;
+    const prop: PlacedProp = { sprite, x: 0, y: 0, ...rest };
+    const spec = containerOf(sprite);
+    if (spec) prop.behavior = { type: 'storage', id: this.newStorageId(sprite), slots: spec.slots };
+    const why = this.furnish.place(item, prop);
+    if (!why) this.bag.remove(item, 1);
+    return why;
+  }
+
+  /** A storage id no container has yet: "inn_ground_upstairs_room_bed_2". */
+  private newStorageId(sprite: string): string {
+    const used = new Set([...this.layouts.values()].flatMap((l) => l.props.map((p) => (p.behavior?.type === 'storage' ? p.behavior.id : ''))));
+    const base = `${this.scene.id}_${sprite.replace(/^anim:/, '')}`;
+    let n = 1;
+    while (used.has(`${base}_${n}`) || this.storage.has(`${base}_${n}`)) n++;
+    return `${base}_${n}`;
   }
 
   /** Serving a table (key: map and position), or the bar: its seats, from what's ready at the plating station. */
   private openTable(key: string, title: string): void {
     const seats = seating(this.layouts.get(this.scene.id)!, this.assets, this.content).seats.filter((s) => s.table === key);
-    this.screen = new TableScreen(title, seats, this.service, () => this.kitchen.takeCutlery(), (g) => this.guestLeft(g), this.content, this.assets);
+    const rooms = () => this.rooms.list().map((id) => ({
+      id, name: this.rooms.name(id), why: this.rooms.notReady(id), has: (c: string) => this.rooms.has(id, c),
+    }));
+    this.screen = new TableScreen(title, seats, this.service, () => this.kitchen.takeCutlery(), (g, o) => this.guestLeft(g, o),
+      (g) => talk(g, this.content, this.cookbook), rooms, this.content, this.assets);
   }
 
   /** Guests eat, pay and leave, and new ones arrive (wherever the player is). */
@@ -228,7 +316,9 @@ export class Game {
       this.seenTimer = 1;
       this.noteSeen();
     }
-    this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (g) => this.guestLeft(g));
+    const h = this.clock.hour;
+    this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (g, o) => this.guestLeft(g, o),
+      { busy: this.clock.busy, evening: h >= 18 || this.clock.night, rooms: this.rooms.list().length > 0 });
   }
 
   /** Serving as seen in this map: what's ready on the plating station, seated guests, what's on the tables and bar. */
@@ -246,10 +336,12 @@ export class Game {
       if (g.state === 'arriving') out.push(new WalkerEntity(g.look, door, this.seatSpot(seat), 1 - g.walk / g.walkTotal, this.assets, this.time));
       else out.push(new GuestEntity(g, seat, props[seat.chair], this.assets));
     }
+    const stairs = this.stairsOf(l.id) ?? door;
     for (const w of this.service.leavers) {
       const seat = seats.find((s) => s.key === w.seat);
-      // what they said about it goes out the door with them
-      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), door, w.t / w.total, this.assets, this.time, w.guest.outcome?.remark));
+      // what they said about it goes out the door with them (or up the stairs, to bed)
+      const to = w.guest.stayingIn ? stairs : door;
+      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), to, w.t / w.total, this.assets, this.time, w.guest.outcome?.remark));
     }
     // on each table and along the bar: each guest's meal in front of them while they eat, and the
     // dishes left at each seat once they've gone
@@ -342,6 +434,7 @@ export class Game {
   /** Fade out, change scene, fade in. Ignored while a transition is already running. */
   goTo(id: string, spawnId: string): void {
     if (this.transition) return;
+    this.furnish.putBack(); // furniture stays in the room it's in (pack it away to take it elsewhere)
     this.getScene(id); // fail fast on a bad id
     this.transition = { phase: 'out', t: 0, to: id, spawn: spawnId };
   }
@@ -419,7 +512,8 @@ export class Game {
     } else {
       if (this.input.pressed('map')) this.screen = new JournalScreen(this.bag, this.reputation, this.service, this.cookbook, this.content, this.assets);
       if (this.input.pressed('menu')) {
-        this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id), this.content, this.assets);
+        this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id),
+          (item) => this.placeFromBag(item), this.content, this.assets);
       }
       const g = this.scene.ground;
       this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1, this.furnish.carrying);
@@ -438,6 +532,11 @@ export class Game {
       }
     }
     if (!this.editor.active) {
+      this.clock.update(dt, this.service.guests.size === 0);
+      if (this.clock.day > this.day) {
+        this.day = this.clock.day;
+        this.morning();
+      }
       this.tickService(dt);
       this.entities = [...this.scene.props, this.player, ...this.serviceEntities()];
     }
@@ -468,6 +567,15 @@ export class Game {
     this.emotes.draw(r, cx, cy, this.time);
     this.worldPops.draw(r, this.assets, this.content, this.time, cx, cy);
     this.floats.draw(r, this.assets, cx, cy, this.time);
+    if (!this.editor.active) {
+      // the time of day's light over the world
+      const light = this.clock.light(this.scene.ground instanceof RoomMap);
+      if (light.alpha > 0.005) {
+        r.ctx.globalAlpha = light.alpha;
+        r.rect(0, 0, VIEW_W, VIEW_H, light.color, true);
+        r.ctx.globalAlpha = 1;
+      }
+    }
 
     if (this.editor.active) {
       this.editor.drawWorld(cx, cy);
@@ -492,6 +600,12 @@ export class Game {
       r.nine('panel_dark', 4, 4, 28 + String(this.bag.coins).length * 6, 24);
       drawCoins(r, this.assets, this.bag.coins, 8, 8);
       this.drawReputation(r);
+      this.drawClock(r);
+      if (this.furnish.carrying) {
+        const t = hint(this.input.device, [['interact', 'set down'], ['cook', 'pack away'], ['back', 'put back']]);
+        r.nine('panel_dark', Math.round((VIEW_W - measure(t)) / 2) - 8, VIEW_H - 26, measure(t) + 16, 20);
+        drawText(r, this.assets, t, Math.round((VIEW_W - measure(t)) / 2), VIEW_H - 20);
+      }
     }
     this.hudPops.draw(r, this.assets, this.content, this.time);
     if (this.debug) this.drawDebug(cx, cy);

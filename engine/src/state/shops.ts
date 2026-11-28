@@ -1,35 +1,50 @@
 /**
  * What each shop has out, and buying and selling. Each shop has a themed pool (gamedata) and a handful
- * of it is out at a time, plus anything it always carries. Things sell to other folk over time and run
- * out, and something else from the pool takes their place: it's worked out lazily, from the time since
- * the shop was last visited, so every visit is a little different (and never a race: nothing is shown
- * about time). Prices come from gamedata; shops buy back only what gamedata says they buy.
+ * of it is out at a time, plus anything it always carries. A shop keeps hours (gamedata) and opens each
+ * morning with fresh stock: a new handful from its pool, and what it always carries topped up. Through
+ * the day things sell to other folk and run out (worked out lazily, from the time since the shop was last
+ * visited); what's sold out stays sold out till the next morning. Prices come from gamedata; shops buy
+ * back only what gamedata says they buy.
  */
 import type { Content, StockEntry } from '../game/data';
+import type { Clock } from './clock';
 import type { Bag } from './inventory';
 
 export interface Shelf { item: string; price: number; left: number; always: boolean }
 
 export type TradeResult = { ok: true } | { ok: false; reason: string };
 
-const SELL_RATE = 1 / 150; // of each thing out, other folk buy about one every this many seconds...
-const REPLACE_AFTER = 45; // ...and a sold-out line is replaced with something else after a while
+const SELL_RATE = 1 / 150; // of each thing out, other folk buy about one every this many game minutes
 
-interface ShopState { shelf: Shelf[]; checked: number; emptySince: Map<string, number> }
+interface ShopState { shelf: Shelf[]; checked: number; day: number }
 
 export class Shops {
   private readonly shops = new Map<string, ShopState>();
 
-  /** clock: game seconds. */
-  constructor(private readonly content: Content, private readonly clock: () => number, private readonly rng = Math.random) {
-    for (const [id, shop] of Object.entries(content.shops)) {
-      const out = this.pick(shop.pool, shop.shelf, new Set());
-      this.shops.set(id, {
-        shelf: [...out.map((e) => this.line(e, false)), ...shop.always.map((e) => this.line(e, true))],
-        checked: clock(),
-        emptySince: new Map(),
-      });
+  constructor(private readonly content: Content, private readonly clock: Clock, private readonly rng = Math.random) {
+    for (const id of Object.keys(content.shops)) {
+      const s: ShopState = { shelf: [], checked: clock.minutes, day: clock.day };
+      this.restock(id, s);
+      this.shops.set(id, s);
     }
+  }
+
+  /** A morning's fresh stock: a new handful from the pool, and what's always carried. */
+  private restock(id: string, s: ShopState): void {
+    const shop = this.content.shop(id);
+    s.shelf = [...this.pick(shop.pool, shop.shelf, new Set()).map((e) => this.line(e, false)), ...shop.always.map((e) => this.line(e, true))];
+  }
+
+  /** Whether a shop is open now. */
+  open(shop: string): boolean {
+    return this.clock.within(this.content.shop(shop).hours);
+  }
+
+  /** "Opens at 8 am" (or "Closed for the night"). */
+  hoursText(shop: string): string {
+    const [open, close] = this.content.shop(shop).hours;
+    const at = (h: number) => `${h % 12 || 12} ${h < 12 ? 'am' : 'pm'}`;
+    return `Open ${at(open)} to ${at(close)}`;
   }
 
   private line(e: StockEntry, always: boolean): Shelf {
@@ -53,32 +68,23 @@ export class Shops {
   }
 
   /**
-   * Catch a shop up on the time since it was last visited: things sold to other folk, sold-out lines
-   * replaced. Call when the player walks up to it (not while they browse).
+   * Catch a shop up on the time since it was last visited: a new day's fresh stock, and things sold to
+   * other folk since. Call when the player walks up to it (not while they browse).
    */
   visit(shop: string): void {
     const s = this.state(shop);
-    const now = this.clock();
-    const elapsed = now - s.checked;
-    s.checked = now;
-    const pool = this.content.shop(shop).pool;
-    s.shelf.forEach((line, i) => {
-      if (line.always) {
-        line.left = Math.max(line.left, pool.find((e) => e.item === line.item)?.daily_qty ?? line.left);
-        return;
-      }
+    if (this.clock.day > s.day) {
+      s.day = this.clock.day;
+      s.checked = Math.max(s.checked, this.clock.minutes - (this.clock.hour - this.content.shop(shop).hours[0]) * 60);
+      this.restock(shop, s);
+    }
+    const elapsed = Math.max(0, this.clock.minutes - s.checked);
+    s.checked = this.clock.minutes;
+    for (const line of s.shelf) {
+      if (line.always) continue;
       const sold = Math.floor(elapsed * SELL_RATE + this.rng());
-      if (line.left > 0 && sold > 0) {
-        line.left = Math.max(0, line.left - sold);
-        if (line.left === 0) s.emptySince.set(line.item, now - elapsed / 2);
-      }
-      const since = s.emptySince.get(line.item);
-      if (line.left === 0 && since !== undefined && now - since >= REPLACE_AFTER) {
-        const [next] = this.pick(pool, 1, new Set(s.shelf.map((l) => l.item)));
-        s.emptySince.delete(line.item);
-        if (next) s.shelf[i] = this.line(next, false);
-      }
-    });
+      if (line.left > 0 && sold > 0) line.left = Math.max(0, line.left - sold);
+    }
   }
 
   shelf(shop: string): Shelf[] {
@@ -98,7 +104,6 @@ export class Shops {
     bag.add(item, n);
     bag.coins -= line.price * n;
     line.left -= n;
-    if (line.left === 0 && !line.always) s.emptySince.set(item, this.clock());
     return { ok: true };
   }
 

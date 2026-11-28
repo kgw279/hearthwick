@@ -26,6 +26,7 @@
   "spawns": {},
   "exits": [],
   "props": [
-    {"sprite": "wall_door", "x": 80, "y": 64, "layer": "wall", "behavior": {"type": "door", "to": "inn_ground_upstairs"}}
+    {"sprite": "wall_door", "x": 80, "y": 64, "layer": "wall", "behavior": {"type": "door", "to": "inn_ground_upstairs"}},
+    {"sprite": "bed", "x": 48, "y": 90, "depth": 26, "behavior": {"type": "storage", "id": "inn_ground_upstairs_room_bed_1", "slots": 3, "contents": [{"item": "bed_linens", "count": 1}, {"item": "pillow", "count": 1}]}}
   ]
 }

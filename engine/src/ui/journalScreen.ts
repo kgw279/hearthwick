@@ -129,7 +129,12 @@ export class JournalScreen implements Screen {
   /** How a visit stands, in a few words. */
   private status(g: Guest): string {
     const o = g.outcome;
-    if (!o) return g.state === 'arriving' ? 'Coming in' : g.state === 'eating' ? 'Eating' : 'Waiting';
+    if (g.stay) return g.stay.mood >= 0.95 ? 'Stayed the night: slept well' : 'Stayed the night';
+    if (g.stayingIn) return 'Staying the night';
+    if (g.state === 'room') return 'Asking for a room';
+    if (g.state !== 'gone') return g.state === 'arriving' ? 'Coming in' : g.state === 'eating' ? 'Eating' : g.had.length ? 'Another round' : 'Waiting';
+    if (!o) return 'Gone';
+    if (o.how === 'no room') return 'No room for them';
     if (o.how === 'gave up') return 'Gave up waiting';
     if (o.how === 'dismissed') return 'Sent on their way';
     return o.mood >= 0.95 ? 'Left delighted' : o.mood >= 0.7 ? 'Left happy' : 'Left content';
@@ -235,6 +240,16 @@ export class JournalScreen implements Screen {
     drawText(r, assets, `${this.status(g)}${g.bar ? ', at the bar' : ''}`, x + 36, y + 16);
     r.ctx.globalAlpha = 1;
     y += 36;
+    if (g.had.length) {
+      // earlier rounds
+      r.ctx.globalAlpha = 0.75;
+      wrap(`Earlier: ${g.had.map((round) => round.map((sv) => content.itemName(sv.dish)).join(', ')).join('; then ')}`, w).forEach((l) => {
+        drawText(r, assets, l, x, y);
+        y += 11;
+      });
+      r.ctx.globalAlpha = 1;
+      y += 2;
+    }
     // each course: what they wanted, what came, how it fit
     for (const c of service.wants(g)) {
       this.drawCourse(r, g, c, x, y);
@@ -248,6 +263,21 @@ export class JournalScreen implements Screen {
       y += SLOT + 4;
     }
     const o = g.outcome;
+    const lines: Array<{ text: string; dim?: boolean }> = [];
+    // what they told you, and their night's stay
+    for (const said of g.said) lines.push({ text: `${said.food ? 'They told you: ' : 'Said: '}"${said.line}"`, dim: !said.food });
+    if (g.room) lines.push({ text: `Wanted a room with ${g.room.wants.map((c) => content.rooms.comforts[c].want).join(', ') || 'nothing special'}`, dim: true });
+    if (g.stay) {
+      lines.push({ text: `Stayed the night: ${g.stay.coins} coins, ${g.stay.renown} renown. "${g.stay.remark}"` });
+    }
+    for (const line of lines) {
+      r.ctx.globalAlpha = line.dim ? 0.7 : 1;
+      wrap(line.text, w).forEach((l) => {
+        if (y < this.y + H - 12) drawText(r, assets, l, x, y);
+        y += 11;
+      });
+      r.ctx.globalAlpha = 1;
+    }
     if (!o) return;
     y += 2;
     wrap(`"${o.remark}"`, w).forEach((l) => {
@@ -258,7 +288,7 @@ export class JournalScreen implements Screen {
     drawText(r, assets, sums, x, y + 2);
     y += 14;
     r.ctx.globalAlpha = 0.7;
-    wrap(o.awards.map((a) => `${a.why} ${a.points > 0 ? '+' : ''}${a.points}`).join(', '), w).forEach((l) => {
+    wrap([...o.awards, ...(g.stay?.awards ?? [])].map((a) => `${a.why} ${a.points > 0 ? '+' : ''}${a.points}`).join(', '), w).forEach((l) => {
       if (y < this.y + H - 12) drawText(r, assets, l, x, y);
       y += 11;
     });

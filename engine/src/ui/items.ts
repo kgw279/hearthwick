@@ -35,7 +35,7 @@ export function drawCoins(r: Renderer, assets: Assets, coins: number, x: number,
 export function drawItemInfo(r: Renderer, assets: Assets, content: Content, item: string, x: number, y: number): number {
   const it = content.item(item);
   drawText(r, assets, it.name, x, y);
-  const kind = ({ raw: 'Ingredient', prepared: 'Prepared', tableware: 'Tableware' } as Record<string, string>)[it.kind] ?? 'Dish';
+  const kind = ({ raw: 'Ingredient', prepared: 'Prepared', tableware: 'Tableware', supply: 'Inn supplies', furniture: 'Furniture' } as Record<string, string>)[it.kind] ?? 'Dish';
   r.ctx.globalAlpha = 0.7;
   drawText(r, assets, kind, x, y + 12);
   r.ctx.globalAlpha = 1;
