@@ -14,18 +14,19 @@ import type { Rect } from '../core/geom';
 
 /** The small piece shown for a served part, or a dirty piece. */
 function mini(content: Content, item: string, part: 'food' | 'drink' | 'cutlery' | 'dirty'): string {
+  if (part !== 'dirty' && part !== 'cutlery' && !content.items[item]?.tableware) return '';
   const kind = content.items[item]?.tableware?.kind ?? 'plate';
   if (part === 'dirty') return kind === 'cutlery' ? 'mini_cutlery_dirty' : `mini_${kind}_dirty`;
   if (part === 'cutlery') return 'mini_cutlery';
   if (part === 'drink') return 'mini_mug_full';
-  if (!content.items[item]?.tableware) return ''; // a snack, served as it is
   return kind === 'bowl' ? 'mini_bowl_food' : 'mini_plate_food';
 }
 
 /** A meal's pieces, small, with the top-left of the plate at (x, y). */
 export function drawMeal(r: Renderer, content: Content, m: Meal, x: number, y: number): void {
   if (m.cutlery) r.sprite(mini(content, m.cutlery, 'cutlery'), x + 4, y - 2);
-  if (m.food?.ware) r.sprite(mini(content, m.food.ware, 'food'), x, y);
+  if (m.snack) r.sprite(mini(content, m.snack.ware, 'food'), x - 4, y + 1);
+  if (m.main) r.sprite(mini(content, m.main.ware, 'food'), x, y);
   if (m.drink) r.sprite(mini(content, m.drink.ware, 'drink'), x + 3, y - 6);
 }
 
@@ -47,7 +48,7 @@ export class ReadyEntity extends Entity {
   draw(r: Renderer, camX: number, camY: number): void {
     const gap = (this.art.w - 16) / Math.max(1, this.ready.length);
     this.ready.forEach((s, i) => {
-      const meal: Meal = this.content.dishes[s.dish]?.kind === 'drink' ? { drink: s } : { food: s };
+      const meal: Meal = { [this.content.course(s.dish)]: s };
       drawMeal(r, this.content, meal, Math.round(this.art.x + 8 + i * gap + gap / 2 - 5) - camX, this.art.y + 7 - camY);
     });
   }

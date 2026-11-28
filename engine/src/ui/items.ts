@@ -35,9 +35,8 @@ export function drawItemInfo(r: Renderer, assets: Assets, content: Content, item
   const it = content.item(item);
   drawText(r, assets, it.name, x, y);
   const kind = ({ raw: 'Ingredient', prepared: 'Prepared', tableware: 'Tableware' } as Record<string, string>)[it.kind] ?? 'Dish';
-  const keeps = it.shelf_life_days ? `  keeps ${it.shelf_life_days} day${it.shelf_life_days > 1 ? 's' : ''}` : '';
   r.ctx.globalAlpha = 0.7;
-  drawText(r, assets, kind + keeps, x, y + 12);
+  drawText(r, assets, kind, x, y + 12);
   r.ctx.globalAlpha = 1;
   let tx = x;
   for (const tag of it.tags) {

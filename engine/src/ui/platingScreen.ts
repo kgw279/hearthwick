@@ -10,7 +10,7 @@
  * Controls as at the prep stations: A (E, click) puts on; X (F, right-click) takes off (on what's ready:
  * unplates it, back to the stores); RT (X key, click the result) plates it; Y (R) clears the plate; View
  * (M) opens the recipe book of known dishes; B (Esc) leaves. Plating something new writes it in.
- * Plating empties the plate (with a pop) and pins a card of what went on it: RT again plates another.
+ * Plating empties the plate (with a pop); under the result, a ribbon says RT plates another of the same.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -292,17 +292,6 @@ export class PlatingScreen implements Screen {
       const item = this.plate[i];
       if (item) drawItem(r, assets, content, item, p.x, p.y, 1, kitchen.have(item) < this.plate.filter((x) => x === item).length);
     }
-    if (!this.plate.length && this.again.length) {
-      // the last dish, pinned over the plate like a card: RT plates it again
-      const p0 = this.plateSlot(0);
-      const w = this.size * (SLOT + 2) + 6;
-      r.nine('panel_parchment', p0.x - 4, p0.y - 4, w, SLOT + 8);
-      this.again.forEach((item, i) => drawItem(r, assets, content, item, this.plateSlot(i).x, p0.y, 1, kitchen.have(item) < this.again.filter((x) => x === item).length));
-      const tag = `${buttonName(this.device, 'cat_next')}: again`;
-      // a ribbon tied on at the card's foot: what makes it again
-      r.nine('ribbon_banner', p0.x - 4, p0.y + SLOT + 4, measure(tag) + 14, 14);
-      drawText(r, assets, tag, p0.x + 3, p0.y + SLOT + 6);
-    }
     const res = this.resultSlot();
     drawSlot(r, res.x, res.y, false);
     const dish = this.dish();
@@ -319,7 +308,7 @@ export class PlatingScreen implements Screen {
     } else {
       if (this.plate.length) drawText(r, assets, '?', res.x + (SLOT - measure('?')) / 2, res.y + 12);
       r.ctx.globalAlpha = 0.7;
-      wrap(this.plate.length ? "That isn't a dish (yet)" : this.again.length ? 'Ready to plate again' : 'Put ingredients on the plate', width).slice(0, 2)
+      wrap(this.plate.length ? "That isn't a dish (yet)" : this.again.length ? '' : 'Put ingredients on the plate', width).slice(0, 2)
         .forEach((l, i) => drawText(r, assets, l, tx, res.y + 6 + i * 11));
       r.ctx.globalAlpha = 1;
     }
@@ -332,6 +321,15 @@ export class PlatingScreen implements Screen {
       if (s) drawItem(r, assets, content, s.dish, p.x, p.y);
     }
 
+    // made a moment ago: what RT makes again, shown faintly in the result, with a ribbon saying so
+    const again = !this.plate.length && this.again.length ? this.kitchen.plated(this.again) : undefined;
+    if (again) {
+      const res = this.resultSlot();
+      drawItem(r, assets, content, again, res.x, res.y, 1, true);
+      const tag = `${buttonName(this.device, 'cat_next')}: plate another ${content.itemName(again)}`;
+      r.nine('ribbon_banner', res.x - 4, res.y + SLOT + 4, measure(tag) + 14, 14);
+      drawText(r, assets, tag, res.x + 3, res.y + SLOT + 6);
+    }
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
       : hint(this.device, [['interact', 'add'], ['cook', 'take off'], ['cat_next', 'plate'], ['recipes', 'clear'], ['map', 'recipes'], ['back', 'leave']]);

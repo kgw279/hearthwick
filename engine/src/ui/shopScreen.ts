@@ -186,7 +186,7 @@ export class ShopScreen implements Screen {
       const line = shelf[this.shelfSel];
       if (line) {
         item = line.item;
-        action = line.left ? `Buy for ${line.price}` : 'Sold out today';
+        action = line.left ? `Buy for ${line.price}` : 'Sold out';
       }
     } else {
       const s = bag.slots[this.bagSel];

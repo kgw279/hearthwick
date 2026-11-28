@@ -299,6 +299,16 @@
         {
           "type": "forage",
           "spot": "meadow"
+        },
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 3
+        },
+        {
+          "type": "shop",
+          "shop": "spice",
+          "price": 3
         }
       ],
       "made_by": [],
@@ -339,6 +349,11 @@
         {
           "type": "shop",
           "shop": "spice",
+          "price": 7
+        },
+        {
+          "type": "shop",
+          "shop": "mill",
           "price": 7
         }
       ],
@@ -393,6 +408,11 @@
           "type": "shop",
           "shop": "mill",
           "price": 4
+        },
+        {
+          "type": "shop",
+          "shop": "dairy",
+          "price": 4
         }
       ],
       "made_by": [],
@@ -430,6 +450,11 @@
         {
           "type": "forage",
           "spot": "forest"
+        },
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 3
         }
       ],
       "made_by": [],
@@ -466,6 +491,11 @@
         {
           "type": "forage",
           "spot": "forest"
+        },
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 5
         }
       ],
       "made_by": [],
@@ -727,6 +757,11 @@
         {
           "type": "forage",
           "spot": "orchard"
+        },
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 5
         }
       ],
       "made_by": [],
@@ -1711,7 +1746,13 @@
       },
       "legacy_id": "flatbread",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "grill",
@@ -1746,7 +1787,13 @@
       },
       "legacy_id": "loaf",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 8
+        }
+      ],
       "made_by": [
         {
           "station": "oven",
@@ -2185,7 +2232,13 @@
       },
       "legacy_id": "syrup",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "spice",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "pot",
@@ -2228,7 +2281,13 @@
       },
       "legacy_id": "chherbs",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "spice",
+          "price": 3
+        }
+      ],
       "made_by": [
         {
           "station": "board",
@@ -3361,7 +3420,13 @@
       },
       "legacy_id": "cream",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "dairy",
+          "price": 5
+        }
+      ],
       "made_by": [
         {
           "station": "bowl",
@@ -3745,7 +3810,13 @@
       },
       "legacy_id": "grated",
       "pack": "prototype",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "dairy",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "board",
@@ -4981,7 +5052,13 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 9
+        }
+      ],
       "made_by": [
         {
           "station": "oven",
@@ -5632,7 +5709,18 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 6
+        },
+        {
+          "type": "shop",
+          "shop": "dairy",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "bowl",
@@ -5780,7 +5868,13 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "dairy",
+          "price": 8
+        }
+      ],
       "made_by": [
         {
           "station": "oven",
@@ -5925,7 +6019,13 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 9
+        }
+      ],
       "made_by": [
         {
           "station": "oven",
@@ -6288,7 +6388,13 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "bowl",
@@ -6327,7 +6433,13 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 6
+        }
+      ],
       "made_by": [
         {
           "station": "bowl",
@@ -6363,7 +6475,13 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "butcher",
+          "price": 14
+        }
+      ],
       "made_by": [
         {
           "station": "pot",
@@ -6471,7 +6589,13 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "spice",
+          "price": 5
+        }
+      ],
       "made_by": [
         {
           "station": "mill",
@@ -6904,7 +7028,13 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "butcher",
+          "price": 8
+        }
+      ],
       "made_by": [
         {
           "station": "mill",
@@ -6976,7 +7106,13 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "butcher",
+          "price": 9
+        }
+      ],
       "made_by": [
         {
           "station": "bowl",
@@ -7334,7 +7470,13 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 5
+        }
+      ],
       "made_by": [
         {
           "station": "mill",
@@ -7446,7 +7588,13 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "sources": [],
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "mill",
+          "price": 8
+        }
+      ],
       "made_by": [
         {
           "station": "oven",
@@ -13178,7 +13326,24 @@
   "shops": {
     "mill": {
       "name": "Willowmill Bakery",
-      "stock": [
+      "building": "bakery",
+      "buys": [
+        "bread_loaf",
+        "bread_rolls",
+        "butter",
+        "egg",
+        "flatbread",
+        "flour",
+        "honey",
+        "oatcakes",
+        "oats",
+        "rolled_oats",
+        "shortbread",
+        "wheat"
+      ],
+      "market": false,
+      "always": [],
+      "pool": [
         {
           "item": "wheat",
           "price": 3,
@@ -13199,44 +13364,85 @@
           "price": 3,
           "pack": "oats",
           "daily_qty": 10
-        }
-      ],
-      "building": "bakery",
-      "buys": [
-        "egg",
-        "flour",
-        "oats",
-        "wheat"
-      ]
-    },
-    "grocer": {
-      "name": "General Store",
-      "stock": [
+        },
         {
-          "item": "tomato",
-          "price": 4,
+          "item": "rolled_oats",
+          "price": 5,
           "daily_qty": 6
         },
         {
-          "item": "potato",
-          "price": 3,
-          "daily_qty": 10
+          "item": "bread_loaf",
+          "price": 8,
+          "daily_qty": 3
         },
         {
-          "item": "carrot",
-          "price": 3,
-          "daily_qty": 10
+          "item": "bread_rolls",
+          "price": 9,
+          "daily_qty": 3
         },
         {
-          "item": "onion",
-          "price": 3,
-          "daily_qty": 10
+          "item": "flatbread",
+          "price": 6,
+          "daily_qty": 6
         },
         {
-          "item": "cress",
-          "price": 3,
-          "daily_qty": 10
+          "item": "oatcakes",
+          "price": 8,
+          "daily_qty": 3
         },
+        {
+          "item": "shortbread",
+          "price": 9,
+          "daily_qty": 3
+        },
+        {
+          "item": "butter",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "honey",
+          "price": 7,
+          "daily_qty": 3
+        }
+      ],
+      "shelf": 5
+    },
+    "grocer": {
+      "name": "General Store",
+      "building": "general_store",
+      "buys": [
+        "apple",
+        "bed_linens",
+        "berries",
+        "candles",
+        "carrot",
+        "clay_bowl",
+        "clay_mug",
+        "clay_plate",
+        "cress",
+        "herbs",
+        "iron_cutlery",
+        "mushroom",
+        "onion",
+        "pewter_bowl",
+        "pewter_cutlery",
+        "pewter_mug",
+        "pewter_plate",
+        "pickled_carrots",
+        "pickled_onions",
+        "pillow",
+        "potato",
+        "salt",
+        "soap",
+        "tomato",
+        "wood_bowl",
+        "wood_cutlery",
+        "wood_mug",
+        "wood_plate"
+      ],
+      "market": false,
+      "always": [
         {
           "item": "wood_plate",
           "price": 2,
@@ -13316,43 +13522,88 @@
           "item": "soap",
           "price": 2,
           "daily_qty": 10
+        }
+      ],
+      "pool": [
+        {
+          "item": "tomato",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "potato",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "carrot",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "onion",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "cress",
+          "price": 3,
+          "daily_qty": 10
         },
         {
           "item": "salt",
           "price": 2,
           "pack": "seasoning",
           "daily_qty": 10
+        },
+        {
+          "item": "apple",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "mushroom",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "herbs",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "pickled_onions",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "pickled_carrots",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "berries",
+          "price": 3,
+          "daily_qty": 10
         }
       ],
-      "building": "general_store",
-      "buys": [
-        "bed_linens",
-        "candles",
-        "carrot",
-        "clay_bowl",
-        "clay_mug",
-        "clay_plate",
-        "cress",
-        "iron_cutlery",
-        "onion",
-        "pewter_bowl",
-        "pewter_cutlery",
-        "pewter_mug",
-        "pewter_plate",
-        "pillow",
-        "potato",
-        "salt",
-        "soap",
-        "tomato",
-        "wood_bowl",
-        "wood_cutlery",
-        "wood_mug",
-        "wood_plate"
-      ]
+      "shelf": 5
     },
     "dairy": {
       "name": "Clover Dairy",
-      "stock": [
+      "building": "dairy",
+      "buys": [
+        "butter",
+        "cheese",
+        "clotted_cream",
+        "egg",
+        "grated_cheese",
+        "milk",
+        "whipped_cream"
+      ],
+      "market": false,
+      "always": [],
+      "pool": [
         {
           "item": "milk",
           "price": 4,
@@ -13362,17 +13613,51 @@
           "item": "cheese",
           "price": 6,
           "daily_qty": 6
+        },
+        {
+          "item": "butter",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "clotted_cream",
+          "price": 8,
+          "daily_qty": 3
+        },
+        {
+          "item": "whipped_cream",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "egg",
+          "price": 4,
+          "daily_qty": 6
+        },
+        {
+          "item": "grated_cheese",
+          "price": 6,
+          "daily_qty": 6
         }
       ],
-      "building": "dairy",
-      "buys": [
-        "cheese",
-        "milk"
-      ]
+      "shelf": 4
     },
     "butcher": {
       "name": "Hollin's Butchery",
-      "stock": [
+      "building": "butcher",
+      "buys": [
+        "bacon",
+        "beef",
+        "chicken",
+        "mutton",
+        "pork",
+        "salt_beef",
+        "sausage_meat",
+        "venison"
+      ],
+      "market": false,
+      "always": [],
+      "pool": [
         {
           "item": "beef",
           "price": 9,
@@ -13399,20 +13684,36 @@
           "price": 8,
           "pack": "pork",
           "daily_qty": 3
+        },
+        {
+          "item": "bacon",
+          "price": 9,
+          "daily_qty": 3
+        },
+        {
+          "item": "sausage_meat",
+          "price": 8,
+          "daily_qty": 3
+        },
+        {
+          "item": "salt_beef",
+          "price": 14,
+          "daily_qty": 3
         }
       ],
-      "building": "butcher",
-      "buys": [
-        "beef",
-        "chicken",
-        "mutton",
-        "pork",
-        "venison"
-      ]
+      "shelf": 4
     },
     "fish": {
       "name": "The Fishmonger",
-      "stock": [
+      "building": "fishmonger",
+      "buys": [
+        "fish_stock",
+        "trout",
+        "trout_fillet"
+      ],
+      "market": false,
+      "always": [],
+      "pool": [
         {
           "item": "trout",
           "price": 8,
@@ -13429,16 +13730,24 @@
           "daily_qty": 3
         }
       ],
-      "building": "fishmonger",
-      "buys": [
-        "fish_stock",
-        "trout",
-        "trout_fillet"
-      ]
+      "shelf": 3
     },
     "spice": {
       "name": "Zephra's Spices",
-      "stock": [
+      "building": "spice_shop",
+      "buys": [
+        "chopped_herbs",
+        "cracked_pepper",
+        "ember_pepper",
+        "herbs",
+        "honey",
+        "honey_syrup",
+        "peppercorns",
+        "salt"
+      ],
+      "market": false,
+      "always": [],
+      "pool": [
         {
           "item": "ember_pepper",
           "price": 12,
@@ -13460,19 +13769,32 @@
           "price": 4,
           "pack": "seasoning",
           "daily_qty": 6
+        },
+        {
+          "item": "cracked_pepper",
+          "price": 5,
+          "daily_qty": 6
+        },
+        {
+          "item": "herbs",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "chopped_herbs",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "honey_syrup",
+          "price": 6,
+          "daily_qty": 6
         }
       ],
-      "building": "spice_shop",
-      "buys": [
-        "ember_pepper",
-        "honey",
-        "peppercorns",
-        "salt"
-      ]
+      "shelf": 4
     },
     "market": {
       "name": "Market Square",
-      "stock": "rotating",
       "pool": [
         {
           "item": "egg",
@@ -13571,7 +13893,6 @@
         }
       ],
       "building": "market_stall",
-      "daily_items": 6,
       "buys": [
         "acorns",
         "apple",
@@ -13599,7 +13920,10 @@
         "venison",
         "water",
         "wheat"
-      ]
+      ],
+      "market": true,
+      "always": [],
+      "shelf": 6
     }
   },
   "folk": {

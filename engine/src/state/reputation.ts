@@ -1,8 +1,8 @@
 /**
  * The inn's reputation, filled up like experience: points earned (for now, by serving guests interesting
  * dishes) fill the meter; a full meter is the next level, and the meter starts over needing more. It
- * levels slowly. A higher reputation brings guests more often, and fewer of them are travellers happy
- * with whatever's on hand. Pure state.
+ * levels slowly. A higher reputation brings more guests, more often, and more of them asking for
+ * something in particular. Pure state.
  */
 const FIRST_LEVEL = 12; // points to go from level 1 to 2...
 const GROWTH = 1.6; // ...and each level needs this much more than the last
@@ -39,8 +39,16 @@ export class Reputation {
     return Math.max(12, 40 - (this.level - 1) * 6);
   }
 
-  /** The chance a new guest is a traveller, happy to eat whatever's on hand (most of them, at first). */
-  get travellers(): number {
-    return [1, 0.6, 0.3][this.level - 1] ?? 0.1;
+  /** The chance a course a guest orders is "anything that's ready" rather than something in particular. */
+  get anything(): number {
+    return [0.9, 0.6, 0.35][this.level - 1] ?? 0.15;
+  }
+
+  /**
+   * How many guests the inn has room for, as word stands: past this many, a new one only drops in now and
+   * then (one at a time, mostly, at first).
+   */
+  get usualGuests(): number {
+    return this.level;
   }
 }

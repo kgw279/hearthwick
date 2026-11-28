@@ -9,7 +9,7 @@
  * clean plate (a mug for a drink; a bowl if there are no plates), and the dish waits at the plating
  * station, ready to serve (see state/service.ts). Pure state, no drawing.
  */
-import { SECTION, type Content, type Recipe, type Store } from '../game/data';
+import { SECTION, type Content, type Course, type Recipe, type Store } from '../game/data';
 import { containerOf, type ContainerSpec } from '../world/containers';
 import type { Layout } from '../world/layout';
 import type { Bag, Inventory, Stack } from './inventory';
@@ -261,16 +261,16 @@ export class Kitchen {
   }
 
   /**
-   * What a guest could order: dishes whose components are all to hand or one step away. At the bar,
-   * only drinks, dishes of a component or so, and raw snacks to hand.
+   * What a guest could ask for in particular, by course: dishes whose components are all to hand or one
+   * step away, and raw snacks to hand.
    */
-  menu(bar: boolean): { food: string[]; drink: string[] } {
-    const out = { food: [] as string[], drink: [] as string[] };
+  menu(bar: boolean): Record<Course, string[]> {
+    const out: Record<Course, string[]> = { drink: [], snack: [], main: [] };
     for (const [id, d] of Object.entries(this.content.dishes)) {
-      if (bar && d.kind === 'food' && d.components.length > this.content.bar.max_components) continue;
-      if (d.components.every((c) => this.soon(c))) out[d.kind].push(id);
+      if (d.components.every((c) => this.soon(c))) out[this.content.course(id)].push(id);
     }
-    if (bar) out.food.push(...this.content.bar.snacks.filter((s) => this.have(s) > 0));
+    out.snack.push(...this.content.bar.snacks.filter((s) => this.have(s) > 0));
+    if (bar) out.main = [];
     return out;
   }
 }

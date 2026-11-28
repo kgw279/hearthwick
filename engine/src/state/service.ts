@@ -5,17 +5,19 @@
  * time; plates and mugs limit them too). At a table or the bar, what's ready is served straight to a
  * guest: no carrying.
  *
- * Guests sit at seats (see game/seating.ts): at a table they order a dish and/or a drink; at the bar, a
- * drink, a simple dish or a raw snack. Travellers (most guests while the inn is little known) order
- * nothing: they're happy with whatever's ready. Served, they eat a while, pay and leave (with reputation
- * for the inn, the more for a more interesting dish), and what they ate from is left dirty where they sat.
+ * Guests sit at seats (see game/seating.ts) and order one or more courses: a drink, a snack, a main dish
+ * (at the bar, no mains). Each is either something in particular, or anything of that course that's
+ * ready; while the inn is little known, guests mostly take anything, and want just the one thing. Each
+ * course is served on its own, in any order. With everything they wanted, they eat a while, pay and leave
+ * (with reputation for the inn, the more for more interesting dishes), and what they ate from is left
+ * dirty where they sat.
  *
  * Patience is gentle, not a race: it's only a way for guests nobody's going to serve to move on. A
  * guest waits a good while, longer each time something they ordered arrives, and if nothing comes they
  * leave without paying. The player can also politely dismiss a guest: they pay nothing (not even for what
  * they've had), and they're happier about it the sooner it's done.
  */
-import type { Content } from '../game/data';
+import { COURSES, type Content, type Course } from '../game/data';
 import type { Reputation } from './reputation';
 
 /**
@@ -23,21 +25,19 @@ import type { Reputation } from './reputation';
  * is: its item, on a plate.
  */
 export interface Served { dish: string; ware: string }
-export interface Meal { food?: Served; drink?: Served; cutlery?: string }
+export interface Meal { drink?: Served; snack?: Served; main?: Served; cutlery?: string }
 
 /** How many plated dishes and drinks the plating station holds ready at once. */
 export const READY_MAX = 4;
 
-/** What a guest ordered: dishes (or, at the bar, a raw snack as food). */
-export interface Order { food?: string; drink?: string }
+/** What a guest ordered: each course they want, as a particular dish, or null for anything of that course. */
+export type Order = Partial<Record<Course, string | null>>;
 
 export interface Guest {
   /** Their sprite (a guest look: dwarf, elf...) and folk (what they like). */
   look: string;
   folk: string;
   bar: boolean;
-  /** Passing through: no order, happy with any one thing that's ready. */
-  traveller: boolean;
   order: Order;
   /** What's been brought so far. */
   got: Meal;
@@ -60,9 +60,10 @@ const EAT_TIME = 15; // seconds a served guest eats before paying and leaving
 const PATIENCE = 300; // seconds a guest waits for what they ordered...
 const PATIENCE_PER_PART = 180; // ...and more for each part of it brought
 /** Patience is shown as this many chits, marked off one at a time. */
-export const CHITS = 5;
+export const CHITS = 10;
 const PROMPT = 20; // seconds: dismissed sooner than this, a guest doesn't mind at all
-const FIRST_GUESTS = 2; // seated at the start
+const FIRST_GUESTS = 1; // seated at the start
+const EXTRA_GUEST = 0.12; // past the usual number of guests, the chance another drops in (for each one more)
 
 export class Service {
   /** Plated and waiting at the plating station. */
@@ -105,16 +106,16 @@ export class Service {
     return g.state === 'waiting' ? Math.max(0, Math.ceil((g.patience / g.patienceMax) * CHITS)) : CHITS;
   }
 
-  /** Whether a dish or snack is food or drink. */
-  kindOf(dish: string): 'food' | 'drink' {
-    return this.content.dishes[dish]?.kind ?? 'food';
+  /** The courses a guest wants, in serving order. */
+  wants(g: Guest): Course[] {
+    return COURSES.filter((c) => c in g.order);
   }
 
   /**
    * Advance time: waiting guests lose patience, served ones finish eating; new guests arrive at empty
    * seats. menu(bar): what a guest there could order. Each guest who leaves is passed to `left`.
    */
-  update(dt: number, seats: SeatRef[], menu: (bar: boolean) => { food: string[]; drink: string[] }, left: (l: Leaving) => void): void {
+  update(dt: number, seats: SeatRef[], menu: (bar: boolean) => Record<Course, string[]>, left: (l: Leaving) => void): void {
     const here = new Set(seats.map((s) => s.key));
     for (const key of [...this.guests.keys()]) {
       if (!here.has(key)) {
@@ -139,6 +140,8 @@ export class Service {
     }
     if ((this.arrive -= dt) > 0) return;
     this.arrive = this.reputation.arriveEvery;
+    const over = this.guests.size - this.reputation.usualGuests;
+    if (over >= 0 && this.rng() >= EXTRA_GUEST ** (over + 1)) return; // the inn's as busy as its name allows
     const seat = empty[Math.floor(this.rng() * empty.length)];
     this.seat(seat, menu(seat.bar));
   }
@@ -157,15 +160,22 @@ export class Service {
     let coins = 0;
     let reputation = 0;
     if (how === 'paid') {
-      for (const s of [g.got.food, g.got.drink]) if (s) coins += this.worth(s);
-      for (const s of [g.got.food, g.got.drink]) if (s) reputation += this.content.dishes[s.dish]?.reputation ?? 0;
-      if (g.got.food && this.content.dishes[g.got.food.dish] && !g.got.cutlery) coins -= 1;
+      for (const c of COURSES) {
+        const s = g.got[c];
+        if (!s) continue;
+        coins += this.worth(s);
+        reputation += this.content.dishes[s.dish]?.reputation ?? 0;
+      }
+      if (g.got.main && !g.got.cutlery) coins -= 1;
       coins = Math.max(1, coins);
     }
     const mood = how === 'paid' ? 1 : how === 'gave up' ? 0 : g.waited < PROMPT ? 0.8 : Math.max(0.2, 0.8 - this.restless(g) * 0.6);
     this.happiness += mood;
     const pile = this.dirty.get(seat.table) ?? [];
-    for (const s of [g.got.food, g.got.drink]) if (s?.ware) pile.push(this.content.item(s.ware).dirty ?? s.ware);
+    for (const c of COURSES) {
+      const s = g.got[c];
+      if (s?.ware) pile.push(this.content.item(s.ware).dirty ?? s.ware);
+    }
     if (g.got.cutlery) pile.push(this.content.item(g.got.cutlery).dirty ?? g.got.cutlery);
     this.dirty.set(seat.table, pile);
     this.guests.delete(seat.key);
@@ -173,19 +183,21 @@ export class Service {
     return { seat, guest: g, how, coins, mood, reputation };
   }
 
-  private seat(seat: SeatRef, menu: { food: string[]; drink: string[] }): void {
+  private seat(seat: SeatRef, menu: Record<Course, string[]>): void {
     const look = this.looks[Math.floor(this.rng() * this.looks.length)];
     const folk = this.content.folk[look] ? look : 'human';
-    const pick = (list: string[]) => this.favourite(list, folk);
-    const traveller = this.rng() < this.reputation.travellers;
+    // how many courses: just one, mostly, while the inn is little known; up to all three later
+    const allowed: Course[] = seat.bar ? ['drink', 'snack'] : [...COURSES];
+    const most = this.reputation.level <= 1 ? (this.rng() < 0.8 ? 1 : 2) : 1 + Math.floor(this.rng() * allowed.length);
+    const courses = [...allowed].sort(() => this.rng() - 0.5).slice(0, Math.max(1, Math.min(most, allowed.length)));
     const order: Order = {};
-    if (!traveller) {
-      if (menu.food.length && this.rng() < (seat.bar ? 0.4 : 0.8)) order.food = pick(menu.food);
-      if (menu.drink.length && (this.rng() < 0.7 || !order.food)) order.drink = pick(menu.drink);
-      if (!order.food && !order.drink) order.drink = 'dish_cup_of_well_water';
+    for (const c of courses) {
+      // something in particular, or anything of that course (most guests, early on)
+      const particular = menu[c].length && this.rng() >= this.reputation.anything;
+      order[c] = particular ? this.favourite(menu[c], folk) : null;
     }
     this.guests.set(seat.key, {
-      look, folk, bar: seat.bar, traveller, order, got: {}, state: 'waiting', patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0,
+      look, folk, bar: seat.bar, order, got: {}, state: 'waiting', patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0,
     });
     this.changed();
   }
@@ -212,17 +224,18 @@ export class Service {
     if (!s) return 'Choose something ready to serve';
     if (!g) return 'Nobody is sitting there';
     if (g.state !== 'waiting') return "They've already been served";
-    const part = this.kindOf(s.dish);
+    const c = this.content.course(s.dish);
     const name = (d: string) => this.content.itemName(d);
-    if (g.got[part]) return `They already have their ${part === 'food' ? 'meal' : 'drink'}`;
-    if (!g.traveller && g.order[part] !== s.dish) return g.order[part] ? `They ordered ${name(g.order[part]!)}` : `They didn't order ${name(s.dish)}`;
+    if (!(c in g.order)) return `They didn't want a ${c === 'main' ? 'main dish' : c}`;
+    if (g.got[c]) return `They already have their ${c === 'main' ? 'main dish' : c}`;
+    const want = g.order[c];
+    if (want && want !== s.dish) return `They asked for ${name(want)}`;
     this.ready.splice(ready, 1);
-    g.got = { ...g.got, [part]: s };
-    if (part === 'food' && this.content.dishes[s.dish] && !g.got.cutlery) g.got.cutlery = cutlery() ?? undefined;
+    g.got = { ...g.got, [c]: s };
+    if (c === 'main' && !g.got.cutlery) g.got.cutlery = cutlery() ?? undefined;
     g.patience += PATIENCE_PER_PART;
     g.patienceMax += PATIENCE_PER_PART;
-    // a traveller is happy with any one thing; others, once they have all they ordered
-    if (g.traveller || ((!g.order.food || g.got.food) && (!g.order.drink || g.got.drink))) {
+    if (this.wants(g).every((w) => g.got[w])) {
       g.state = 'eating';
       g.eating = EAT_TIME;
     }

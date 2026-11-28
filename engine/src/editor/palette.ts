@@ -60,7 +60,7 @@ function shopPlacement(content: Content): Map<string, Partial<PlacedProp>> {
   const out = new Map<string, Partial<PlacedProp>>();
   for (const [id, s] of Object.entries(content.shops)) {
     if (!s.building) continue;
-    if (s.stock === 'rotating') out.set(s.building, { collider: s.building, behavior: { type: 'market', shop: id } });
+    if (s.market) out.set(s.building, { collider: s.building, behavior: { type: 'market', shop: id } });
     else out.set(s.building, { ...BUILDING, behavior: { type: 'shop', shop: id } });
   }
   return out;

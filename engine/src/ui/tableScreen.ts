@@ -1,7 +1,8 @@
 /**
  * Serving a table, or the bar (it works the same). Left: the seats, each with who's sitting there, what
- * they ordered (dimmed once it's been brought; a traveller orders nothing and takes anything ready) and,
- * while they wait, their patience as a row of chits, marked off one at a time over a good few minutes.
+ * they want, a slot per course (a drink, a snack, a main dish: something in particular, or anything of
+ * that course that's ready), filled as each is brought, and, while they wait, their patience as a row of
+ * chits, marked off one at a time over a good few minutes. Courses can be served in any order.
  * Right: what's ready at the plating station. Choose
  * something ready, then the guest to serve it to: it must be something they ordered. A dish brings a
  * clean set of cutlery with it, if there's one to hand. Once they have all they ordered they eat, pay and
@@ -195,37 +196,37 @@ export class TableScreen implements Screen {
         drawText(r, assets, 'Enjoying their meal', p.x + 38, p.y + 22);
         r.ctx.globalAlpha = 1;
       } else {
-        // patience: chits, marked off one by one
+        // patience: small chits, marked off one by one
         const left = this.service.chits(g);
         for (let c = 0; c < CHITS; c++) {
-          const cx = p.x + 38 + c * 10;
-          const cy = p.y + 21;
-          r.rect(cx, cy, 8, 8, '#45283c', true);
-          r.rect(cx + 1, cy + 1, 6, 6, c < left ? '#d9a066' : '#663931', true);
-          if (c < left) r.rect(cx + 2, cy + 2, 2, 2, '#eec39a', true);
+          const cx = p.x + 38 + c * 6;
+          const cy = p.y + 23;
+          r.rect(cx, cy, 5, 5, '#45283c', true);
+          r.rect(cx + 1, cy + 1, 3, 3, c < left ? '#df7126' : '#eec39a', true);
         }
       }
-      // the order: each thing, dimmed once it's been brought
-      let ox = p.x + LIST_W - 4;
-      if (g.traveller && g.state === 'waiting') {
-        const t = 'Anything ready';
-        r.ctx.globalAlpha = 0.7;
-        drawText(r, assets, t, ox - measure(t) - 4, p.y + 15);
-        r.ctx.globalAlpha = 1;
-      }
-      for (const part of ['drink', 'food'] as const) {
-        const dish = g.order[part];
-        if (!dish) continue;
-        ox -= SLOT + 2;
-        drawSlot(r, ox, p.y + 3, false);
-        drawItem(r, assets, content, dish, ox, p.y + 3, 1, !!g.got[part]);
-      }
+      // a slot per course they want: what was brought, what they asked for (dimmed), or "any"
+      const wants = this.service.wants(g);
+      wants.forEach((c, k) => {
+        const sx = p.x + LIST_W - 4 - (wants.length - k) * (SLOT + 2);
+        drawSlot(r, sx, p.y + 3, false);
+        const got = g.got[c];
+        const want = g.order[c];
+        if (got) drawItem(r, assets, content, got.dish, sx, p.y + 3);
+        else if (want) drawItem(r, assets, content, want, sx, p.y + 3, 1, true);
+        else {
+          r.ctx.globalAlpha = 0.75;
+          drawText(r, assets, 'Any', sx + (SLOT - measure('Any')) / 2, p.y + 8);
+          drawText(r, assets, c, sx + (SLOT - measure(c)) / 2, p.y + 19);
+          r.ctx.globalAlpha = 1;
+        }
+      });
     });
     const g = this.guest(this.seat);
     if (g && this.pane === 'seats') {
-      const want = g.traveller ? 'anything (just passing through)' : [g.order.food, g.order.drink].filter((d): d is string => !!d).map((d) => content.itemName(d)).join(' and ');
+      const want = this.service.wants(g).map((c) => (g.order[c] ? content.itemName(g.order[c]!) : `any ${c === 'main' ? 'main dish' : c}`)).join(', ');
       r.ctx.globalAlpha = 0.8;
-      drawText(r, assets, `Ordered ${want}`, this.x + 20 + measure(this.title), this.y + 10);
+      drawText(r, assets, `Wants ${want}`, this.x + 20 + measure(this.title), this.y + 10);
       r.ctx.globalAlpha = 1;
     }
 

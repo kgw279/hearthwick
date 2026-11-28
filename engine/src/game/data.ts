@@ -32,15 +32,22 @@ export interface DishData {
   complexity: number; reputation: number;
 }
 export interface FolkData { name: string; likes: string[]; hates: string | null }
+/** The courses a guest orders: a drink, a snack (a raw snack or a one-ingredient dish), a main dish. */
+export type Course = 'drink' | 'snack' | 'main';
+export const COURSES: Course[] = ['drink', 'snack', 'main'];
+
 /** One way to make something: what goes in, what comes out. */
 export interface Recipe { out: string; inputs: string[] }
 
 export interface StockEntry { item: string; price: number; daily_qty: number }
-interface ShopBase { name: string; building: string | null; buys: string[] }
-/** A shop with a fixed list of goods, or the market, which sells a few of its pool each day. */
-export type ShopData =
-  | (ShopBase & { stock: StockEntry[] })
-  | (ShopBase & { stock: 'rotating'; pool: StockEntry[]; daily_items: number });
+/**
+ * A shop: a themed pool of what it might have out (`shelf` of them at a time), what it always has, and
+ * what it buys back. The market is a stall, not a building.
+ */
+export interface ShopData {
+  name: string; building: string | null; buys: string[];
+  market: boolean; pool: StockEntry[]; always: StockEntry[]; shelf: number;
+}
 export interface ForageNodeData { yields: string; spot: string | null; states: { ready: string; harvested: string } }
 export interface Economy { starting_coins: number; bag_slots: number; stack_size: number; sell_ratio: number }
 
@@ -121,6 +128,14 @@ export class Content {
   stationOfArt(art: string): string | undefined {
     const frame = art.replace(/^anim:/, '').replace(/_f\d+$/, '');
     return Object.keys(this.stations).find((k) => this.stations[k].sprite.frame === frame);
+  }
+
+  /** Which course something served is: a drink, a snack (a raw snack, or a dish of one thing), or a main. */
+  course(id: string): Course {
+    const d = this.dishes[id];
+    if (!d) return 'snack';
+    if (d.kind === 'drink') return 'drink';
+    return d.components.length <= 1 ? 'snack' : 'main';
   }
 
   dishTags(id: string): string[] {

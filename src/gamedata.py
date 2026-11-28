@@ -19,6 +19,7 @@ import revisions
 import content_animals
 import content_tableware
 import content_supplies
+import content_shops
 import art_kitchen
 import art_supplies
 import art_tableware
@@ -277,6 +278,26 @@ def build():
         sh['pool'] = pool
         sh['daily_items'] = E['market_daily_items']
         sh['buys'] = sorted(i for i, it in items.items() if it['kind'] == 'raw')
+
+    # every shop the same shape: a themed pool (what it might have out), how many are out at once, and
+    # what it always has (content_shops.py). Prices are what it was stocked at, or worth plus a markup
+    for sid, sh in shops.items():
+        base = sh['pool'] if sh['stock'] == 'rotating' else sh['stock']
+        have = {e['item'] for e in base}
+        for i in content_shops.POOL[sid]:
+            if i not in items: raise ValueError(f'shop {sid}: unknown pool item {i}')
+            if i in have: continue
+            price = cheapest.get(i) or math.ceil(items[i]['value'] * content_shops.MARKUP)
+            base.append({'item': i, 'price': price, 'daily_qty': content_economy.daily_qty(price)})
+            items[i]['sources'].append({'type': 'shop', 'shop': sid, 'price': price})
+            have.add(i)
+        kinds = content_shops.ALWAYS.get(sid, ())
+        sh['market'] = sh['stock'] == 'rotating'
+        sh['always'] = [e for e in base if items[e['item']]['kind'] in kinds]
+        sh['pool'] = [e for e in base if items[e['item']]['kind'] not in kinds]
+        sh['shelf'] = content_shops.SHELF[sid]
+        if not sh['market']: sh['buys'] = sorted(set(sh['buys']) | {e['item'] for e in base})
+        for k in ('stock', 'daily_items'): sh.pop(k, None)
 
     animals = {}
     for aid, a in content_animals.ANIMALS.items():

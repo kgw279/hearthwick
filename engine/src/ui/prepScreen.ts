@@ -12,8 +12,8 @@
  * (known recipes; choosing one puts its ingredients in); B (Esc) leaves the station. Working out
  * something new writes it in the book.
  *
- * Making something empties the tray (with a pop, and the new thing's name), and pins a card of what went
- * in over the tray: RT again puts those same ingredients back in and makes another, while there are any.
+ * Making something empties the tray (with a pop, and the new thing's name); under "Makes", a ribbon
+ * says RT makes another: it puts those same ingredients back in and makes one more, while there are any.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -285,17 +285,6 @@ export class PrepScreen implements Screen {
       const item = this.tray[i];
       if (item) drawItem(r, assets, content, item, p.x, p.y, 1, kitchen.have(item) < this.tray.filter((t) => t === item).length);
     }
-    if (!this.tray.length && this.again.length) {
-      // the last recipe, pinned over the tray like a card: RT makes it again
-      const p0 = this.traySlot(0);
-      const w = this.size * (SLOT + 4) + 4;
-      r.nine('panel_parchment', p0.x - 4, p0.y - 4, w, SLOT + 8);
-      this.again.forEach((item, i) => drawItem(r, assets, content, item, this.traySlot(i).x, p0.y, 1, kitchen.have(item) < this.again.filter((x) => x === item).length));
-      const tag = `${buttonName(this.device, 'cat_next')}: again`;
-      // a ribbon tied on at the card's foot: what makes it again
-      r.nine('ribbon_banner', p0.x - 4, p0.y + SLOT + 4, measure(tag) + 14, 14);
-      drawText(r, assets, tag, p0.x + 3, p0.y + SLOT + 6);
-    }
     const res = this.resultSlot();
     drawText(r, assets, 'Makes', res.x, res.y - 12);
     drawSlot(r, res.x, res.y, false);
@@ -311,10 +300,19 @@ export class PrepScreen implements Screen {
       const q = '?';
       if (this.tray.length) drawText(r, assets, q, res.x + (SLOT - measure(q)) / 2, res.y + 12);
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, !this.tray.length ? (this.again.length ? 'Ready to make again' : 'Put ingredients in') : this.partOfSomething() ? 'Something more goes in...' : 'Nothing comes of that', tx, res.y + 12);
+      drawText(r, assets, !this.tray.length ? (this.again.length ? '' : 'Put ingredients in') : this.partOfSomething() ? 'Something more goes in...' : 'Nothing comes of that', tx, res.y + 12);
       r.ctx.globalAlpha = 1;
     }
 
+    // made a moment ago: what RT makes again, shown faintly in the result, with a ribbon saying so
+    const again = !this.tray.length && this.again.length ? this.content.recipeFor(this.station, this.again)?.out : undefined;
+    if (again) {
+      const res = this.resultSlot();
+      drawItem(r, assets, content, again, res.x, res.y, 1, true);
+      const tag = `${buttonName(this.device, 'cat_next')}: make another ${content.itemName(again)}`;
+      r.nine('ribbon_banner', res.x - 4, res.y + SLOT + 4, measure(tag) + 14, 14);
+      drawText(r, assets, tag, res.x + 3, res.y + SLOT + 6);
+    }
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
       : hint(this.device, [['interact', 'add'], ['cook', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['map', 'recipes'], ['back', 'leave']]);

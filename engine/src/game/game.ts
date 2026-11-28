@@ -113,7 +113,10 @@ export class Game {
         else this.floats.pop('Your bag is full', this.player.center.x, this.player.y, this.time);
         return got === n;
       },
-      openShop: (shop) => (this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets)),
+      openShop: (shop) => {
+        this.shops.visit(shop);
+        this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets);
+      },
       openStorage: (box, art) => {
         const inv = this.storage.get(box.id, box.slots, box.contents, accepts(containerOf(art), this.content));
         this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
@@ -126,7 +129,7 @@ export class Game {
     };
     const e = this.content.economy;
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
-    this.shops = new Shops(this.content);
+    this.shops = new Shops(this.content, () => this.time);
     this.storage = new Storage(e.stack_size);
     this.furnish = new Furnish({
       assets, content: this.content, player: this.player,
@@ -136,7 +139,6 @@ export class Game {
       changed: (id) => this.editor.markChanged(id),
       say: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
     });
-    this.shops.restock(1);
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
     this.kitchen = new Kitchen(new InnStores(this.storage, this.layouts, this.content), this.bag, this.content);
