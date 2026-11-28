@@ -22,10 +22,10 @@ export class Reputation {
     return Math.min(1, this.points / this.need);
   }
 
-  /** Add points; returns how many levels that gained. */
+  /** Add points (or, for a bad visit, take some away: never below the level's start); returns levels gained. */
   add(n: number): number {
     let gained = 0;
-    this.points += n;
+    this.points = Math.max(0, this.points + n);
     while (this.points >= this.need) {
       this.points -= this.need;
       this.level++;

@@ -42,7 +42,7 @@ import type { Screen } from '../ui/screen';
 import { ShopScreen } from '../ui/shopScreen';
 import { Player } from './player';
 
-const GUEST_SPEED = 38; // px per second guests walk at
+const GUEST_SPEED = 18; // px per second guests walk at: an unhurried amble
 const FADE = 0.22; // seconds for each half of a scene transition
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
@@ -121,7 +121,8 @@ export class Game {
         this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets);
       },
       openStorage: (box, art) => {
-        const inv = this.storage.get(box.id, box.slots, box.contents, accepts(containerOf(art), this.content));
+        const spec = containerOf(art);
+        const inv = this.storage.get(box.id, box.slots, box.contents, accepts(spec, this.content), spec?.kinds);
         this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
       },
       openStation: (station) => (this.screen = new PrepScreen(station, this.kitchen, this.cookbook, this.content, assets)),
@@ -200,12 +201,11 @@ export class Game {
     this.bag.coins += o.coins;
     const levels = o.renown ? this.reputation.add(o.renown) : 0;
     if (levels) this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
-    else if (o.renown) this.hudPops.pop(70, 34, this.time, { text: `+${o.renown} renown` });
+    else if (o.renown) this.hudPops.pop(70, 34, this.time, { text: `${o.renown > 0 ? '+' : ''}${o.renown} renown` });
     const s = this.seats().find((x) => x.key === g.seat);
     if (!s || s.layout !== this.scene.id) return;
     const x = s.art.x + s.art.w / 2;
     if (o.coins) this.worldPops.pop(x, s.art.y + 12, this.time, { text: `+${o.coins} coins` });
-    this.floats.pop(`"${o.remark}"`, x, s.art.y - 6, this.time);
     this.emotes.pop(o.mood >= 0.8 ? 'emote_happy' : o.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
   }
 
@@ -248,7 +248,8 @@ export class Game {
     }
     for (const w of this.service.leavers) {
       const seat = seats.find((s) => s.key === w.seat);
-      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), door, w.t / w.total, this.assets, this.time));
+      // what they said about it goes out the door with them
+      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), door, w.t / w.total, this.assets, this.time, w.guest.outcome?.remark));
     }
     // on each table and along the bar: each guest's meal in front of them while they eat, and the
     // dishes left at each seat once they've gone

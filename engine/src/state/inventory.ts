@@ -8,8 +8,11 @@ export interface Stack { item: string; count: number }
 export class Inventory {
   readonly slots: Array<Stack | null>;
 
-  /** accepts: what may be put in (a shelf takes prepped food only...); everything, if not given. */
-  constructor(size: number, readonly stackSize: number, readonly accepts: (item: string) => boolean = () => true) {
+  /**
+   * accepts: what may be put in (a shelf takes prepped food only...); everything, if not given. kinds: at
+   * most this many different things at once (a barrel holds one liquid).
+   */
+  constructor(size: number, readonly stackSize: number, readonly accepts: (item: string) => boolean = () => true, readonly kinds = Infinity) {
     this.slots = Array.from({ length: size }, () => null);
   }
 
@@ -20,6 +23,8 @@ export class Inventory {
   /** How many of an item would fit right now. */
   room(item: string): number {
     if (!this.accepts(item)) return 0;
+    const held = new Set(this.slots.filter((s): s is Stack => !!s).map((s) => s.item));
+    if (!held.has(item) && held.size >= this.kinds) return 0;
     return this.slots.reduce((n, s) => n + (s === null ? this.stackSize : s.item === item ? this.stackSize - s.count : 0), 0);
   }
 

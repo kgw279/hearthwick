@@ -105,7 +105,14 @@ export class StorageScreen implements Screen {
     const s = from.slots[this.sel[this.pane]];
     if (!s) return;
     const moved = from.moveTo(this.sel[this.pane], n, to);
-    if (!moved) this.say(this.pane === 'box' ? (this.bag.why(s.item) ?? 'Your bag is full') : `The ${this.title.toLowerCase()} is full`);
+    if (!moved) {
+      const other = to.slots.find((x) => x && x.item !== s.item);
+      const why = this.pane === 'box' ? (this.bag.why(s.item) ?? 'Your bag is full')
+        : !to.accepts(s.item) ? `That doesn't go in the ${this.title.toLowerCase()}`
+        : other && to.kinds < Infinity ? `This ${this.title.toLowerCase()} already holds ${this.content.itemName(other.item).toLowerCase()}`
+        : `The ${this.title.toLowerCase()} is full`;
+      this.say(why);
+    }
   }
 
   private say(text: string): void {

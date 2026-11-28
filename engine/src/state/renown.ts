@@ -2,7 +2,8 @@
  * How much renown a guest's visit earns the inn: a list of rules, each looking at the meal they had and
  * giving points (or taking them) with a reason. The total is the visit's renown (never below nothing).
  * To weigh something new (a clean table, the inn's comfort, a festival...), add a rule here: each is a
- * small function of the visit, and the reasons show in the journal.
+ * small function of the visit, and the reasons show in the journal. A very bad visit can come to less
+ * than nothing, and takes renown away.
  *
  * Tuning: the numbers at the top of each rule. A plain meal (a fried egg, a cup of milk) earns little or
  * nothing; an interesting one, well matched, brought promptly, what they asked for, earns well.
@@ -96,11 +97,15 @@ const variety: RenownRule = (v) => served(v)
   .filter((s) => v.recent.filter((r) => r === s.dish).length >= SAME_AGAIN)
   .map((s) => ({ why: `${name(v, s.dish)} again?`, points: -1 }));
 
-/** Every rule that weighs a visit, in the order their reasons are listed. */
-export const RENOWN_RULES: RenownRule[] = [complexity, asked, craving, pairing, taste, speed, variety];
+/** Sitting beside someone else's dirty dishes. */
+const MESSY = 10; // seconds
+const tidiness: RenownRule = (v) => (v.guest.mess > MESSY ? [{ why: 'Dirty dishes left on the table', points: -1 }] : []);
 
-/** A visit's renown: the total (not below nothing) and each rule's say. */
+/** Every rule that weighs a visit, in the order their reasons are listed. */
+export const RENOWN_RULES: RenownRule[] = [complexity, asked, craving, pairing, taste, speed, variety, tidiness];
+
+/** A visit's renown (which can be below nothing) and each rule's say. */
 export function renownFor(v: Visit): { total: number; awards: Award[] } {
   const awards = RENOWN_RULES.flatMap((rule) => rule(v));
-  return { total: Math.max(0, awards.reduce((n, a) => n + a.points, 0)), awards };
+  return { total: awards.reduce((n, a) => n + a.points, 0), awards };
 }

@@ -74,6 +74,8 @@ export interface Guest {
   eating: number;
   /** Seconds since they sat down. */
   waited: number;
+  /** Seconds they've sat with someone else's dirty dishes on their table. */
+  mess: number;
   /** When they sat down, in seating order (earliest first). */
   seated: number;
   /** Where they sat (a seat key). */
@@ -99,6 +101,7 @@ export const CHITS = 10;
 const PROMPT = 20; // seconds: dismissed sooner than this, a guest doesn't mind at all
 const FIRST_GUESTS = 1; // seated at the start
 const EXTRA_GUEST = 0.08; // past the usual number of guests, the chance another drops in (for each one more)
+const MESSY = 10; // seconds sat beside dirty dishes before a guest minds
 const RECENT = 12; // dishes remembered, for whether the inn serves the same thing over and over
 
 export class Service {
@@ -173,9 +176,12 @@ export class Service {
     }
     for (const l of this.leavers) l.t += dt;
     for (let i = this.leavers.length - 1; i >= 0; i--) if (this.leavers[i].t >= this.leavers[i].total) this.leavers.splice(i, 1);
+    // tables (and the bar) with someone's dirty dishes still on them
+    const messy = new Set(seats.filter((s) => this.dirty.get(s.key)?.length).map((s) => s.table));
     for (const seat of seats) {
       const g = this.guests.get(seat.key);
       if (!g) continue;
+      if (g.state !== 'arriving' && messy.has(seat.table)) g.mess += dt;
       if (g.state === 'arriving') {
         if ((g.walk -= dt) <= 0) {
           g.state = 'waiting';
@@ -233,18 +239,23 @@ export class Service {
         if (this.recent.length > RECENT) this.recent.shift();
       }
       const misses = served.filter((s) => s.fit && s.fit !== 'right').length;
-      mood = Math.max(0.3, Math.min(1, 0.8 - misses * 0.2 + (this.satisfied(g) ? 0.2 : 0)));
+      const messy = g.mess > MESSY;
+      mood = Math.max(0.2, Math.min(1, 0.8 - misses * 0.2 - (messy ? 0.2 : 0) + (this.satisfied(g) ? 0.2 : 0)));
       remark = this.satisfied(g) ? `I loved how ${g.craving} that was!`
-        : misses ? 'Not quite what I asked for...' : `That was good, but could have been more ${g.craving}.`;
+        : misses ? 'Not quite what I asked for...'
+        : messy ? 'Someone ought to clear those dishes...' : `That was good, but could have been more ${g.craving}.`;
     } else if (how === 'gave up') {
       mood = 0;
       remark = "I couldn't wait any longer.";
+      awards = [{ why: 'Left hungry', points: -2 }];
     } else {
       const prompt = g.waited < PROMPT;
       mood = prompt ? 0.8 : Math.max(0.2, 0.8 - this.restless(g) * 0.6);
       remark = prompt ? 'Another time, then!' : 'After all that waiting...';
+      if (!prompt) awards = [{ why: 'Sent away after a long wait', points: -1 }];
     }
-    const renown = Math.max(0, awards.reduce((n, a) => n + a.points, 0));
+    // a very bad visit takes renown away
+    const renown = awards.reduce((n, a) => n + a.points, 0);
     g.outcome = { how, coins, renown, awards, mood, remark };
     g.state = 'gone';
     const pile = served.filter((s) => s.ware).map((s) => this.content.item(s.ware).dirty ?? s.ware);
@@ -267,7 +278,7 @@ export class Service {
     for (const c of courses) order[c] = this.want(menu[c], folk);
     const g: Guest = {
       look, folk, bar: seat.bar, order, craving: this.craving(folk), got: {}, state: 'arriving', walk: seat.walk ?? 3, walkTotal: seat.walk ?? 3,
-      patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0, seated: this.seatedCount++, seat: seat.key,
+      patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0, mess: 0, seated: this.seatedCount++, seat: seat.key,
     };
     this.guests.set(seat.key, g);
     this.visits.push(g);

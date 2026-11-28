@@ -10,6 +10,7 @@ import { Entity } from '../world/entity';
 import type { Content } from './data';
 import { isSetting, type Guest, type Meal, type ReadySlot } from '../state/service';
 import { loopFrame } from '../core/anim';
+import { drawText, measure } from '../ui/text';
 import type { Seat } from './seating';
 import type { Rect } from '../core/geom';
 
@@ -62,7 +63,11 @@ export class WalkerEntity extends Entity {
   private readonly facing: 'up' | 'down' | 'left' | 'right';
 
   /** t: how far along, 0 to 1. Feet go from `from` to `to`: up or down first, then across. */
-  constructor(private readonly look: string, from: { x: number; y: number }, to: { x: number; y: number }, t: number, private readonly assets: Assets, private readonly time: number) {
+  /** says: words shown over their head as they go (what they thought of it). */
+  constructor(
+    private readonly look: string, from: { x: number; y: number }, to: { x: number; y: number }, t: number,
+    private readonly assets: Assets, private readonly time: number, private readonly says?: string,
+  ) {
     const dy = to.y - from.y;
     const dx = to.x - from.x;
     const len = Math.abs(dx) + Math.abs(dy) || 1;
@@ -82,6 +87,13 @@ export class WalkerEntity extends Entity {
     const anim = `${this.look}_walk_${this.facing}`;
     const frames = this.assets.hasAnimation(anim) ? this.assets.animation(anim) : [`${this.look}_${this.facing}_idle`];
     r.sprite(loopFrame(frames, this.time, 6, 0), this.x - camX, this.y - camY);
+    if (this.says) {
+      const t = `"${this.says}"`;
+      const tx = Math.round(this.x - camX + 16 - measure(t) / 2);
+      const ty = Math.round(this.y - camY - 10);
+      r.rect(tx - 3, ty - 2, measure(t) + 6, 12, '#45283c', true);
+      drawText(r, this.assets, t, tx, ty);
+    }
   }
 }
 

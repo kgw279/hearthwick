@@ -215,7 +215,7 @@ export class JournalScreen implements Screen {
       drawText(r, assets, this.status(g), p.x + 36, p.y + 16);
       r.ctx.globalAlpha = 1;
       const o = g.outcome;
-      if (o && (o.coins || o.renown)) drawText(r, assets, [o.coins ? `+${o.coins}c` : '', o.renown ? `+${o.renown}r` : ''].filter(Boolean).join(' '), p.x + 36, p.y + 27);
+      if (o && (o.coins || o.renown)) drawText(r, assets, [o.coins ? `+${o.coins} coins` : '', o.renown ? `${o.renown > 0 ? '+' : ''}${o.renown} renown` : ''].filter(Boolean).join('  '), p.x + 36, p.y + 27);
       const wants = service.wants(g);
       wants.forEach((c, k) => this.drawCourse(r, g, c, p.x + lw - 4 - (wants.length - k) * (SLOT + 2), p.y + 3));
     }

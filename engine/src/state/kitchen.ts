@@ -46,7 +46,7 @@ export class InnStores {
         if (b?.type !== 'storage' || typeof p.sprite !== 'string') continue;
         const spec = containerOf(p.sprite);
         if (!spec) continue;
-        out.push({ id: b.id, spec, inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content)) });
+        out.push({ id: b.id, spec, inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content), spec.kinds) });
       }
     }
     return out;
@@ -126,8 +126,14 @@ export class Kitchen {
     private readonly content: Content,
   ) {}
 
+  /** Whether something's a liquid or a drink: kept in barrels, and only used from there. */
+  private liquid(item: string): boolean {
+    return this.content.items[item]?.store === 'cask';
+  }
+
+  /** How many are to hand: in the inn's stores or the bag (liquids only count in their barrels). */
   have(item: string): number {
-    return this.stores.count(item) + this.bag.count(item);
+    return this.stores.count(item) + (this.liquid(item) ? 0 : this.bag.count(item));
   }
 
   /** Each input with how many are needed (an input listed twice is needed twice). */
@@ -143,7 +149,8 @@ export class Kitchen {
 
   private missing(inputs: string[]): Blocker {
     const short = this.needs(inputs).find((n) => this.have(n.item) < n.count);
-    return short ? `Need ${this.content.itemName(short.item)}` : null;
+    if (!short) return null;
+    return `Need ${this.content.itemName(short.item)}${this.liquid(short.item) ? ' in a barrel' : ''}`;
   }
 
   private use(inputs: string[]): void {

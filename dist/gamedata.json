@@ -786,7 +786,7 @@
           "dish_toasted_oats_and_milk"
         ]
       },
-      "store": "pantry",
+      "store": "cask",
       "weight": 2,
       "traits": [
         "hearty"
@@ -1191,7 +1191,7 @@
           "dish_cup_of_well_water"
         ]
       },
-      "store": "pantry",
+      "store": "cask",
       "weight": 3,
       "traits": [
         "fresh"

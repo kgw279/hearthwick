@@ -308,7 +308,7 @@ def build():
         if node not in nodes: raise ValueError(f'ambient {loop}: unknown forage node {node}')
 
     for iid, it in items.items():
-        it['store'] = store_class(it, dishes)
+        it['store'] = store_class(it, dishes, iid)
         it['weight'] = weight_of(iid, it)
     # how interesting a dish is: the prep steps behind it, and each component past the first. Serving it
     # earns that less one in reputation, so plain things (a fried egg, a cup of milk) earn none
@@ -404,17 +404,20 @@ def traits_of(things, tags, items):
 STORES = {
     'pantry': 'raw ingredients: crates, chests and cupboards',
     'shelf': 'prepped food: shelves',
-    'cask': 'drinks: barrels and kegs',
+    'cask': 'liquids (water, milk) and drinks: barrels and kegs, one kind to a barrel',
     'tableware': 'plates, bowls, mugs, cutlery: crates, chests and cupboards',
     'supply': "the inn's supplies: crates, chests and wardrobes",
 }
 
 
-def store_class(it, dishes):
+LIQUIDS = ['water', 'milk']   # raw things kept in barrels (with every drink)
+
+
+def store_class(it, dishes, iid=None):
     """Where an item is kept in the inn (STORES). A prepared item is a drink if it's brewed, or every dish
     it goes into is a drink."""
     if it['kind'] in ('tableware', 'supply'): return it['kind']
-    if it['kind'] == 'raw': return 'pantry'
+    if it['kind'] == 'raw': return 'cask' if iid in LIQUIDS else 'pantry'
     into = [dishes[d]['kind'] for d in it['used_in']['dishes']]
     if it.get('method') == 'ferment' or (into and all(k == 'drink' for k in into)): return 'cask'
     return 'shelf'

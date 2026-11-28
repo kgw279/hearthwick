@@ -89,6 +89,12 @@ export class PlatingScreen implements Screen {
       .sort((a, b) => this.content.itemName(a.item).localeCompare(this.content.itemName(b.item)));
   }
 
+  /** Whether what's on the plate is part of some dish (more goes with it). */
+  private partOfSomething(): boolean {
+    const n = (list: string[], x: string) => list.filter((i) => i === x).length;
+    return Object.values(this.content.dishes).some((d) => d.components.length > this.plate.length && this.plate.every((p) => n(d.components, p) >= n(this.plate, p)));
+  }
+
   private dish(): string | undefined {
     return this.plate.length ? this.kitchen.plated(this.plate) : undefined;
   }
@@ -309,7 +315,7 @@ export class PlatingScreen implements Screen {
     } else {
       if (this.plate.length) drawText(r, assets, '?', res.x + (SLOT - measure('?')) / 2, res.y + 12);
       r.ctx.globalAlpha = 0.7;
-      wrap(this.plate.length ? "That isn't a dish (yet)" : this.again.length ? '' : 'Put ingredients on the plate', width).slice(0, 2)
+      wrap(this.plate.length ? (this.partOfSomething() ? 'Something more goes with it...' : "That isn't a dish") : this.again.length ? '' : 'Put ingredients on the plate', width).slice(0, 2)
         .forEach((l, i) => drawText(r, assets, l, tx, res.y + 6 + i * 11));
       r.ctx.globalAlpha = 1;
     }
