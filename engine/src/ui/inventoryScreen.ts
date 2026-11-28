@@ -14,6 +14,8 @@ import type { Bag, Stack } from '../state/inventory';
 import { InnStores } from '../state/kitchen';
 import { READY_MAX, type ReadySlot } from '../state/service';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';
+import { Discard } from './discard';
+import { buttonName } from './buttons';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';
 
@@ -26,6 +28,7 @@ const TABS = ['Bag', 'Kitchen', 'Inn'] as const;
 type Tab = (typeof TABS)[number];
 
 export class InventoryScreen implements Screen {
+  private readonly discard = new Discard();
   private tab: Tab = 'Bag';
   private sel = 0;
   private scroll = 0; // rows
@@ -69,7 +72,18 @@ export class InventoryScreen implements Screen {
     if (input.pressed('interact') && this.placing()) return false;
     if (input.pressed('interact')) this.transfer(Infinity);
     if (input.pressed('cook')) this.transfer(1);
+    if (input.pressed('recipes')) this.throwOut(buttonName(input.device, 'recipes'));
     return true;
+  }
+
+  /** Throw out the chosen stack: from the bag, or all of it from the inn's stores (asks first). */
+  private throwOut(again: string): void {
+    const s = this.cells()[this.sel];
+    if (!s) return;
+    if (!this.discard.press(s.item, this.content.itemName(s.item), s.count, this.time, (t) => this.say(t, 3), again)) return;
+    if (this.tab === 'Bag') this.bag.takeFrom(this.sel, s.count);
+    else this.stores.remove(s.item, s.count);
+    this.sel = Math.min(this.sel, Math.max(0, this.cells().length - 1));
   }
 
   /** Furniture chosen in the bag is taken out to set down: true if it was (the bag closes). */
@@ -121,8 +135,8 @@ export class InventoryScreen implements Screen {
     this.sel = Math.min(this.sel, Math.max(0, this.cells().length - 1));
   }
 
-  private say(text: string): void {
-    this.message = { text, until: this.time + 1.8 };
+  private say(text: string, secs = 1.8): void {
+    this.message = { text, until: this.time + secs };
   }
 
   private cellAt(i: number): { x: number; y: number } {
@@ -216,8 +230,8 @@ export class InventoryScreen implements Screen {
     const hint = msg ? this.message.text
       : this.tab === 'Bag' && s && content.items[s.item]?.kind === 'furniture' ? 'Choose: take it out and set it down here'
       : !this.inInn ? 'Tabs: LB / RB (Q / C)'
-      : this.tab === 'Bag' ? 'Choose: put the stack away in the inn   X: just one'
-      : 'Choose: take the stack   X: just one   Tabs: LB / RB';
+      : this.tab === 'Bag' ? 'Choose: put the stack away in the inn   X: just one   Y / R: throw out'
+      : 'Choose: take the stack   X: just one   Y / R: throw out   Tabs: LB / RB';
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, hint, this.x + 12, this.y + H - 18);
     r.ctx.globalAlpha = 1;

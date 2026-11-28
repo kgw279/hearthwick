@@ -11,6 +11,8 @@ import type { Content } from '../game/data';
 import type { Bag, Inventory } from '../state/inventory';
 import { gridMove, inside } from './inventoryScreen';
 import { drawItem, drawItemInfo, drawSlot, SLOT } from './items';
+import { Discard } from './discard';
+import { buttonName } from './buttons';
 import { Nav, type Screen } from './screen';
 import { drawText } from './text';
 
@@ -23,6 +25,7 @@ const TOP = 30;
 type Pane = 'box' | 'bag';
 
 export class StorageScreen implements Screen {
+  private readonly discard = new Discard();
   private pane: Pane = 'box';
   private sel: Record<Pane, number> = { box: 0, bag: 0 };
   private readonly nav = new Nav();
@@ -78,7 +81,17 @@ export class StorageScreen implements Screen {
     if (d) this.move(d);
     if (input.pressed('interact')) this.transfer(Infinity);
     if (input.pressed('cook')) this.transfer(1);
+    if (input.pressed('recipes')) this.throwOut(buttonName(input.device, 'recipes'));
     return true;
+  }
+
+  /** Throw out the chosen stack (asks first). */
+  private throwOut(again: string): void {
+    const inv = this.inv(this.pane);
+    const i = this.sel[this.pane];
+    const s = inv.slots[i];
+    if (!s) return;
+    if (this.discard.press(s.item, this.content.itemName(s.item), s.count, this.time, (t) => this.say(t, 3), again)) inv.takeFrom(i, s.count);
   }
 
   private move(d: { x: number; y: number }): void {
@@ -115,8 +128,8 @@ export class StorageScreen implements Screen {
     }
   }
 
-  private say(text: string): void {
-    this.message = { text, until: this.time + 1.5 };
+  private say(text: string, secs = 1.5): void {
+    this.message = { text, until: this.time + secs };
   }
 
   pointer(px: number, py: number, button: number): boolean {
@@ -154,7 +167,7 @@ export class StorageScreen implements Screen {
       drawText(r, assets, `x${s.count}`, this.x + PAD + 150, iy);
       r.ctx.globalAlpha = 1;
     }
-    const hint = this.time < this.message.until ? this.message.text : 'Choose: move the stack   X / right-click: move one';
+    const hint = this.time < this.message.until ? this.message.text : 'Choose: move the stack   X / right-click: move one   Y / R: throw out';
     r.ctx.globalAlpha = this.time < this.message.until ? 1 : 0.6;
     drawText(r, assets, hint, this.x + PAD, this.y + this.h - 16);
     r.ctx.globalAlpha = 1;

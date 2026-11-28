@@ -8,12 +8,16 @@ export interface Stack { item: string; count: number }
 export class Inventory {
   readonly slots: Array<Stack | null>;
 
-  /**
-   * accepts: what may be put in (a shelf takes prepped food only...); everything, if not given. kinds: at
-   * most this many different things at once (a barrel holds one liquid).
-   */
+  /** accepts: what may be put in (a shelf takes prepped food only...); everything, if not given. */
   constructor(size: number, readonly stackSize: number, readonly accepts: (item: string) => boolean = () => true) {
     this.slots = Array.from({ length: size }, () => null);
+  }
+
+  /** A copy, to try something out on without changing this one. */
+  clone(): Inventory {
+    const c = new Inventory(this.slots.length, this.stackSize, this.accepts);
+    this.slots.forEach((s, i) => (c.slots[i] = s && { ...s }));
+    return c;
   }
 
   count(item: string): number {

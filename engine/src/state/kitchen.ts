@@ -68,12 +68,26 @@ export class InnStores {
     return n - left;
   }
 
+  /**
+   * Room for something once these are taken out (as making it would take them): what's used up frees
+   * its space for what's made.
+   */
+  roomAfter(taken: Stack[], item: string): number {
+    const boxes = this.boxes().map((b) => ({ ...b, inv: b.inv.clone() }));
+    for (const t of taken) InnStores.take(boxes, t.item, t.count);
+    return boxes.filter((b) => !b.spec.byHand).reduce((n, b) => n + b.inv.room(item), 0);
+  }
+
   /** Take n out (from the last containers first); false and no change if there aren't that many. */
   remove(item: string, n: number): boolean {
-    const boxes = this.boxes();
+    return InnStores.take(this.boxes(), item, n);
+  }
+
+  /** Take n out of these containers, from the last first; false and no change if there aren't that many. */
+  private static take(boxes: Box[], item: string, n: number): boolean {
     if (boxes.reduce((k, b) => k + b.inv.count(item), 0) < n) return false;
     let left = n;
-    for (const b of boxes.reverse()) {
+    for (const b of [...boxes].reverse()) {
       const k = Math.min(left, b.inv.count(item));
       if (k) b.inv.remove(item, k);
       left -= k;
@@ -154,9 +168,15 @@ export class Kitchen {
     return `Need ${this.content.itemName(short.item)}${this.liquid(short.item) ? ' in a barrel' : ''}`;
   }
 
+  /** What making something takes from the inn's stores (the rest comes from the bag). */
+  private fromStores(inputs: string[]): Stack[] {
+    return this.needs(inputs).map((n) => ({ item: n.item, count: Math.min(n.count, this.stores.count(n.item)) })).filter((n) => n.count > 0);
+  }
+
   private use(inputs: string[]): void {
+    const stores = this.fromStores(inputs);
     for (const n of this.needs(inputs)) {
-      const fromStores = Math.min(n.count, this.stores.count(n.item));
+      const fromStores = stores.find((s) => s.item === n.item)?.count ?? 0;
       if (fromStores) this.stores.remove(n.item, fromStores);
       if (n.count > fromStores) this.bag.remove(n.item, n.count - fromStores);
     }
@@ -165,8 +185,8 @@ export class Kitchen {
   canMake(r: Recipe): Blocker {
     const short = this.missing(r.inputs);
     if (short) return short;
-    // the inputs it uses up may free a slot, but don't count on it: there must be room now
-    if (!this.stores.room(r.out)) return `No room ${InnStores.placeFor(this.content.item(r.out).store)}`;
+    // what it uses up from the stores frees its space: what's made can go there
+    if (!this.stores.roomAfter(this.fromStores(r.inputs), r.out)) return `No room ${InnStores.placeFor(this.content.item(r.out).store)}`;
     return null;
   }
 
