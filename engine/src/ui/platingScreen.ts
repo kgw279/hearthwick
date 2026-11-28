@@ -8,8 +8,9 @@
  *    made up, so it can be plated again.
  *  - Right: what's ready to serve.
  * Controls as at the prep stations: A (E, click) puts on; X (F, right-click) takes off (on what's ready:
- * unplates it, back to the stores); RT (X key, click the result) plates it; Y (R) clears the plate; Menu
- * (Tab) opens the recipe book of known dishes; B (Esc) leaves. Plating something new writes it in.
+ * unplates it, back to the stores); RT (X key, click the result) plates it; Y (R) clears the plate; View
+ * (M) opens the recipe book of known dishes; B (Esc) leaves. Plating something new writes it in.
+ * Plating empties the plate (with a pop) and pins a card of what went on it: RT again plates another.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -20,7 +21,8 @@ import type { Cookbook } from '../state/cookbook';
 import type { Stack } from '../state/inventory';
 import type { Kitchen } from '../state/kitchen';
 import { READY_MAX, type Served } from '../state/service';
-import { hint } from './buttons';
+import { buttonName, hint } from './buttons';
+import { Pops } from './fx';
 import { drawItem, drawSlot, SLOT } from './items';
 import { gridMove } from './inventoryScreen';
 import { RecipeBook } from './recipeBook';
@@ -48,6 +50,9 @@ export class PlatingScreen implements Screen {
   private readonly size: number;
   private readonly usable: Set<string>;
   private readonly book: RecipeBook;
+  private readonly pops = new Pops();
+  /** What last went on the plate, to plate again with RT once it's been emptied. */
+  private again: string[] = [];
   private readonly nav = new Nav();
   private message = { text: '', until: 0 };
   private time = 0;
@@ -95,14 +100,17 @@ export class PlatingScreen implements Screen {
       if (pick) this.fill(pick.inputs);
       return true;
     }
-    if (input.pressed('back')) return false;
-    if (input.pressed('menu')) this.book.open = true;
+    if (input.pressed('back') || input.pressed('menu')) return false;
+    if (input.pressed('map')) this.book.open = true;
     const d = this.nav.step(input, dt);
     if (d) this.move(d);
     if (input.pressed('interact')) this.add();
     if (input.pressed('cook')) this.takeOff();
     if (input.pressed('cat_next')) this.make();
-    if (input.pressed('recipes')) this.plate = [];
+    if (input.pressed('recipes')) {
+      this.plate = [];
+      this.again = [];
+    }
     return true;
   }
 
@@ -166,12 +174,18 @@ export class PlatingScreen implements Screen {
   }
 
   private make(): void {
+    if (!this.plate.length && this.again.length) this.fill(this.again);
     const dish = this.dish();
     if (!dish) return this.say(this.plate.length ? "That isn't a dish" : 'Put some ingredients on the plate first');
     const why = this.kitchen.plate(dish, this.ready);
+    if (why) return this.say(why);
     const name = this.content.itemName(dish);
-    const learned = !why && this.content.dishes[dish] && this.cookbook.learn('plate', dish, this.content.dish(dish).components);
-    this.say(why ?? (learned ? `New dish: ${name}! Ready to serve` : `${name} is ready to serve`));
+    const learned = !!this.content.dishes[dish] && this.cookbook.learn('plate', dish, this.content.dish(dish).components);
+    const slot = this.readySlot(this.ready.length - 1);
+    this.pops.pop(slot.x + SLOT / 2, slot.y + SLOT / 2, this.time, { item: dish, text: learned ? `New dish! ${name}` : `${name} is ready`, big: learned });
+    this.say(learned ? `${name} is in your recipe book` : `${name} is ready to serve`);
+    this.again = [...this.plate];
+    this.plate = [];
     this.changed();
     this.keepSelection();
   }
@@ -197,7 +211,7 @@ export class PlatingScreen implements Screen {
   }
 
   private resultSlot(): { x: number; y: number } {
-    return { x: this.midX, y: this.y + TOP + SLOT + 20 };
+    return { x: this.midX, y: this.y + TOP + SLOT + 24 };
   }
 
   private readySlot(i: number): { x: number; y: number } {
@@ -278,6 +292,17 @@ export class PlatingScreen implements Screen {
       const item = this.plate[i];
       if (item) drawItem(r, assets, content, item, p.x, p.y, 1, kitchen.have(item) < this.plate.filter((x) => x === item).length);
     }
+    if (!this.plate.length && this.again.length) {
+      // the last dish, pinned over the plate like a card: RT plates it again
+      const p0 = this.plateSlot(0);
+      const w = this.size * (SLOT + 2) + 6;
+      r.nine('panel_parchment', p0.x - 4, p0.y - 4, w, SLOT + 8);
+      this.again.forEach((item, i) => drawItem(r, assets, content, item, this.plateSlot(i).x, p0.y, 1, kitchen.have(item) < this.again.filter((x) => x === item).length));
+      const tag = `${buttonName(this.device, 'cat_next')}: again`;
+      // a ribbon tied on at the card's foot: what makes it again
+      r.nine('ribbon_banner', p0.x - 4, p0.y + SLOT + 4, measure(tag) + 14, 14);
+      drawText(r, assets, tag, p0.x + 3, p0.y + SLOT + 6);
+    }
     const res = this.resultSlot();
     drawSlot(r, res.x, res.y, false);
     const dish = this.dish();
@@ -294,7 +319,7 @@ export class PlatingScreen implements Screen {
     } else {
       if (this.plate.length) drawText(r, assets, '?', res.x + (SLOT - measure('?')) / 2, res.y + 12);
       r.ctx.globalAlpha = 0.7;
-      wrap(this.plate.length ? "That isn't a dish (yet)" : 'Put ingredients on the plate', width).slice(0, 2)
+      wrap(this.plate.length ? "That isn't a dish (yet)" : this.again.length ? 'Ready to plate again' : 'Put ingredients on the plate', width).slice(0, 2)
         .forEach((l, i) => drawText(r, assets, l, tx, res.y + 6 + i * 11));
       r.ctx.globalAlpha = 1;
     }
@@ -309,10 +334,11 @@ export class PlatingScreen implements Screen {
 
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
-      : hint(this.device, [['interact', 'add'], ['cook', 'take off'], ['cat_next', 'plate'], ['recipes', 'clear'], ['menu', 'recipes'], ['back', 'leave']]);
+      : hint(this.device, [['interact', 'add'], ['cook', 'take off'], ['cat_next', 'plate'], ['recipes', 'clear'], ['map', 'recipes'], ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + PAD, this.y + H - 18);
     r.ctx.globalAlpha = 1;
+    this.pops.draw(r, assets, content, this.time);
     if (this.book.open) {
       const b = this.bookAt();
       this.book.draw(r, b.x, b.y, b.w, BOOK_ROWS);

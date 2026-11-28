@@ -19,6 +19,7 @@ import { drawItem, drawSlot, SLOT } from './items';
 import { gridMove } from './inventoryScreen';
 import { Nav, type Screen } from './screen';
 import { drawText } from './text';
+import { Pops } from './fx';
 
 const W = 440;
 const H = 236;
@@ -35,13 +36,18 @@ export class WashScreen implements Screen {
   private message = { text: '', until: 0 };
   private time = 0;
   private device: Device = 'keyboard';
+  private readonly pops = new Pops();
+  /** Pieces each section had finished when last looked at (to pop the new ones). */
+  private seen: [number, number];
 
   constructor(
     private readonly washing: Washing,
     private readonly kitchen: Kitchen,
     private readonly content: Content,
     private readonly assets: Assets,
-  ) {}
+  ) {
+    this.seen = [washing.washing.done, washing.drying.done];
+  }
 
   private get x(): number {
     return Math.round((VIEW_W - W) / 2);
@@ -61,6 +67,13 @@ export class WashScreen implements Screen {
   update(input: Input, dt: number): boolean {
     this.time += dt;
     this.device = input.device;
+    // a pop for each piece that's come out of the tub or off the rack
+    const sx = this.x + PAD + COLS * (SLOT + 2) + 16 + SLOT / 2;
+    ([[this.washing.washing, 0, this.y + TOP + 2 + SLOT / 2, 'Washed!'], [this.washing.drying, 1, this.y + TOP + 76 + SLOT / 2, 'Clean!']] as const)
+      .forEach(([line, i, y, text]) => {
+        if (line.done > this.seen[i]) this.pops.pop(sx, y, this.time, { item: line.last, text });
+        this.seen[i] = line.done;
+      });
     if (input.pressed('back') || input.pressed('menu')) return false;
     const d = this.nav.step(input, dt);
     if (d) {
@@ -168,5 +181,6 @@ export class WashScreen implements Screen {
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + PAD, this.y + H - 18);
     r.ctx.globalAlpha = 1;
+    this.pops.draw(r, assets, content, this.time);
   }
 }

@@ -1,7 +1,7 @@
 /**
- * The recipe book, opened over a station with the Menu button (Tab / I): every recipe known there, what
- * it makes and what goes into it (dimmed where none is to hand). Choose one (A / E / click) to put its
- * ingredients into the station; B / Esc or Menu close the book.
+ * The recipe book, opened over a station with the View button (M): every recipe known there, what it
+ * makes and what goes into it (dimmed where none is to hand). Choose one (A / E / click) to put its
+ * ingredients into the station; B / Esc or View close the book.
  */
 import type { Assets } from '../core/assets';
 import type { Input } from '../core/input';
@@ -28,9 +28,9 @@ export class RecipeBook {
     private readonly assets: Assets,
   ) {}
 
-  /** While open: returns the recipe chosen, if one was; closes itself on B / Menu. */
+  /** While open: returns the recipe chosen, if one was; closes itself on B / View. */
   update(input: Input, dt: number, rows: number): Entry | null {
-    if (input.pressed('back') || input.pressed('menu')) {
+    if (input.pressed('back') || input.pressed('map')) {
       this.open = false;
       return null;
     }

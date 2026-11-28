@@ -9,11 +9,11 @@ import type { Content } from '../game/data';
 export const WASH_TIME = 1; // seconds to wash one piece
 export const DRY_TIME = 1; // seconds to dry one piece
 
-export interface Line { queue: string[]; t: number }
+export interface Line { queue: string[]; t: number; /** pieces finished, all told */ done: number; /** the last one */ last?: string }
 
 export class Washing {
-  readonly washing: Line = { queue: [], t: 0 };
-  readonly drying: Line = { queue: [], t: 0 };
+  readonly washing: Line = { queue: [], t: 0, done: 0 };
+  readonly drying: Line = { queue: [], t: 0, done: 0 };
 
   constructor(private readonly content: Content) {}
 
@@ -34,6 +34,8 @@ export class Washing {
     if (out && !put(out)) return; // nowhere to put it: wait
     line.queue.shift();
     line.t = 0;
+    line.done++;
+    line.last = out;
   }
 
   /** Which line a piece goes in: dirty to washing, wet to drying (none for anything else). */

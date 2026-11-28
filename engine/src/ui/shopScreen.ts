@@ -14,6 +14,7 @@ import { gridMove, inside } from './inventoryScreen';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';
+import { Pops } from './fx';
 
 const COLS = 6;
 const W = 464;
@@ -28,6 +29,7 @@ export class ShopScreen implements Screen {
   private bagSel = 0;
   private scroll = 0;
   private readonly nav = new Nav();
+  private readonly pops = new Pops();
   private message = { text: '', until: 0 };
   private time = 0;
   private get x(): number {
@@ -101,6 +103,12 @@ export class ShopScreen implements Screen {
       done = `Sold ${k} ${name}`;
     }
     this.say(res.ok ? done : res.reason);
+    if (res.ok) {
+      // the goods (or coins) arriving: at the bag when buying, at the purse when selling
+      const item = this.pane === 'shelf' ? this.shelf[this.shelfSel]?.item : undefined;
+      const at = this.pane === 'shelf' ? this.slotAt(Math.max(0, this.bag.slots.findIndex((s) => s?.item === item))) : { x: this.x + W - 70, y: this.y + 2 };
+      this.pops.pop(at.x + SLOT / 2, at.y + SLOT / 2, this.time, { item, text: done });
+    }
   }
 
   private say(text: string): void {
@@ -193,5 +201,6 @@ export class ShopScreen implements Screen {
     }
     const msg = this.time < this.message.until ? this.message.text : '';
     if (msg) drawText(r, assets, msg, this.x + 12, this.y + H - 18);
+    this.pops.draw(r, assets, content, this.time);
   }
 }

@@ -26,7 +26,11 @@ export interface ItemData {
   dirty?: string;
 }
 export interface StationData { name: string; verb: string; method: string; sprite: { sheet: string; frame: string } }
-export interface DishData { name: string; components: string[]; kind: 'food' | 'drink'; value: number; tags: string[] }
+export interface DishData {
+  name: string; components: string[]; kind: 'food' | 'drink'; value: number; tags: string[];
+  /** How interesting it is (the prep behind it), and the reputation serving it earns. */
+  complexity: number; reputation: number;
+}
 export interface FolkData { name: string; likes: string[]; hates: string | null }
 /** One way to make something: what goes in, what comes out. */
 export interface Recipe { out: string; inputs: string[] }

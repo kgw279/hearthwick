@@ -1,7 +1,8 @@
 /**
  * Serving a table, or the bar (it works the same). Left: the seats, each with who's sitting there, what
- * they ordered (dimmed once it's been brought) and a bar for how much longer they'll stay: their patience
- * while they wait, their meal while they eat. Right: what's ready at the plating station. Choose
+ * they ordered (dimmed once it's been brought; a traveller orders nothing and takes anything ready) and,
+ * while they wait, their patience as a row of chits, marked off one at a time over a good few minutes.
+ * Right: what's ready at the plating station. Choose
  * something ready, then the guest to serve it to: it must be something they ordered. A dish brings a
  * clean set of cutlery with it, if there's one to hand. Once they have all they ordered they eat, pay and
  * leave, and what they ate from is left dirty where they sat: Y clears it into your bag. X politely
@@ -14,7 +15,8 @@ import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
 import type { Seat } from '../game/seating';
-import { READY_MAX, type Guest, type Leaving, type Service } from '../state/service';
+import { CHITS, READY_MAX, type Guest, type Leaving, type Service } from '../state/service';
+import { Pops } from './fx';
 import { hint } from './buttons';
 import { drawItem, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
@@ -36,6 +38,7 @@ export class TableScreen implements Screen {
   private message = { text: '', until: 0 };
   private time = 0;
   private device: Device = 'keyboard';
+  private readonly pops = new Pops();
 
   constructor(
     private readonly title: string,
@@ -105,9 +108,12 @@ export class TableScreen implements Screen {
     if (this.picked === null) return this.say(this.service.ready.length ? 'Choose something ready first' : 'Nothing ready: plate something at the plating station');
     const seat = this.seats[this.seat];
     if (!seat) return;
+    const dish = this.service.ready[this.picked]?.dish;
     const why = this.service.serve(this.picked, seat.key, this.cutlery);
     if (why) return this.say(why);
-    this.say('Served!');
+    const p = this.rowAt(this.seat);
+    this.pops.pop(p.x + LIST_W - 40, p.y + 20, this.time, { item: dish, text: 'Served!' });
+    this.say(`Served ${dish ? this.content.itemName(dish) : ''}`);
     this.picked = null;
     this.readySel = 0;
     this.pane = this.service.ready.length ? 'ready' : 'seats';
@@ -184,16 +190,29 @@ export class TableScreen implements Screen {
       }
       r.sprite(`${g.look}_down_idle`, p.x + 2, p.y + 4);
       drawText(r, assets, content.folk[g.folk]?.name ?? g.folk, p.x + 38, p.y + 6);
-      // how much longer they'll stay
-      const left = this.service.stayLeft(g);
-      const bw = 90;
-      r.rect(p.x + 38, p.y + 20, bw, 5, '#45283c', true);
-      r.rect(p.x + 38, p.y + 20, Math.round(bw * left), 5, g.state === 'eating' ? '#99e550' : left > 0.3 ? '#fbf236' : '#df7126', true);
-      r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, g.state === 'eating' ? 'Eating' : 'Waiting', p.x + 38, p.y + 28);
-      r.ctx.globalAlpha = 1;
+      if (g.state === 'eating') {
+        r.ctx.globalAlpha = 0.7;
+        drawText(r, assets, 'Enjoying their meal', p.x + 38, p.y + 22);
+        r.ctx.globalAlpha = 1;
+      } else {
+        // patience: chits, marked off one by one
+        const left = this.service.chits(g);
+        for (let c = 0; c < CHITS; c++) {
+          const cx = p.x + 38 + c * 10;
+          const cy = p.y + 21;
+          r.rect(cx, cy, 8, 8, '#45283c', true);
+          r.rect(cx + 1, cy + 1, 6, 6, c < left ? '#d9a066' : '#663931', true);
+          if (c < left) r.rect(cx + 2, cy + 2, 2, 2, '#eec39a', true);
+        }
+      }
       // the order: each thing, dimmed once it's been brought
       let ox = p.x + LIST_W - 4;
+      if (g.traveller && g.state === 'waiting') {
+        const t = 'Anything ready';
+        r.ctx.globalAlpha = 0.7;
+        drawText(r, assets, t, ox - measure(t) - 4, p.y + 15);
+        r.ctx.globalAlpha = 1;
+      }
       for (const part of ['drink', 'food'] as const) {
         const dish = g.order[part];
         if (!dish) continue;
@@ -204,7 +223,7 @@ export class TableScreen implements Screen {
     });
     const g = this.guest(this.seat);
     if (g && this.pane === 'seats') {
-      const want = [g.order.food, g.order.drink].filter((d): d is string => !!d).map((d) => content.itemName(d)).join(' and ');
+      const want = g.traveller ? 'anything (just passing through)' : [g.order.food, g.order.drink].filter((d): d is string => !!d).map((d) => content.itemName(d)).join(' and ');
       r.ctx.globalAlpha = 0.8;
       drawText(r, assets, `Ordered ${want}`, this.x + 20 + measure(this.title), this.y + 10);
       r.ctx.globalAlpha = 1;
@@ -243,5 +262,6 @@ export class TableScreen implements Screen {
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + 12, this.y + H - 16);
     r.ctx.globalAlpha = 1;
+    this.pops.draw(r, assets, content, this.time);
   }
 }

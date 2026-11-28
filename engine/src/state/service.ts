@@ -6,8 +6,9 @@
  * guest: no carrying.
  *
  * Guests sit at seats (see game/seating.ts): at a table they order a dish and/or a drink; at the bar, a
- * drink, a simple dish or a raw snack. Served what they ordered, they eat a while, pay and leave, and
- * what they ate from is left dirty where they sat.
+ * drink, a simple dish or a raw snack. Travellers (most guests while the inn is little known) order
+ * nothing: they're happy with whatever's ready. Served, they eat a while, pay and leave (with reputation
+ * for the inn, the more for a more interesting dish), and what they ate from is left dirty where they sat.
  *
  * Patience is gentle, not a race: it's only a way for guests nobody's going to serve to move on. A
  * guest waits a good while, longer each time something they ordered arrives, and if nothing comes they
@@ -15,6 +16,7 @@
  * they've had), and they're happier about it the sooner it's done.
  */
 import type { Content } from '../game/data';
+import type { Reputation } from './reputation';
 
 /**
  * A dish as served: the dish and what it's on (a plate or bowl, or a mug). A raw snack is plated as it
@@ -34,6 +36,8 @@ export interface Guest {
   look: string;
   folk: string;
   bar: boolean;
+  /** Passing through: no order, happy with any one thing that's ready. */
+  traveller: boolean;
   order: Order;
   /** What's been brought so far. */
   got: Meal;
@@ -50,13 +54,14 @@ export interface Guest {
 export interface SeatRef { key: string; layout: string; table: string; bar: boolean }
 
 /** How a guest left: paid, went without, or was sent on their way; and how happy they were (0 to 1). */
-export interface Leaving { seat: SeatRef; guest: Guest; how: 'paid' | 'gave up' | 'dismissed'; coins: number; mood: number }
+export interface Leaving { seat: SeatRef; guest: Guest; how: 'paid' | 'gave up' | 'dismissed'; coins: number; mood: number; reputation: number }
 
 const EAT_TIME = 15; // seconds a served guest eats before paying and leaving
-const PATIENCE = 150; // seconds a guest waits for what they ordered...
-const PATIENCE_PER_PART = 90; // ...and more for each part of it brought
+const PATIENCE = 300; // seconds a guest waits for what they ordered...
+const PATIENCE_PER_PART = 180; // ...and more for each part of it brought
+/** Patience is shown as this many chits, marked off one at a time. */
+export const CHITS = 5;
 const PROMPT = 20; // seconds: dismissed sooner than this, a guest doesn't mind at all
-const ARRIVE_EVERY = 20; // seconds between guests arriving, while there's an empty seat
 const FIRST_GUESTS = 2; // seated at the start
 
 export class Service {
@@ -73,7 +78,13 @@ export class Service {
   private arrive = 0;
   private started = false;
 
-  constructor(private readonly content: Content, private readonly looks: string[], private readonly rng = Math.random) {}
+  /** reputation: how often guests come, and how many are travellers. */
+  constructor(
+    private readonly content: Content,
+    private readonly looks: string[],
+    private readonly reputation: Reputation,
+    private readonly rng = Math.random,
+  ) {}
 
   changed(): void {
     this.version++;
@@ -89,9 +100,9 @@ export class Service {
     return g.state === 'waiting' ? Math.max(0, Math.min(1, 1 - g.patience / g.patienceMax)) : 0;
   }
 
-  /** How much of their stay is left, 1 to 0: patience while waiting, the meal while eating. */
-  stayLeft(g: Guest): number {
-    return g.state === 'waiting' ? Math.max(0, g.patience / g.patienceMax) : Math.max(0, g.eating / EAT_TIME);
+  /** How many patience chits a waiting guest has left (all of them once they're eating). */
+  chits(g: Guest): number {
+    return g.state === 'waiting' ? Math.max(0, Math.ceil((g.patience / g.patienceMax) * CHITS)) : CHITS;
   }
 
   /** Whether a dish or snack is food or drink. */
@@ -123,11 +134,11 @@ export class Service {
     if (!this.started) {
       this.started = true;
       for (let i = 0; i < FIRST_GUESTS && i < empty.length; i++) this.seat(empty[i], menu(empty[i].bar));
-      this.arrive = ARRIVE_EVERY;
+      this.arrive = this.reputation.arriveEvery;
       return;
     }
     if ((this.arrive -= dt) > 0) return;
-    this.arrive = ARRIVE_EVERY;
+    this.arrive = this.reputation.arriveEvery;
     const seat = empty[Math.floor(this.rng() * empty.length)];
     this.seat(seat, menu(seat.bar));
   }
@@ -144,8 +155,10 @@ export class Service {
   private leave(seat: SeatRef, how: Leaving['how']): Leaving {
     const g = this.guests.get(seat.key)!;
     let coins = 0;
+    let reputation = 0;
     if (how === 'paid') {
       for (const s of [g.got.food, g.got.drink]) if (s) coins += this.worth(s);
+      for (const s of [g.got.food, g.got.drink]) if (s) reputation += this.content.dishes[s.dish]?.reputation ?? 0;
       if (g.got.food && this.content.dishes[g.got.food.dish] && !g.got.cutlery) coins -= 1;
       coins = Math.max(1, coins);
     }
@@ -157,18 +170,23 @@ export class Service {
     this.dirty.set(seat.table, pile);
     this.guests.delete(seat.key);
     this.changed();
-    return { seat, guest: g, how, coins, mood };
+    return { seat, guest: g, how, coins, mood, reputation };
   }
 
   private seat(seat: SeatRef, menu: { food: string[]; drink: string[] }): void {
     const look = this.looks[Math.floor(this.rng() * this.looks.length)];
     const folk = this.content.folk[look] ? look : 'human';
     const pick = (list: string[]) => this.favourite(list, folk);
+    const traveller = this.rng() < this.reputation.travellers;
     const order: Order = {};
-    if (menu.food.length && this.rng() < (seat.bar ? 0.4 : 0.8)) order.food = pick(menu.food);
-    if (menu.drink.length && (this.rng() < 0.7 || !order.food)) order.drink = pick(menu.drink);
-    if (!order.food && !order.drink) order.drink = 'dish_cup_of_well_water';
-    this.guests.set(seat.key, { look, folk, bar: seat.bar, order, got: {}, state: 'waiting', patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0 });
+    if (!traveller) {
+      if (menu.food.length && this.rng() < (seat.bar ? 0.4 : 0.8)) order.food = pick(menu.food);
+      if (menu.drink.length && (this.rng() < 0.7 || !order.food)) order.drink = pick(menu.drink);
+      if (!order.food && !order.drink) order.drink = 'dish_cup_of_well_water';
+    }
+    this.guests.set(seat.key, {
+      look, folk, bar: seat.bar, traveller, order, got: {}, state: 'waiting', patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0,
+    });
     this.changed();
   }
 
@@ -197,13 +215,14 @@ export class Service {
     const part = this.kindOf(s.dish);
     const name = (d: string) => this.content.itemName(d);
     if (g.got[part]) return `They already have their ${part === 'food' ? 'meal' : 'drink'}`;
-    if (g.order[part] !== s.dish) return g.order[part] ? `They ordered ${name(g.order[part]!)}` : `They didn't order ${name(s.dish)}`;
+    if (!g.traveller && g.order[part] !== s.dish) return g.order[part] ? `They ordered ${name(g.order[part]!)}` : `They didn't order ${name(s.dish)}`;
     this.ready.splice(ready, 1);
     g.got = { ...g.got, [part]: s };
     if (part === 'food' && this.content.dishes[s.dish] && !g.got.cutlery) g.got.cutlery = cutlery() ?? undefined;
     g.patience += PATIENCE_PER_PART;
     g.patienceMax += PATIENCE_PER_PART;
-    if ((!g.order.food || g.got.food) && (!g.order.drink || g.got.drink)) {
+    // a traveller is happy with any one thing; others, once they have all they ordered
+    if (g.traveller || ((!g.order.food || g.got.food) && (!g.order.drink || g.got.drink))) {
       g.state = 'eating';
       g.eating = EAT_TIME;
     }

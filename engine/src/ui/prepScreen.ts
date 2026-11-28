@@ -8,13 +8,17 @@
  *
  * D-pad / stick / arrows move (across from the grid's right edge into the tray and back). A (E, click)
  * puts the chosen ingredient in; X (F, right-click) takes one of it back out (in the tray: the chosen
- * one); RT (X key, click the result) makes one; Y (R) empties the tray; Menu (Tab) opens the recipe book
+ * one); RT (X key, click the result) makes one; Y (R) empties the tray; View (M) opens the recipe book
  * (known recipes; choosing one puts its ingredients in); B (Esc) leaves the station. Working out
  * something new writes it in the book.
+ *
+ * Making something empties the tray (with a pop, and the new thing's name), and pins a card of what went
+ * in over the tray: RT again puts those same ingredients back in and makes another, while there are any.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
-import { hint } from './buttons';
+import { buttonName, hint } from './buttons';
+import { Pops } from './fx';
 import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content, Recipe } from '../game/data';
@@ -50,6 +54,9 @@ export class PrepScreen implements Screen {
   private time = 0;
   private device: Device = 'keyboard';
   private readonly book: RecipeBook;
+  private readonly pops = new Pops();
+  /** What last went in, to make it again with RT once the tray's been emptied. */
+  private again: string[] = [];
 
   constructor(
     private readonly station: string,
@@ -98,14 +105,17 @@ export class PrepScreen implements Screen {
       if (pick) this.fill(pick.inputs);
       return true;
     }
-    if (input.pressed('back')) return false;
-    if (input.pressed('menu')) this.book.open = true;
+    if (input.pressed('back') || input.pressed('menu')) return false;
+    if (input.pressed('map')) this.book.open = true;
     const d = this.nav.step(input, dt);
     if (d) this.move(d);
     if (input.pressed('interact')) this.add();
     if (input.pressed('cook')) this.takeOut();
     if (input.pressed('cat_next')) this.make();
-    if (input.pressed('recipes')) this.tray = [];
+    if (input.pressed('recipes')) {
+      this.tray = [];
+      this.again = [];
+    }
     return true;
   }
 
@@ -161,13 +171,20 @@ export class PrepScreen implements Screen {
     if (short) this.say(`Not enough ${this.content.itemName(short)} to hand`);
   }
 
-  /** Make one of what the tray holds; the tray stays filled for the next. */
+  /** Make one of what the tray holds (or, with it empty, of what went in last); the tray empties. */
   private make(): void {
+    if (!this.tray.length && this.again.length) this.fill(this.again);
     const r = this.recipe();
     if (!r) return this.say(this.tray.length ? 'That makes nothing here' : 'Put some ingredients in first');
     const why = this.kitchen.make(r);
+    if (why) return this.say(why);
     const name = this.content.itemName(r.out);
-    this.say(why ?? (this.cookbook.learn(this.station, r.out, r.inputs) ? `New recipe: ${name}! Made one` : `Made ${name}`));
+    const isNew = this.cookbook.learn(this.station, r.out, r.inputs);
+    const res = this.resultSlot();
+    this.pops.pop(res.x + SLOT / 2, res.y + SLOT / 2, this.time, { item: r.out, text: isNew ? `New recipe! ${name}` : `+1 ${name}`, big: isNew });
+    this.say(isNew ? `${name} is in your recipe book` : `Made ${name}`);
+    this.again = [...this.tray];
+    this.tray = [];
     this.keepSelection();
   }
 
@@ -192,7 +209,7 @@ export class PrepScreen implements Screen {
   }
 
   private resultSlot(): { x: number; y: number } {
-    return { x: this.trayX, y: this.y + TOP + 14 + SLOT + 26 };
+    return { x: this.trayX, y: this.y + TOP + 14 + SLOT + 36 };
   }
 
   pointer(px: number, py: number, button: number): boolean {
@@ -268,6 +285,17 @@ export class PrepScreen implements Screen {
       const item = this.tray[i];
       if (item) drawItem(r, assets, content, item, p.x, p.y, 1, kitchen.have(item) < this.tray.filter((t) => t === item).length);
     }
+    if (!this.tray.length && this.again.length) {
+      // the last recipe, pinned over the tray like a card: RT makes it again
+      const p0 = this.traySlot(0);
+      const w = this.size * (SLOT + 4) + 4;
+      r.nine('panel_parchment', p0.x - 4, p0.y - 4, w, SLOT + 8);
+      this.again.forEach((item, i) => drawItem(r, assets, content, item, this.traySlot(i).x, p0.y, 1, kitchen.have(item) < this.again.filter((x) => x === item).length));
+      const tag = `${buttonName(this.device, 'cat_next')}: again`;
+      // a ribbon tied on at the card's foot: what makes it again
+      r.nine('ribbon_banner', p0.x - 4, p0.y + SLOT + 4, measure(tag) + 14, 14);
+      drawText(r, assets, tag, p0.x + 3, p0.y + SLOT + 6);
+    }
     const res = this.resultSlot();
     drawText(r, assets, 'Makes', res.x, res.y - 12);
     drawSlot(r, res.x, res.y, false);
@@ -283,16 +311,17 @@ export class PrepScreen implements Screen {
       const q = '?';
       if (this.tray.length) drawText(r, assets, q, res.x + (SLOT - measure(q)) / 2, res.y + 12);
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, !this.tray.length ? 'Put ingredients in' : this.partOfSomething() ? 'Something more goes in...' : 'Nothing comes of that', tx, res.y + 12);
+      drawText(r, assets, !this.tray.length ? (this.again.length ? 'Ready to make again' : 'Put ingredients in') : this.partOfSomething() ? 'Something more goes in...' : 'Nothing comes of that', tx, res.y + 12);
       r.ctx.globalAlpha = 1;
     }
 
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
-      : hint(this.device, [['interact', 'add'], ['cook', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['menu', 'recipes'], ['back', 'leave']]);
+      : hint(this.device, [['interact', 'add'], ['cook', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['map', 'recipes'], ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + PAD, this.y + H - 18);
     r.ctx.globalAlpha = 1;
+    this.pops.draw(r, assets, content, this.time);
     if (this.book.open) {
       const b = this.bookAt();
       this.book.draw(r, b.x, b.y, b.w, BOOK_ROWS);

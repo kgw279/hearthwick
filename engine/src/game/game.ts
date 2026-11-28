@@ -28,6 +28,8 @@ import { PlatingScreen } from '../ui/platingScreen';
 import { accepts, InnStores, isInn, Kitchen } from '../state/kitchen';
 import { Service, type Leaving } from '../state/service';
 import { Cookbook } from '../state/cookbook';
+import { Reputation } from '../state/reputation';
+import { Pops } from '../ui/fx';
 import { Washing } from '../state/washing';
 import { WashScreen } from '../ui/washScreen';
 import { barKey, platingStations, seating, type Seat } from './seating';
@@ -76,6 +78,11 @@ export class Game {
   readonly kitchen: Kitchen;
   /** What's ready to serve, and the guests at the tables. */
   readonly service: Service;
+  /** The inn's reputation: filled by serving guests, it brings more of them. */
+  readonly reputation: Reputation;
+  /** Pops (see ui/fx.ts) out in the world, and over the HUD. */
+  private readonly worldPops = new Pops();
+  private readonly hudPops = new Pops();
   /** The recipes the player knows. */
   readonly cookbook: Cookbook;
   /** The wash station's tub and drying rack. */
@@ -101,9 +108,9 @@ export class Game {
       give: (item, n) => {
         const got = this.bag.add(item, n);
         const name = this.content.itemName(item);
-        if (got) this.floats.pop(`+${got > 1 ? ` ${got}` : ''} ${name}`, this.player.center.x, this.player.y, this.time);
+        // what was picked up pops out over the player's head
+        if (got) this.worldPops.pop(this.player.center.x, this.player.y + 2, this.time, { item, text: `+${got > 1 ? `${got} ` : ''}${name}` });
         else this.floats.pop('Your bag is full', this.player.center.x, this.player.y, this.time);
-        if (got) this.emotes.pop('emote_happy', this.player.center.x, this.player.y, this.time);
         return got === n;
       },
       openShop: (shop) => (this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets)),
@@ -134,11 +141,28 @@ export class Game {
     this.layouts = loadLayouts();
     this.kitchen = new Kitchen(new InnStores(this.storage, this.layouts, this.content), this.bag, this.content);
     const looks = (assets.sheets.find((sh) => sh.name === 'guests')?.frames ?? []).filter((f) => f.endsWith('_down_idle')).map((f) => f.replace(/_down_idle$/, ''));
-    this.service = new Service(this.content, looks);
+    this.reputation = new Reputation();
+    this.service = new Service(this.content, looks, this.reputation);
     this.cookbook = new Cookbook(this.content);
     this.washing = new Washing(this.content);
     this.editor = new Editor(this);
     this.enter('town', 'start');
+  }
+
+  /** The reputation meter, under the purse: the level, and the meter filling towards the next. */
+  private drawReputation(r: Renderer): void {
+    const rep = this.reputation;
+    const label = `Inn renown ${rep.level}`;
+    const w = 112;
+    r.nine('panel_dark', 4, 30, w, 24);
+    drawText(r, this.assets, label, 10, 34);
+    // the meter: a row of notches that fill with gold
+    const bx = 10;
+    const by = 46;
+    const bw = w - 12;
+    r.rect(bx, by, bw, 4, '#45283c', true);
+    r.rect(bx, by, Math.round(bw * rep.fill), 4, '#fbf236', true);
+    for (let i = 1; i < 10; i++) r.rect(bx + Math.round((bw * i) / 10), by, 1, 4, '#45283c', true);
   }
 
   /** Every seat in the inn. */
@@ -146,14 +170,20 @@ export class Game {
     return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => seating(l, this.assets, this.content).seats);
   }
 
-  /** A guest has left: their coins, and how they felt about it, over where they sat. */
+  /** A guest has left: their coins and the reputation they earn the inn, and how they felt, over where they sat. */
   private guestLeft(l: Leaving): void {
     this.bag.coins += l.coins;
+    const levels = l.reputation ? this.reputation.add(l.reputation) : 0;
+    if (levels) {
+      this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `The inn's reputation grows! Renown ${this.reputation.level}`, big: true });
+    } else if (l.reputation) {
+      this.hudPops.pop(70, 34, this.time, { text: `+${l.reputation} reputation` });
+    }
     if (l.seat.layout !== this.scene.id) return;
     const s = this.seats().find((x) => x.key === l.seat.key);
     if (!s) return;
     const x = s.art.x + s.art.w / 2;
-    if (l.coins) this.floats.pop(`+${l.coins} coins`, x, s.art.y + 8, this.time);
+    if (l.coins) this.worldPops.pop(x, s.art.y + 4, this.time, { text: `+${l.coins} coins` });
     this.emotes.pop(l.mood >= 0.8 ? 'emote_happy' : l.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
   }
 
@@ -388,6 +418,7 @@ export class Game {
     if (!this.editor.active) this.furnish.draw(r, cx, cy);
     r.flush();
     this.emotes.draw(r, cx, cy, this.time);
+    this.worldPops.draw(r, this.assets, this.content, this.time, cx, cy);
     this.floats.draw(r, this.assets, cx, cy, this.time);
 
     if (this.editor.active) {
@@ -412,7 +443,9 @@ export class Game {
     } else if (!this.dialog.open) {
       r.nine('panel_dark', 4, 4, 28 + String(this.bag.coins).length * 6, 24);
       drawCoins(r, this.assets, this.bag.coins, 8, 8);
+      this.drawReputation(r);
     }
+    this.hudPops.draw(r, this.assets, this.content, this.time);
     if (this.debug) this.drawDebug(cx, cy);
 
     if (this.transition) {

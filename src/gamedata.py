@@ -287,6 +287,11 @@ def build():
         if node not in nodes: raise ValueError(f'ambient {loop}: unknown forage node {node}')
 
     for iid, it in items.items(): it['store'] = store_class(it, dishes)
+    # how interesting a dish is: the prep steps behind it, and each component past the first. Serving it
+    # earns that less one in reputation, so plain things (a fried egg, a cup of milk) earn none
+    for d in dishes.values():
+        d['complexity'] = dish_steps(d, items) + len(d['components']) - 1
+        d['reputation'] = max(0, d['complexity'] - 1)
     data = {
         'schema': SCHEMA,
         'animals': animals,

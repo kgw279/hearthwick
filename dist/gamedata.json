@@ -9208,7 +9208,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 0,
+      "reputation": 0
     },
     "dish_cup_of_well_water": {
       "name": "Cup of Well Water",
@@ -9228,7 +9230,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 0,
+      "reputation": 0
     },
     "dish_berries_and_honey": {
       "name": "Berries & Honey",
@@ -9250,7 +9254,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_sunny_fried_egg": {
       "name": "Sunny Fried Egg",
@@ -9272,7 +9278,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_boiled_egg": {
       "name": "Boiled Egg",
@@ -9292,7 +9300,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_meadow_herb_broth": {
       "name": "Meadow Herb Broth",
@@ -9313,7 +9323,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_cup_of_chicken_broth": {
       "name": "Cup of Chicken Broth",
@@ -9334,7 +9346,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_glass_of_apple_juice": {
       "name": "Glass of Apple Juice",
@@ -9355,7 +9369,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_goblet_of_mead": {
       "name": "Goblet of Mead",
@@ -9375,7 +9391,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 1,
+      "reputation": 0
     },
     "dish_meadow_salad": {
       "name": "Meadow Salad",
@@ -9397,7 +9415,9 @@
       },
       "legacy_id": "meadow",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_honey_grain_bowl": {
       "name": "Honey Grain Bowl",
@@ -9420,7 +9440,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_warm_honey_milk": {
       "name": "Warm Honey Milk",
@@ -9443,7 +9465,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_toasted_oats_and_milk": {
       "name": "Toasted Oats & Milk",
@@ -9465,7 +9489,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_soft_scramble": {
       "name": "Soft Scramble",
@@ -9487,7 +9513,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_herb_tea": {
       "name": "Herb Tea",
@@ -9508,7 +9536,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_berry_cordial": {
       "name": "Berry Cordial",
@@ -9529,7 +9559,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_salted_acorns": {
       "name": "Salted Acorns",
@@ -9550,7 +9582,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_bowl_of_porridge": {
       "name": "Bowl of Porridge",
@@ -9571,7 +9605,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_berry_milk": {
       "name": "Berry Milk",
@@ -9592,7 +9628,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_tankard_of_ale": {
       "name": "Tankard of Ale",
@@ -9612,7 +9650,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_mug_of_cider": {
       "name": "Mug of Cider",
@@ -9633,7 +9673,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_pint_of_oat_stout": {
       "name": "Pint of Oat Stout",
@@ -9654,7 +9696,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_goblet_of_berry_wine": {
       "name": "Goblet of Berry Wine",
@@ -9674,7 +9718,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 2,
+      "reputation": 1
     },
     "dish_mushroom_stew": {
       "name": "Mushroom Stew",
@@ -9697,7 +9743,9 @@
       },
       "legacy_id": "stew",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_grilled_trout": {
       "name": "Grilled Trout",
@@ -9721,7 +9769,9 @@
       },
       "legacy_id": "trout",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_berries_and_cream": {
       "name": "Berries & Cream",
@@ -9743,7 +9793,9 @@
       },
       "legacy_id": "cream",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_honey_glazed_venison": {
       "name": "Honey-Glazed Venison",
@@ -9767,7 +9819,9 @@
       },
       "legacy_id": "glazedven",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_hunters_roast": {
       "name": "Hunter's Roast",
@@ -9791,7 +9845,9 @@
       },
       "legacy_id": "roast",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_mutton_stew": {
       "name": "Mutton Stew",
@@ -9815,7 +9871,9 @@
       },
       "legacy_id": "muttonstew",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_steak_and_potatoes": {
       "name": "Steak & Potatoes",
@@ -9839,7 +9897,9 @@
       },
       "legacy_id": "steakpot",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_crispy_potatoes_and_herbs": {
       "name": "Crispy Potatoes & Herbs",
@@ -9862,7 +9922,9 @@
       },
       "legacy_id": "frites",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_ember_honeycomb": {
       "name": "Ember Honeycomb",
@@ -9886,7 +9948,9 @@
       },
       "legacy_id": "comb",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_herb_fried_egg": {
       "name": "Herb Fried Egg",
@@ -9910,7 +9974,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_crunchy_honey_grain": {
       "name": "Crunchy Honey Grain",
@@ -9933,7 +9999,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_wilted_greens_and_egg": {
       "name": "Wilted Greens & Egg",
@@ -9956,7 +10024,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_pan_fried_trout": {
       "name": "Pan-Fried Trout",
@@ -9980,7 +10050,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_baked_egg_and_herbs": {
       "name": "Baked Egg & Herbs",
@@ -10004,7 +10076,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_curds_and_honey": {
       "name": "Curds & Honey",
@@ -10027,7 +10101,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_berries_and_clotted_cream": {
       "name": "Berries & Clotted Cream",
@@ -10050,7 +10126,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_honey_herb_tea": {
       "name": "Honey Herb Tea",
@@ -10073,7 +10151,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_pickled_onions_and_cheese": {
       "name": "Pickled Onions & Cheese",
@@ -10096,7 +10176,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_salt_crusted_trout": {
       "name": "Salt-Crusted Trout",
@@ -10120,7 +10202,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_grilled_chicken_and_cress": {
       "name": "Grilled Chicken & Cress",
@@ -10144,7 +10228,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_pork_chop_and_applesauce": {
       "name": "Pork Chop & Applesauce",
@@ -10168,7 +10254,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_honey_ham_and_potatoes": {
       "name": "Honey Ham & Potatoes",
@@ -10193,7 +10281,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_porridge_and_honey": {
       "name": "Porridge & Honey",
@@ -10216,7 +10306,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_porridge_and_berries": {
       "name": "Porridge & Berries",
@@ -10240,7 +10332,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_meringue_kisses": {
       "name": "Meringue Kisses",
@@ -10260,7 +10354,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_spiced_apple_tea": {
       "name": "Spiced Apple Tea",
@@ -10281,7 +10377,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_mulled_cider": {
       "name": "Mulled Cider",
@@ -10302,7 +10400,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_eggnog": {
       "name": "Eggnog",
@@ -10323,7 +10423,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_mulled_wine": {
       "name": "Mulled Wine",
@@ -10344,7 +10446,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "drink"
+      "kind": "drink",
+      "complexity": 3,
+      "reputation": 2
     },
     "dish_herb_omelette": {
       "name": "Herb Omelette",
@@ -10368,7 +10472,9 @@
       },
       "legacy_id": "omelette",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_egg_and_herb_salad": {
       "name": "Egg & Herb Salad",
@@ -10391,7 +10497,9 @@
       },
       "legacy_id": null,
       "pack": "simple_meals",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_crackers_and_cheese": {
       "name": "Crackers & Cheese",
@@ -10413,7 +10521,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_stuffed_eggs": {
       "name": "Stuffed Eggs",
@@ -10436,7 +10546,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_fresh_curds_and_herbs": {
       "name": "Fresh Curds & Herbs",
@@ -10459,7 +10571,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_buttered_carrots": {
       "name": "Buttered Carrots",
@@ -10483,7 +10597,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_creamy_mushrooms": {
       "name": "Creamy Mushrooms",
@@ -10506,7 +10622,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_grain_pudding_and_berries": {
       "name": "Grain Pudding & Berries",
@@ -10530,7 +10648,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_venison_in_cream_sauce": {
       "name": "Venison in Cream Sauce",
@@ -10554,7 +10674,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_poached_egg_and_cress": {
       "name": "Poached Egg & Cress",
@@ -10577,7 +10699,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_salt_beef_and_mash": {
       "name": "Salt Beef & Mash",
@@ -10601,7 +10725,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_pepper_steak_and_fries": {
       "name": "Pepper Steak & Fries",
@@ -10625,7 +10751,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_fried_chicken_and_fries": {
       "name": "Fried Chicken & Fries",
@@ -10649,7 +10777,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_bacon_and_eggs": {
       "name": "Bacon & Eggs",
@@ -10673,7 +10803,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_foragers_plate": {
       "name": "Forager's Plate",
@@ -10698,7 +10830,9 @@
       },
       "legacy_id": "forager",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_river_chowder": {
       "name": "River Chowder",
@@ -10723,7 +10857,9 @@
       },
       "legacy_id": "chowder",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_honeyed_porridge": {
       "name": "Honeyed Porridge",
@@ -10747,7 +10883,9 @@
       },
       "legacy_id": "porridge",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_orchard_salad": {
       "name": "Orchard Salad",
@@ -10771,7 +10909,9 @@
       },
       "legacy_id": "cider",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_beef_stew": {
       "name": "Beef Stew",
@@ -10796,7 +10936,9 @@
       },
       "legacy_id": "beefstew",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_bog_broth": {
       "name": "Bog Broth",
@@ -10821,7 +10963,9 @@
       },
       "legacy_id": "bogbroth",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_elven_nectar_bowl": {
       "name": "Elven Nectar Bowl",
@@ -10845,7 +10989,9 @@
       },
       "legacy_id": "nectar",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_grain_salad": {
       "name": "Grain Salad",
@@ -10870,7 +11016,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_roast_chicken_supper": {
       "name": "Roast Chicken Supper",
@@ -10896,7 +11044,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_roast_pork_supper": {
       "name": "Roast Pork Supper",
@@ -10922,7 +11072,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_sausage_rolls": {
       "name": "Sausage Rolls",
@@ -10944,7 +11096,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 4,
+      "reputation": 3
     },
     "dish_farmhouse_loaf": {
       "name": "Farmhouse Loaf",
@@ -10967,7 +11121,9 @@
       },
       "legacy_id": "bread",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_berry_cake_and_cream": {
       "name": "Berry Cake & Cream",
@@ -10991,7 +11147,9 @@
       },
       "legacy_id": "tart",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_honey_cake": {
       "name": "Honey Cake",
@@ -11014,7 +11172,9 @@
       },
       "legacy_id": "cake",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_honey_pancakes": {
       "name": "Honey Pancakes",
@@ -11037,7 +11197,9 @@
       },
       "legacy_id": "pancakes",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_bread_and_honey": {
       "name": "Bread & Honey",
@@ -11059,7 +11221,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_dumpling_broth": {
       "name": "Dumpling Broth",
@@ -11082,7 +11246,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_honey_fritters": {
       "name": "Honey Fritters",
@@ -11105,7 +11271,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_warm_rolls": {
       "name": "Warm Rolls",
@@ -11128,7 +11296,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_granola_and_cream": {
       "name": "Granola & Cream",
@@ -11151,7 +11321,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_cheesy_omelette": {
       "name": "Cheesy Omelette",
@@ -11175,7 +11347,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_pickled_carrots_and_cress": {
       "name": "Pickled Carrots & Cress",
@@ -11198,7 +11372,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_honey_glazed_chicken": {
       "name": "Honey-Glazed Chicken",
@@ -11223,7 +11399,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_chicken_and_dumplings": {
       "name": "Chicken & Dumplings",
@@ -11246,7 +11424,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_bangers_and_mash": {
       "name": "Bangers & Mash",
@@ -11270,7 +11450,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_oatcakes_and_cheese": {
       "name": "Oatcakes & Cheese",
@@ -11292,7 +11474,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_oat_crusted_trout_and_cress": {
       "name": "Oat-Crusted Trout & Cress",
@@ -11316,7 +11500,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_garden_greens": {
       "name": "Garden Greens",
@@ -11340,7 +11526,9 @@
       },
       "legacy_id": "salad",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_sunday_roast": {
       "name": "Sunday Roast",
@@ -11365,7 +11553,9 @@
       },
       "legacy_id": "roastdinner",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_honey_flapjacks": {
       "name": "Honey Flapjacks",
@@ -11386,7 +11576,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 5,
+      "reputation": 4
     },
     "dish_venison_pie": {
       "name": "Venison Pie",
@@ -11410,7 +11602,9 @@
       },
       "legacy_id": "pie",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_apple_pie_and_cream": {
       "name": "Apple Pie & Cream",
@@ -11434,7 +11628,9 @@
       },
       "legacy_id": "crumble",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_cheese_toast": {
       "name": "Cheese Toast",
@@ -11457,7 +11653,9 @@
       },
       "legacy_id": "toast",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_noodles_in_tomato_sauce": {
       "name": "Noodles in Tomato Sauce",
@@ -11480,7 +11678,9 @@
       },
       "legacy_id": "tomnoodles",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_carrot_cake_and_cream": {
       "name": "Carrot Cake & Cream",
@@ -11504,7 +11704,9 @@
       },
       "legacy_id": "carrotcake",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_egg_on_toast": {
       "name": "Egg on Toast",
@@ -11527,7 +11729,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_custard_and_compote": {
       "name": "Custard & Compote",
@@ -11550,7 +11754,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_frittata_and_greens": {
       "name": "Frittata & Greens",
@@ -11574,7 +11780,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_shortbread_and_milk": {
       "name": "Shortbread & Milk",
@@ -11596,7 +11804,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_cheesy_noodles": {
       "name": "Cheesy Noodles",
@@ -11619,7 +11829,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_poached_trout_and_greens": {
       "name": "Poached Trout & Greens",
@@ -11642,7 +11854,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_ember_chicken_and_flatbread": {
       "name": "Ember Chicken & Flatbread",
@@ -11666,7 +11880,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_bacon_and_cheese_omelette": {
       "name": "Bacon & Cheese Omelette",
@@ -11690,7 +11906,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_skirlie_and_sausages": {
       "name": "Skirlie & Sausages",
@@ -11714,7 +11932,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 6,
+      "reputation": 5
     },
     "dish_tomato_flatbread": {
       "name": "Tomato Flatbread",
@@ -11739,7 +11959,9 @@
       },
       "legacy_id": "tomflat",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_berry_meringue_mess": {
       "name": "Berry Meringue Mess",
@@ -11762,7 +11984,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_brown_butter_trout": {
       "name": "Brown Butter Trout",
@@ -11787,7 +12011,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_chicken_in_mushroom_cream": {
       "name": "Chicken in Mushroom Cream",
@@ -11812,7 +12038,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_egg_mash_on_toast": {
       "name": "Egg Mash on Toast",
@@ -11835,7 +12063,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_buttered_toast": {
       "name": "Buttered Toast",
@@ -11857,7 +12087,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_poached_egg_on_toast": {
       "name": "Poached Egg on Toast",
@@ -11879,7 +12111,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_chicken_pie_and_mash": {
       "name": "Chicken Pie & Mash",
@@ -11902,7 +12136,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_bacon_sandwich": {
       "name": "Bacon Sandwich",
@@ -11926,7 +12162,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_beef_noodle_soup": {
       "name": "Beef Noodle Soup",
@@ -11951,7 +12189,9 @@
       },
       "legacy_id": "beefnoodle",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_tavern_wrap": {
       "name": "Tavern Wrap",
@@ -11977,7 +12217,9 @@
       },
       "legacy_id": "wrap",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_dwarven_stonebread": {
       "name": "Dwarven Stonebread",
@@ -12001,7 +12243,9 @@
       },
       "legacy_id": "stonebread",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_shepherds_supper": {
       "name": "Shepherd's Supper",
@@ -12026,7 +12270,9 @@
       },
       "legacy_id": "supper",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_onion_noodle_pan": {
       "name": "Onion Noodle Pan",
@@ -12052,7 +12298,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_egg_noodle_broth": {
       "name": "Egg Noodle Broth",
@@ -12076,7 +12324,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_ploughmans_lunch": {
       "name": "Ploughman's Lunch",
@@ -12100,7 +12350,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_chicken_and_cress_sandwich": {
       "name": "Chicken & Cress Sandwich",
@@ -12126,7 +12378,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_cheese_and_wine_board": {
       "name": "Cheese & Wine Board",
@@ -12150,7 +12404,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_chicken_noodle_soup": {
       "name": "Chicken Noodle Soup",
@@ -12173,7 +12429,9 @@
       },
       "legacy_id": null,
       "pack": "chicken",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 7,
+      "reputation": 6
     },
     "dish_bread_pudding": {
       "name": "Bread Pudding",
@@ -12196,7 +12454,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_tea_and_shortbread": {
       "name": "Tea & Shortbread",
@@ -12220,7 +12480,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_pork_and_apple_stew": {
       "name": "Pork & Apple Stew",
@@ -12244,7 +12506,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_berry_crumble_and_cream": {
       "name": "Berry Crumble & Cream",
@@ -12268,7 +12532,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 8,
+      "reputation": 7
     },
     "dish_patty_on_bread": {
       "name": "Patty on Bread",
@@ -12294,7 +12560,9 @@
       },
       "legacy_id": "patty",
       "pack": "prototype",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_hearthwick_onion_soup": {
       "name": "Hearthwick Onion Soup",
@@ -12318,7 +12586,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_quiche_and_garden_salad": {
       "name": "Quiche & Garden Salad",
@@ -12343,7 +12613,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_cream_tea": {
       "name": "Cream Tea",
@@ -12367,7 +12639,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_salt_beef_sandwich": {
       "name": "Salt Beef Sandwich",
@@ -12392,7 +12666,9 @@
       },
       "legacy_id": null,
       "pack": "seasoning",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_sausages_and_onions_on_toast": {
       "name": "Sausages & Onions on Toast",
@@ -12418,7 +12694,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_full_hearthwick_breakfast": {
       "name": "Full Hearthwick Breakfast",
@@ -12444,7 +12722,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 10,
+      "reputation": 9
     },
     "dish_crumbed_trout": {
       "name": "Crumbed Trout",
@@ -12469,7 +12749,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_apple_pie_and_custard": {
       "name": "Apple Pie & Custard",
@@ -12492,7 +12774,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_pork_pie_and_pickles": {
       "name": "Pork Pie & Pickles",
@@ -12516,7 +12800,9 @@
       },
       "legacy_id": null,
       "pack": "pork",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_pie_and_a_pint": {
       "name": "Pie & a Pint",
@@ -12539,7 +12825,9 @@
       },
       "legacy_id": null,
       "pack": "drinks",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 9,
+      "reputation": 8
     },
     "dish_tavern_scotch_egg": {
       "name": "Tavern Scotch Egg",
@@ -12564,7 +12852,9 @@
       },
       "legacy_id": null,
       "pack": "eggs",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 10,
+      "reputation": 9
     },
     "dish_fireside_potato_soup": {
       "name": "Fireside Potato Soup",
@@ -12587,7 +12877,9 @@
       },
       "legacy_id": null,
       "pack": "milk",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 10,
+      "reputation": 9
     },
     "dish_garden_soup_and_bread": {
       "name": "Garden Soup & Bread",
@@ -12611,7 +12903,9 @@
       },
       "legacy_id": null,
       "pack": "water",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 11,
+      "reputation": 10
     },
     "dish_stuffed_mutton_roast": {
       "name": "Stuffed Mutton Roast",
@@ -12638,7 +12932,9 @@
       },
       "legacy_id": null,
       "pack": "wheat",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 12,
+      "reputation": 11
     },
     "dish_apple_crumble_and_custard": {
       "name": "Apple Crumble & Custard",
@@ -12661,7 +12957,9 @@
       },
       "legacy_id": null,
       "pack": "oats",
-      "kind": "food"
+      "kind": "food",
+      "complexity": 12,
+      "reputation": 11
     }
   },
   "forage_spots": {
