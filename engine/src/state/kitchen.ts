@@ -6,14 +6,15 @@
  * Cooking draws from here (then the player's bag) and puts what it makes back here, into the first
  * container that takes it and has room: prepped food onto shelves, drinks into barrels and kegs. With
  * nowhere to put it, nothing is made. Plating at the serving counter takes a dish's components and a
- * clean plate (a mug for a drink; a bowl if there are no plates), and the dish waits on the counter.
- * Pure state, no drawing.
+ * clean plate (a mug for a drink; a bowl if there are no plates), and the dish goes onto a serving tray
+ * (see state/service.ts). Pure state, no drawing.
  */
 import { SECTION, type Content, type Recipe, type Store } from '../game/data';
 import { containerOf, type ContainerSpec } from '../world/containers';
 import type { Layout } from '../world/layout';
 import type { Bag, Inventory, Stack } from './inventory';
 import type { Storage } from './storage';
+import { TRAY_MEALS, type Part, type Tray } from './service';
 
 /** The inn's maps: every map whose id starts with "inn". */
 export const isInn = (layoutId: string) => layoutId.startsWith('inn');
@@ -111,28 +112,6 @@ export class InnStores {
   }
 }
 
-/** Dishes plated on the serving counter, each with the piece it's served on (a guest leaves that dirty). */
-export class Serving {
-  readonly plated: Array<{ dish: string; ware: string }> = [];
-
-  constructor(readonly capacity: number) {}
-
-  get full(): boolean {
-    return this.plated.length >= this.capacity;
-  }
-
-  /** Each dish once with how many are plated, in the order first plated. */
-  contents(): Stack[] {
-    const out: Stack[] = [];
-    for (const p of this.plated) {
-      const hit = out.find((o) => o.item === p.dish);
-      if (hit) hit.count++;
-      else out.push({ item: p.dish, count: 1 });
-    }
-    return out;
-  }
-}
-
 /** Why something can't be made or plated right now, or null if it can. */
 export type Blocker = string | null;
 
@@ -144,7 +123,6 @@ export class Kitchen {
   constructor(
     readonly stores: InnStores,
     private readonly bag: Bag,
-    readonly serving: Serving,
     private readonly content: Content,
   ) {}
 
@@ -205,21 +183,78 @@ export class Kitchen {
     return null;
   }
 
-  canPlate(dish: string): Blocker {
+  /** The best clean cutlery to hand, if any. */
+  cutlery(): string | null {
+    const sets = Object.entries(this.content.items)
+      .filter(([, it]) => it.tableware?.kind === 'cutlery' && !it.washes_to)
+      .sort((a, b) => b[1].tableware!.tier - a[1].tableware!.tier);
+    return sets.find(([id]) => this.have(id) > 0)?.[0] ?? null;
+  }
+
+  canPlate(dish: string, tray: Tray): Blocker {
     const short = this.missing(this.content.dish(dish).components);
     if (short) return short;
     if (!this.ware(dish)) return this.content.dish(dish).kind === 'drink' ? 'No clean mugs' : 'No clean plates';
-    if (this.serving.full) return 'The counter is full';
+    if (tray.freeMeal(this.content.dish(dish).kind) < 0) return `The tray is full (${TRAY_MEALS} meals)`;
     return null;
   }
 
-  plate(dish: string): Blocker {
-    const why = this.canPlate(dish);
+  /** Plate a dish onto a tray: into the first meal still without one of its kind (food or drink). */
+  plate(dish: string, tray: Tray): Blocker {
+    const why = this.canPlate(dish, tray);
     if (why) return why;
     const ware = this.ware(dish)!;
+    const part = this.content.dish(dish).kind;
     this.use([...this.content.dish(dish).components, ware]);
-    this.serving.plated.push({ dish, ware });
+    const i = tray.freeMeal(part);
+    tray.meals[i] = { ...(tray.meals[i] ?? {}), [part]: { dish, ware } };
     return null;
+  }
+
+  /** Lay a set of cutlery on a tray, with the first meal that hasn't any. */
+  addCutlery(tray: Tray): Blocker {
+    const set = this.cutlery();
+    if (!set) return 'No clean cutlery';
+    const i = tray.freeMeal('cutlery');
+    if (i < 0) return `The tray is full (${TRAY_MEALS} meals)`;
+    this.use([set]);
+    tray.meals[i] = { ...(tray.meals[i] ?? {}), cutlery: set };
+    return null;
+  }
+
+  /**
+   * Take a part of a meal back off a tray: a dish is unplated (its components and what it was on go back
+   * to the stores, or the bag), cutlery goes back. Nothing moves if there's nowhere to put it all.
+   */
+  takeOff(tray: Tray, meal: number, part: Part): Blocker {
+    const m = tray.meals[meal];
+    const got = m?.[part];
+    if (!m || !got) return null;
+    const back = typeof got === 'string' ? [got] : [...this.content.dish(got.dish).components, got.ware];
+    const need = this.needs(back);
+    if (need.some((n) => this.stores.room(n.item) + this.bag.room(n.item) < n.count)) return 'No room to put it back';
+    for (const n of need) {
+      const k = this.stores.add(n.item, n.count);
+      if (k < n.count) this.bag.add(n.item, n.count - k);
+    }
+    delete m[part];
+    tray.tidy();
+    return null;
+  }
+
+  /** Whether an item is to hand, or one step at a station from things to hand. */
+  private soon(item: string): boolean {
+    if (this.have(item) > 0) return true;
+    return (this.content.items[item]?.made_by ?? []).some((m) => m.inputs.every((i) => this.have(i) > 0));
+  }
+
+  /** What guests can order: dishes whose components are all to hand or one step away. */
+  menu(): { food: string[]; drink: string[] } {
+    const out = { food: [] as string[], drink: [] as string[] };
+    for (const [id, d] of Object.entries(this.content.dishes)) {
+      if (d.components.every((c) => this.soon(c))) out[d.kind].push(id);
+    }
+    return out;
   }
 
   /** Dishes that could be plated from what's to hand (ignoring tableware and counter room), by name. */

@@ -70,6 +70,10 @@
     {"sprite": "crate", "x": 79, "y": 224, "behavior": {"type": "storage", "id": "inn_ground_crate_2", "slots": 8, "contents": [{"item": "wheat", "count": 6}, {"item": "water", "count": 6}, {"item": "egg", "count": 4}, {"item": "milk", "count": 4}, {"item": "herbs", "count": 4}, {"item": "honey", "count": 3}]}},
     {"sprite": "crate", "x": 41, "y": 200, "behavior": {"type": "storage", "id": "inn_ground_crate_3", "slots": 8}},
     {"sprite": "wall_shelf", "x": 128, "y": 51, "layer": "wall", "behavior": {"type": "storage", "id": "inn_ground_wall_shelf_1", "slots": 6}},
-    {"sprite": "shelf_jars", "x": 160, "y": 51, "layer": "wall", "behavior": {"type": "storage", "id": "inn_ground_shelf_jars_1", "slots": 6}}
+    {"sprite": "shelf_jars", "x": 160, "y": 51, "layer": "wall", "behavior": {"type": "storage", "id": "inn_ground_shelf_jars_1", "slots": 6}},
+    {"sprite": "chair_right", "x": 191, "y": 168},
+    {"sprite": "chair_left", "x": 239, "y": 168},
+    {"sprite": "chair_right", "x": 228, "y": 205},
+    {"sprite": "chair_left", "x": 277, "y": 205}
   ]
 }

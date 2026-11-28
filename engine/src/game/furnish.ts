@@ -45,6 +45,8 @@ export interface FurnishWorld {
   /** Note the map needs saving. */
   changed(id: string): void;
   say(text: string): void;
+  /** Holding use on something that picks up itself (a tray); true if it did. Tried before furniture. */
+  hold(): boolean;
 }
 
 export class Furnish {
@@ -87,7 +89,7 @@ export class Furnish {
     }
     if (this.pressed && input.down('interact')) {
       this.held += dt;
-      if (!this.carried && !this.pickedUp && this.held >= HOLD) this.pickedUp = this.pickUp();
+      if (!this.carried && !this.pickedUp && this.held >= HOLD) this.pickedUp = this.w.hold() || this.pickUp();
       return false;
     }
     if (!this.pressed) return false;

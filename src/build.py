@@ -13,6 +13,7 @@ from art_walldecor import WALL_DECOR  # noqa: E402
 from art_kitchen import KITCHEN, BAR  # noqa: E402
 from art_tableware import ITEMS as TABLEWARE_ITEMS, TABLES, CHAIRS  # noqa: E402
 from art_supplies import ITEMS as SUPPLY_ITEMS  # noqa: E402
+from art_service import SERVICE  # noqa: E402
 from art_cliffs import CLIFFS  # noqa: E402
 from art_houses import HOUSES  # noqa: E402
 from sprites import TILES, PROPS, grass  # noqa: E402
@@ -79,6 +80,7 @@ def build_groups(data):
         'food': (food_entries(data), 32, 32, 16, 'cream'),
         'tableware_items': ([(n, f()) for n, f in TABLEWARE_ITEMS], 32, 32, 12, 'cream'),
         'supply_items': ([(n, f()) for n, f in SUPPLY_ITEMS], 32, 32, 4, 'cream'),
+        'service': ([(n, f()) for n, f in SERVICE], 32, 32, 9, 'floor'),
         'tables': ([(n, f()) for n, f in TABLES], 64, 48, 3, 'floor'),
         'chairs': ([(n, f()) for n, f in CHAIRS], 32, 32, 5, 'floor'),
     }

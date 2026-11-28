@@ -10653,6 +10653,69 @@
         }
       }
     },
+    "service": {
+      "image": "service.png",
+      "cell": [
+        32,
+        32
+      ],
+      "frames": {
+        "serving_tray": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_plate_food": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_bowl_food": {
+          "x": 64,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_mug_full": {
+          "x": 96,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_cutlery": {
+          "x": 128,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_plate_dirty": {
+          "x": 160,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_bowl_dirty": {
+          "x": 192,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_mug_dirty": {
+          "x": 224,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "mini_cutlery_dirty": {
+          "x": 256,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      }
+    },
     "tables": {
       "image": "tables.png",
       "cell": [

@@ -24,7 +24,8 @@ export interface ItemData {
   dirty?: string;
 }
 export interface StationData { name: string; verb: string; method: string; sprite: { sheet: string; frame: string } }
-export interface DishData { name: string; components: string[]; kind: 'food' | 'drink'; value: number }
+export interface DishData { name: string; components: string[]; kind: 'food' | 'drink'; value: number; tags: string[] }
+export interface FolkData { name: string; likes: string[]; hates: string | null }
 /** One way to make something: what goes in, what comes out. */
 export interface Recipe { out: string; inputs: string[] }
 
@@ -46,6 +47,7 @@ export class Content {
   readonly stations: Record<string, StationData>;
   /** Dishes as served (food or drink) and what goes on the plate. */
   readonly dishes: Record<string, DishData>;
+  readonly folk: Record<string, FolkData>;
   private readonly recipes = new Map<string, Recipe[]>();
 
   constructor(data: GameData) {
@@ -59,6 +61,7 @@ export class Content {
     this.economy = data.economy as Economy;
     this.stations = data.stations as Record<string, StationData>;
     this.dishes = dishes as unknown as Record<string, DishData>;
+    this.folk = data.folk as Record<string, FolkData>;
     for (const [id, it] of Object.entries(this.items)) {
       for (const m of it.made_by ?? []) {
         const list = this.recipes.get(m.station) ?? [];
@@ -93,6 +96,10 @@ export class Content {
   stationOfArt(art: string): string | undefined {
     const frame = art.replace(/^anim:/, '').replace(/_f\d+$/, '');
     return Object.keys(this.stations).find((k) => k !== 'plate' && this.stations[k].sprite.frame === frame);
+  }
+
+  dishTags(id: string): string[] {
+    return this.dish(id).tags ?? [];
   }
 
   /** A dish plated: its components, and what it's served on. */
