@@ -23,7 +23,8 @@ import { Furnish } from './furnish';
 import { StorageScreen } from '../ui/storageScreen';
 import { Shops } from '../state/shops';
 import { InventoryScreen } from '../ui/inventoryScreen';
-import { CookScreen } from '../ui/cookScreen';
+import { PrepScreen } from '../ui/prepScreen';
+import { ServeScreen } from '../ui/serveScreen';
 import { accepts, InnStores, isInn, Kitchen, Serving } from '../state/kitchen';
 import { containerOf } from '../world/containers';
 import { drawCoins } from '../ui/items';
@@ -98,8 +99,8 @@ export class Game {
         const inv = this.storage.get(box.id, box.slots, box.contents, accepts(containerOf(art), this.content));
         this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
       },
-      openStation: (station) => (this.screen = new CookScreen({ station }, this.kitchen, this.content, assets)),
-      openCounter: () => (this.screen = new CookScreen({ counter: true }, this.kitchen, this.content, assets)),
+      openStation: (station) => (this.screen = new PrepScreen(station, this.kitchen, this.content, assets)),
+      openCounter: () => (this.screen = new ServeScreen(this.kitchen, this.content, assets)),
       wash: () => this.washDishes(),
     };
     const e = this.content.economy;

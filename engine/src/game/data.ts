@@ -73,6 +73,22 @@ export class Content {
     return [...(this.recipes.get(station) ?? [])].sort((a, b) => this.itemName(a.out).localeCompare(this.itemName(b.out)));
   }
 
+  /** What a station makes from exactly these inputs (in any order), if anything. */
+  recipeFor(station: string, inputs: string[]): Recipe | undefined {
+    const key = [...inputs].sort().join('+');
+    return this.recipes.get(station)?.find((r) => [...r.inputs].sort().join('+') === key);
+  }
+
+  /** Everything that goes into something at a station. */
+  ingredientsAt(station: string): Set<string> {
+    return new Set((this.recipes.get(station) ?? []).flatMap((r) => r.inputs));
+  }
+
+  /** The most things that go into any one recipe at a station. */
+  mostInputsAt(station: string): number {
+    return Math.max(1, ...(this.recipes.get(station) ?? []).map((r) => r.inputs.length));
+  }
+
   /** The cooking station a piece of art is (its frame, or its animation's), if it's one. The plate is the serving counter's. */
   stationOfArt(art: string): string | undefined {
     const frame = art.replace(/^anim:/, '').replace(/_f\d+$/, '');
