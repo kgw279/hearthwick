@@ -345,6 +345,7 @@ export class Service {
     if (then === 'round' || (g.got.drink && rounds < again.rounds && this.rng() < again.chance)) {
       o.remark = then === 'round' ? "Another round, and I'll tell you the rest!" : 'That hit the spot! Same again?';
       this.nextRound(g, served, { drink: this.want(menu.drink, g.folk, 'drink') });
+      g.craving = this.craving(g.folk, ['drink']);
     } else if (hours.rooms && (then === 'room' || (hours.evening && this.rng() < ROOM_ASK))) {
       o.remark = then === 'room' ? "I'm done in. Have you a bed for me?" : 'Have you a room for the night?';
       this.nextRound(g, served, {});
@@ -536,7 +537,7 @@ export class Service {
     const look = this.looks[Math.floor(this.rng() * this.looks.length)];
     const folk = this.content.folk[look] ? look : 'human';
     return {
-      look, folk, bar: seat.bar, order, craving: this.craving(folk), got: {}, state: 'arriving', walk: seat.walk ?? 3, walkTotal: seat.walk ?? 3,
+      look, folk, bar: seat.bar, order, craving: this.craving(folk, COURSES.filter((c) => c in order)), got: {}, state: 'arriving', walk: seat.walk ?? 3, walkTotal: seat.walk ?? 3,
       patience: PATIENCE, patienceMax: PATIENCE, eating: 0, waited: 0, mess: 0, seated: this.seatedCount++, seat: seat.key,
       had: [], leftovers: [], said: [], chatty: false,
     };
@@ -553,14 +554,26 @@ export class Service {
     const drink = this.rng() < (most === 1 ? ONLY_DRINK : WITH_DRINK);
     const courses = drink ? ['drink' as Course, ...food.slice(0, most - 1)] : food.slice(0, most);
     for (const c of courses) g.order[c] = this.want(menu[c], g.folk, c);
+    g.craving = this.craving(g.folk, courses);
     this.guests.set(seat.key, g);
     this.visits.push(g);
     this.changed();
   }
 
-  /** What a guest of a folk quietly craves: drawn by the folk's weights. */
-  private craving(folk: string): string {
-    const w = Object.entries(this.content.folk[folk]?.cravings ?? { hearty: 1 });
+  /**
+   * What a guest of a folk quietly craves: drawn by the folk's weights, from what what they've ordered
+   * could be (a guest after just a drink craves something a drink can be, not something grilled). If
+   * nothing their folk likes could be, any of what it could be.
+   */
+  private craving(folk: string, courses: Course[]): string {
+    const could = new Set<string>();
+    for (const id of [...Object.keys(this.content.dishes), ...this.content.snacks]) {
+      if (courses.includes(this.content.course(id))) for (const t of this.content.traits(id)) could.add(t);
+    }
+    const all = Object.entries(this.content.folk[folk]?.cravings ?? { hearty: 1 });
+    const fit = all.filter(([t]) => could.has(t));
+    const w = fit.length ? fit : [...could].map((t): [string, number] => [t, 1]);
+    if (!w.length) return all[0]?.[0] ?? 'hearty';
     let r = this.rng() * w.reduce((n, [, v]) => n + v, 0);
     for (const [t, v] of w) if ((r -= v) <= 0) return t;
     return w[w.length - 1][0];

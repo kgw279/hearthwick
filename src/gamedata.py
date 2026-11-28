@@ -21,6 +21,7 @@ import content_tableware
 import content_supplies
 import content_furniture
 import content_rooms
+import content_plates
 import content_shops
 import art_kitchen
 import art_supplies
@@ -208,8 +209,26 @@ def build():
         for c in comps:
             items[ids[c]]['used_in']['dishes'].append(did)
 
+    # plates filling out the pairings the hand-written dishes don't cover (content_plates.py)
+    have = {tuple(sorted(d['components'])) for d in dishes.values()}
+    plate_drinks = []
+    tags_of = {iid: it['tags'] for iid, it in items.items()}
+    for name, comps, drink in content_plates.generated(items):
+        bad = [c for c in comps if c not in items]
+        if bad: raise ValueError(f'plate {name}: unknown {bad}')
+        did = 'dish_' + slug(name)
+        key = tuple(sorted(comps))
+        if key in have or did in dishes or (len(comps) == 1 and comps[0] in SNACKS): continue   # covered already
+        have.add(key)
+        dishes[did] = {'name': name, 'components': sorted(comps), 'station': 'plate', 'tags': dish_tags(comps, None, tags_of),
+                       'value': sum(items[c]['value'] for c in comps) + 1, 'origin_folk': None, 'starter': False,
+                       'sprite': {'sheet': 'food', 'frame': did}, 'legacy_id': None, 'pack': 'plates'}
+        if drink: plate_drinks.append(name)
+        for c in comps:
+            items[c]['used_in']['dishes'].append(did)
+
     # food or drink: each source lists its drink dishes by name
-    drink_names = list(D.SIMPLE_DRINKS) + [n for P in PACKS.values() for n in getattr(P, 'DRINKS', [])]
+    drink_names = list(D.SIMPLE_DRINKS) + [n for P in PACKS.values() for n in getattr(P, 'DRINKS', [])] + plate_drinks
     drinks = {'dish_' + slug(n) for n in drink_names}
     missing = drinks - set(dishes)
     if missing: raise ValueError(f'DRINKS names that are not dishes: {sorted(missing)}')
@@ -401,9 +420,10 @@ TAG_TRAITS = {'meat': 'meaty', 'fish': 'fishy', 'sweet': 'sweet', 'savory': 'sav
 
 def course_of(d):
     """A dish's course: a drink; a dessert (sweet, and not savoury, meaty, fishy or fresh); a snack (a dish of
-    one thing); else a main."""
+    one thing, unless it's a meal in itself); else a main."""
     if d['kind'] == 'drink': return 'drink'
     if 'sweet' in d['tags'] and not set(d['tags']) & {'meat', 'fish', 'savory', 'fresh'}: return 'dessert'
+    if len(d['components']) == 1 and d['components'][0] in content_plates.MAIN_ALONE: return 'main'   # a roast, a pie, a soup
     return 'snack' if len(d['components']) == 1 else 'main'
 
 
@@ -473,7 +493,7 @@ def validate(data):
     for did, d in dishes.items():
         for c in d['components']:
             if c not in items: errs.append(f'{did}: unknown component {c}')
-        if not has_sprite(did): errs.append(f'{did}: missing sprite')
+        if d.get('pack') != 'plates' and not has_sprite(did): errs.append(f'{did}: missing sprite')
     keys = {}
     for did, d in dishes.items():
         k = '+'.join(d['components'])

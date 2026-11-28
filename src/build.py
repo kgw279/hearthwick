@@ -24,6 +24,7 @@ from sprites3 import CHARACTERS, CHAR_LOOKS, CHAR_VIEWS, INTERIOR  # noqa: E402
 from sprites4 import FOLK, FOLK_NAMES, SHOPS  # noqa: E402
 import gamedata  # noqa: E402
 from items_art import sprite_for  # noqa: E402
+from art_plates import plated  # noqa: E402
 from sprites5 import PATHS, PATH_VARIANTS, CONNECTORS, connector, path_mask, WALL_KIT, FORAGE  # noqa: E402
 from ui_build import build_ui, mock_hud, mock_menus, mock_prompts, mock_ui_kit  # noqa: E402
 from sprites7 import TABLEWARE  # noqa: E402
@@ -46,7 +47,8 @@ def food_entries(data):
     """Every item then every dish, in game-data order: raw, prepared, dishes."""
     order = ([i for i, it in data['items'].items() if it['kind'] == 'raw'] +
              [i for i, it in data['items'].items() if it['kind'] == 'prepared'] + list(data['dishes']))
-    return [(i, sprite_for(i)) for i in order]
+    plates = {d: v for d, v in data['dishes'].items() if v.get('pack') == 'plates'}   # drawn from what's on them
+    return [(i, plated(plates[i]['components'], plates[i]['kind'] == 'drink') if i in plates else sprite_for(i)) for i in order]
 
 
 def build_groups(data):

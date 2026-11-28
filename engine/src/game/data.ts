@@ -106,6 +106,8 @@ export class Content {
   /** Guest rooms: what they need, and what a guest staying might ask for. */
   readonly rooms: RoomsData;
   private readonly recipes = new Map<string, Recipe[]>();
+  /** Each dish by its components (sorted, joined): there are a great many. */
+  private readonly byComponents = new Map<string, string>();
 
   constructor(data: GameData) {
     const dishes = data.dishes as Record<string, Omit<ItemData, 'kind'>>;
@@ -123,6 +125,7 @@ export class Content {
     this.bar = data.bar as { snacks: string[]; max_components: number };
     this.snacks = data.snacks as string[];
     this.rooms = data.rooms as RoomsData;
+    for (const [id, d] of Object.entries(this.dishes)) this.byComponents.set([...d.components].sort().join('+'), id);
     for (const [id, it] of Object.entries(this.items)) {
       for (const m of it.made_by ?? []) {
         const list = this.recipes.get(m.station) ?? [];
@@ -145,8 +148,7 @@ export class Content {
 
   /** The dish made from exactly these components (in any order), if any. */
   dishFor(components: string[]): string | undefined {
-    const key = [...components].sort().join('+');
-    return Object.keys(this.dishes).find((d) => [...this.dishes[d].components].sort().join('+') === key);
+    return this.byComponents.get([...components].sort().join('+'));
   }
 
   /** Everything that goes into some dish. */

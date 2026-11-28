@@ -59,17 +59,16 @@ export class Clock {
     return { color: `rgb(${mix.join(',')})`, alpha };
   }
 
-  /** How busy the inn is at this time of day, for how often guests come in: some at every hour. */
+  /**
+   * How busy the inn is at this time of day, for how often guests come in: the usual pace at every hour,
+   * and more at mealtimes (never less).
+   */
   get busy(): number {
     const h = this.hour;
-    if (h < 6) return 0.3; // the small hours
-    if (h < 7) return 0.4;
-    if (h < 10) return 0.8; // breakfast
-    if (h < 11.5) return 0.5;
-    if (h < 14) return 1.4; // lunch
-    if (h < 17) return 0.6;
-    if (h < 21) return 1.6; // supper
-    return 1; // the late evening
+    if (h >= 7 && h < 9.5) return 1.4; // breakfast
+    if (h >= 11.5 && h < 14) return 1.7; // lunch
+    if (h >= 17.5 && h < 21) return 1.8; // supper
+    return 1;
   }
 
   /** Late evening into the small hours (8 pm to 2 am): when folk look for a bed for the night. */
