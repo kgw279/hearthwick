@@ -6,6 +6,8 @@ is the piece itself. Sold at the Furnisher's.
   name     what it's called
   price    what the Furnisher charges
   layer    'floor' (rugs), 'wall' (paintings, sconces) or None (stands on the floor)
+  extras   how the prop is placed: its art if it's an animation, footprint depth, collider, what it does (a
+           clock tells the time)
 """
 SELLER = 'furnisher'
 SHOP = ('Hearth & Home Furnishings', 'house_red')   # name, building
@@ -27,6 +29,8 @@ FURNITURE = {   # id: (name, price, sheet, frame, layer, prop extras)
     'crate': ('Crate', 6, 'props', 'crate', None, {}),
     'barrel': ('Barrel', 12, 'props', 'barrel', None, {}),
     'keg': ('Keg', 20, 'interior', 'keg', None, {}),
+    'wall_clock': ('Wall clock', 16, 'furniture', 'wall_clock', 'wall', {'behavior': {'type': 'clock'}}),
+    'standing_clock': ('Standing clock', 35, 'furniture', 'standing_clock', None, {'behavior': {'type': 'clock'}}),
 }
 
 
@@ -44,13 +48,3 @@ def items():
 def stock():
     return [(iid, price) for iid, (_n, price, *_r) in FURNITURE.items()]
 
-
-def prop_name(sprite):
-    """A placed piece's base art name ("anim:fireplace" -> "fireplace")."""
-    return sprite.replace('anim:', '').split('_f')[0] if sprite.startswith('anim:') else sprite
-
-
-def piece_of(sprite):
-    """Which furniture item a placed piece is, if any (so it can be packed up again)."""
-    base = prop_name(sprite)
-    return next((iid for iid, f in FURNITURE.items() if f[3] == base), None)

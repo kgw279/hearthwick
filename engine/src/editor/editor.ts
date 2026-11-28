@@ -33,6 +33,8 @@ import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Game } from '../game/game';
 import { artRect, layoutSpawns, passageSpawn, placeProp, propFrames } from '../game/build';
 import { drawText, measure } from '../ui/text';
+import { isHearth } from '../game/seating';
+import { isInn } from '../state/kitchen';
 import { formatLayout, GROUND_CHARS, type Layout, type PlacedProp } from '../world/layout';
 import { CELL } from '../world/field';
 import { TileMap, TILE } from '../world/tilemap';
@@ -571,14 +573,23 @@ export class Editor {
     this.changed('Placed');
   }
 
+  /** The inn's last hearth (guests wait by it): it can't be deleted. */
+  private lastHearth(p: PlacedProp): boolean {
+    if (!isHearth(p) || !isInn(this.layout.id)) return false;
+    const others = [...this.game.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => l.props.filter(isHearth));
+    return others.filter((q) => q !== p).length === 0;
+  }
+
   private remove(): void {
     if (this.held) {
+      if (this.lastHearth(this.held.prop)) return this.say('The inn needs a hearth: guests wait by it');
       this.held = null; // already out of the layout (the pick-up was recorded)
       this.changed('Deleted');
       return;
     }
     const hit = this.propAtCursor();
     if (hit < 0) return;
+    if (this.lastHearth(this.layout.props[hit])) return this.say('The inn needs a hearth: guests wait by it');
     this.history.record();
     this.layout.props.splice(hit, 1);
     this.changed('Deleted');

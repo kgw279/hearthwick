@@ -22,7 +22,7 @@ export class Clock {
     return (this.minutes % 1440) / 60;
   }
 
-  /** The small hours: nobody comes in, and the shops are shut. */
+  /** The small hours (11 pm to dawn): quiet, and the time passes quicker while nobody's at the tables. */
   get night(): boolean {
     const h = this.hour;
     return h >= 23 || h < DAWN;
@@ -31,14 +31,6 @@ export class Clock {
   /** Advance; quiet: nothing's going on at the inn (then the night hurries by). */
   update(dt: number, quiet: boolean): void {
     this.minutes += dt * MINUTES_PER_SECOND * (this.night && quiet ? NIGHT_HURRY : 1);
-  }
-
-  /** "7:05 am". */
-  get time(): string {
-    const m = Math.floor(this.minutes % 1440);
-    const h = Math.floor(m / 60);
-    const h12 = h % 12 || 12;
-    return `${h12}:${String(m % 60).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
   }
 
   /** Whether it's within opening hours [open, close) (24-hour clock). */
@@ -67,16 +59,38 @@ export class Clock {
     return { color: `rgb(${mix.join(',')})`, alpha };
   }
 
-  /** How busy the inn is at this time of day, for how often guests come in (0: nobody comes). */
+  /** How busy the inn is at this time of day, for how often guests come in: some at every hour. */
   get busy(): number {
     const h = this.hour;
-    if (this.night) return 0;
-    if (h < 7) return 0.3;
+    if (h < 6) return 0.3; // the small hours
+    if (h < 7) return 0.4;
     if (h < 10) return 0.8; // breakfast
     if (h < 11.5) return 0.5;
     if (h < 14) return 1.4; // lunch
     if (h < 17) return 0.6;
     if (h < 21) return 1.6; // supper
-    return 0.8; // a nightcap
+    return 1; // the late evening
+  }
+
+  /** Late evening into the small hours (8 pm to 2 am): when folk look for a bed for the night. */
+  get evening(): boolean {
+    const h = this.hour;
+    return h >= 20 || h < 2;
+  }
+
+  /** The chance someone coming in is after just a room (late evening, mostly). */
+  get lodging(): number {
+    return this.evening ? 0.55 : 0.08;
+  }
+
+  /** The time as said aloud: "a quarter past seven in the evening, on day 2". */
+  get spoken(): string {
+    const m = Math.round((this.minutes % 1440) / 5) * 5;
+    const h = Math.floor(m / 60) % 24;
+    const min = m % 60;
+    const h12 = h % 12 || 12;
+    const when = h < 5 ? 'at night' : h < 12 ? 'in the morning' : h < 17 ? 'in the afternoon' : h < 21 ? 'in the evening' : 'at night';
+    const at = min === 0 ? `${h12} o'clock` : `${h12}:${String(min).padStart(2, '0')}`;
+    return `${at} ${when}, on day ${this.day}`;
   }
 }

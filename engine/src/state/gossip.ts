@@ -1,15 +1,24 @@
 /**
- * Talking with guests. Mostly small talk, in their folk's way; now and then (and only once a guest) a
- * half-remembered dish from home: something the player doesn't know how to make yet, told vaguely (one
- * thing that goes in it and a hint of another, or two things and no word of how). Nothing is written in
- * the recipe book: the player has to try it out at a station, and only working it out teaches it.
+ * Talking with guests. A guest in the mood to talk (see service.ts) says one thing: small talk, in their
+ * folk's way; or a story that wants another round to finish; or, warm and fed, that they're tired and
+ * would like a room; or a half-remembered dish from home: something the player doesn't know how to make
+ * yet, told vaguely (one thing that goes in it and a hint of another, or two things and no word of how).
+ * Nothing is written in the recipe book: the player has to try it at a station, and only working it out
+ * teaches it. None of it happens without stopping to talk.
  */
 import type { Content } from '../game/data';
 import type { Cookbook } from './cookbook';
 import type { Guest } from './service';
 
-const HINT_CHANCE = 0.08; // a guest who's not told one yet: the chance a chat turns to food from home
-const MOST_TALKS = 3; // after this many, they've said what they have to say
+/** What a talk turns to, by chance: a dish from home, a story (another round), tiredness (a room). */
+const TURNS = { dish: 0.2, story: 0.2, tired: 0.2 };
+const STORIES = [
+  "Did I ever tell you about the time I got lost in the Mosswood? It's a long one...",
+  'You should have seen the wedding I came from. Pour me another and I\'ll tell you all of it.',
+  "There's a tale about the old mill I've been dying to tell someone.",
+];
+const TIRED = ['I could fall asleep right here. Have you a bed?', 'My feet are done in. I think I\'ll stay the night.', 'That meal has made me sleepy...'];
+const ANOTHER_NIGHT = ['I slept so well, I might stay another night.', 'Do you know, I think I\'ll stay on another night.'];
 
 const SMALL_TALK: Record<string, string[]> = {
   human: ['Lovely place you keep.', 'The road in was muddier than I hoped.', "I hear the mill's wheel squeaks again.", 'Busy day at the market, they say.'],
@@ -19,7 +28,6 @@ const SMALL_TALK: Record<string, string[]> = {
   frog: ['Ribbit. Damp weather coming, I can feel it.', 'Lovely puddles out on the river road.', 'Croak... pardon me.'],
   minotaur: ['MOO. I mean, hello.', 'Mind the doorframe, it nearly got my horns.', 'A big appetite needs a big plate!'],
 };
-const FAREWELL = ['Anyway, I mustn\'t keep you.', "Don't let me keep you from your work.", 'Listen to me go on!'];
 
 /** A thing's name, lowercased, for speech. */
 const named = (c: Content, id: string) => c.itemName(id).toLowerCase();
@@ -50,12 +58,31 @@ function hint(content: Content, r: { out: string; inputs: string[]; station: str
   return pick(forms, rng);
 }
 
-/** What a guest says when the player stops to talk (and it's noted with their visit). */
-export function talk(g: Guest, content: Content, book: Cookbook, rng = Math.random): string {
-  if (g.said.length >= MOST_TALKS) return pick(FAREWELL, rng);
+/**
+ * What a guest in the mood to talk says (one thing; noted with their visit), and what it leads to:
+ * another round, or a room. rooms: whether the inn has guest rooms.
+ */
+export function talk(g: Guest, content: Content, book: Cookbook, rooms: boolean, rng = Math.random): { line: string; then?: 'round' | 'room' } {
   const chat = SMALL_TALK[g.folk] ?? SMALL_TALK.human;
-  const r = !g.said.some((s) => s.food) && rng() < HINT_CHANCE ? unknownRecipe(content, book, rng) : null;
-  const line = r ? hint(content, r, rng) : pick(chat.filter((s) => !g.said.some((x) => x.line === s)), rng) ?? pick(FAREWELL, rng);
-  g.said.push({ line, food: !!r });
-  return line;
+  const settled = g.state === 'settled';
+  const r = rng();
+  let line = '';
+  let then: 'round' | 'room' | undefined;
+  let food = false;
+  if (r < TURNS.dish) {
+    const recipe = unknownRecipe(content, book, rng);
+    if (recipe) {
+      line = hint(content, recipe, rng);
+      food = true;
+    }
+  } else if (r < TURNS.dish + TURNS.story && !settled) {
+    line = pick(STORIES, rng);
+    then = 'round';
+  } else if (r < TURNS.dish + TURNS.story + TURNS.tired && rooms) {
+    line = pick(settled ? ANOTHER_NIGHT : TIRED, rng);
+    then = 'room';
+  }
+  if (!line) line = pick(chat, rng);
+  g.said.push({ line, food });
+  return { line, then };
 }

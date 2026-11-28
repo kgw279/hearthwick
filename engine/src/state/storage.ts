@@ -16,10 +16,10 @@ export class Storage {
   }
 
   /** accepts: what the container takes (from its art, see world/containers.ts). */
-  get(id: string, slots: number, contents: Stack[] = [], accepts?: (item: string) => boolean, kinds?: number): Inventory {
+  get(id: string, slots: number, contents: Stack[] = [], accepts?: (item: string) => boolean): Inventory {
     let box = this.boxes.get(id);
     if (!box) {
-      box = new Inventory(slots, this.stackSize, accepts, kinds);
+      box = new Inventory(slots, this.stackSize, accepts);
       for (const s of contents) box.add(s.item, s.count);
       this.boxes.set(id, box);
     }

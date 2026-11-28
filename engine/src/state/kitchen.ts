@@ -46,7 +46,7 @@ export class InnStores {
         if (b?.type !== 'storage' || typeof p.sprite !== 'string') continue;
         const spec = containerOf(p.sprite);
         if (!spec) continue;
-        out.push({ id: b.id, spec, inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content), spec.kinds) });
+        out.push({ id: b.id, spec, inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content)) });
       }
     }
     return out;

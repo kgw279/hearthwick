@@ -34,6 +34,10 @@
     {"layer": "floor", "sprite": "runner_left", "x": 93, "y": 117},
     {"layer": "floor", "sprite": "runner_middle", "x": 124, "y": 117},
     {"layer": "floor", "sprite": "runner_middle", "x": 156, "y": 117},
-    {"layer": "floor", "sprite": "runner_right", "x": 187, "y": 117}
+    {"layer": "floor", "sprite": "runner_right", "x": 187, "y": 117},
+    {"layer": "wall", "sprite": "room_plaque", "x": 79, "y": 58, "behavior": {"type": "plaque", "room": "inn_ground_upstairs_room_1"}},
+    {"layer": "wall", "sprite": "room_plaque", "x": 127, "y": 58, "behavior": {"type": "plaque", "room": "inn_ground_upstairs_room"}},
+    {"layer": "wall", "sprite": "room_plaque", "x": 163, "y": 58, "behavior": {"type": "plaque", "room": "inn_ground_upstairs_room_2"}},
+    {"layer": "wall", "sprite": "room_plaque", "x": 211, "y": 58, "behavior": {"type": "plaque", "room": "inn_ground_upstairs_room_3"}}
   ]
 }

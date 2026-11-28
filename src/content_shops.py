@@ -19,7 +19,7 @@ POOL = {
 }
 SHELF = {'mill': 5, 'grocer': 5, 'dairy': 4, 'butcher': 4, 'fish': 3, 'spice': 4, 'market': 6, 'furnisher': 0}
 ALWAYS = {'grocer': ('tableware', 'supply'), 'furnisher': ('furniture',)}   # the General Store always has plates, mugs, pillows...
-# when each shop is open (hours, 24h clock): closed outside them. Each opens with fresh stock in the morning
-HOURS = {'mill': (6, 14), 'grocer': (8, 18), 'dairy': (6, 13), 'butcher': (8, 16), 'fish': (6, 12), 'spice': (9, 17),
-         'market': (7, 13), 'furnisher': (9, 17)}
+# when each shop is open (hours, 24h clock: all between 6 am and 6 pm, some shorter): closed outside them. Each opens with fresh stock in the morning
+HOURS = {'mill': (6, 16), 'grocer': (7, 18), 'dairy': (6, 15), 'butcher': (7, 17), 'fish': (6, 14), 'spice': (8, 18),
+         'market': (6, 13), 'furnisher': (8, 18)}
 MARKUP = 1.5                                   # a pool extra's price: its worth, marked up

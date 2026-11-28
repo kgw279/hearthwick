@@ -6,7 +6,7 @@
  */
 import type { Assets } from '../core/assets';
 import type { Renderer } from '../core/renderer';
-import { Entity } from '../world/entity';
+import { Entity, type Interaction } from '../world/entity';
 import type { Content } from './data';
 import { isSetting, type Guest, type Meal, type ReadySlot } from '../state/service';
 import { loopFrame } from '../core/anim';
@@ -97,20 +97,33 @@ export class WalkerEntity extends Entity {
   }
 }
 
+/** A guest in their seat; or standing by the hearth, where the player can walk up and see to them (open). */
 export class GuestEntity extends Entity {
   constructor(
     private readonly guest: Guest,
     private readonly seat: Seat,
     private readonly chair: Entity,
     private readonly assets: Assets,
+    private readonly open?: () => void,
   ) {
-    // sat on the chair: their feet just above its base
+    // sat on the chair: their feet just above its base (standing: at the spot)
     super(Math.round(seat.art.x + seat.art.w / 2 - 16), seat.art.y + seat.art.h - 34);
   }
 
   /** At a table facing away from the camera, the chair's back is in front of them; otherwise (and on a stool) behind. */
   get sortY(): number {
+    if (this.seat.hearth) return this.y + 28;
     return this.chair.sortY + (this.seat.facing === 'up' && !this.seat.bar ? -0.1 : 0.1);
+  }
+
+  interaction(): Interaction | null {
+    if (!this.open) return null;
+    const label = { checkout: 'Settle up', room: 'A room?', settled: 'Chat' }[this.guest.state as string] ?? 'Guest';
+    return { label, use: this.open };
+  }
+
+  useArea(): Rect | null {
+    return this.open ? { x: this.x + 6, y: this.y + 6, w: 20, h: 24 } : null;
   }
 
   draw(r: Renderer, camX: number, camY: number): void {

@@ -4,6 +4,8 @@
  *  - a seat is a chair facing a table: the chair's art is just short of a table's in the way it faces,
  *    and overlaps it across that way; or a stool just in front of the bar (a bar counter that isn't a
  *    shop's), facing it. Everyone at the bar is at one "table", the bar;
+ *  - guests who've come just for a room (and guests settling up for their room in the morning) stand by
+ *    the hearth: a few spots in front of it, all one "table". The inn always has a hearth;
  *  - what's ready to serve is shown on top of the plating station.
  * Keys name a seat or table by its map and position.
  */
@@ -19,7 +21,9 @@ export interface Seat {
   layout: string;
   /** At a table (on a chair), or at the bar (on a stool). */
   bar: boolean;
-  /** The chair: its index in the layout, its art, which way the sitter faces. */
+  /** Standing by the hearth (waiting for a room, or to settle up). */
+  hearth?: boolean;
+  /** The chair (for a spot by the hearth, the hearth): its index in the layout, its art (where the guest is), which way they face. */
   chair: number;
   art: Rect;
   facing: Facing;
@@ -38,6 +42,13 @@ const PLATING = /^plating_station$/;
 
 /** The key all the bar's seats share as their "table". */
 export const barKey = (layout: string) => `${layout}:bar`;
+/** The key the spots by a map's hearth share. */
+export const hearthKey = (layout: string) => `${layout}:hearth`;
+const HEARTH = /^(anim:)?fireplace$/;
+/** Whether a piece is a hearth. */
+export const isHearth = (p: PlacedProp) => typeof p.sprite === 'string' && HEARTH.test(p.sprite);
+const HEARTH_SPOTS = [-22, 0, 22]; // px across from the hearth's middle where guests stand
+const HEARTH_GAP = 14; // px in front of it
 
 const keyOf = (layout: string, p: PlacedProp) => `${layout}:${Math.round(p.x)},${Math.round(p.y)}`;
 
@@ -62,6 +73,18 @@ export function seating(layout: Layout, assets: Assets, content: Content): { sea
       seats.push({ key: keyOf(layout.id, p), layout: layout.id, bar: true, chair: i, art: c, facing: 'up', table: barKey(layout.id) });
     }
   });
+  // the spots by the (first) hearth
+  const h = layout.props.findIndex(isHearth);
+  if (h >= 0) {
+    const a = art(layout.props[h]);
+    HEARTH_SPOTS.forEach((dx, n) => {
+      const feet = { x: Math.round(a.x + a.w / 2 + dx), y: a.y + a.h + HEARTH_GAP };
+      seats.push({
+        key: `${hearthKey(layout.id)}:${n}`, layout: layout.id, bar: false, hearth: true, chair: h,
+        art: { x: feet.x - 16, y: feet.y - 26, w: 32, h: 32 }, facing: 'up', table: hearthKey(layout.id),
+      });
+    });
+  }
   return { seats, tables };
 }
 

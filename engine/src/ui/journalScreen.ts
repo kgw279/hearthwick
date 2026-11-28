@@ -129,12 +129,15 @@ export class JournalScreen implements Screen {
   /** How a visit stands, in a few words. */
   private status(g: Guest): string {
     const o = g.outcome;
+    if (g.state === 'room') return 'Asking for a room';
+    if (g.state === 'checkout') return 'Down to settle up';
+    if (g.state === 'settled') return 'Settled up';
     if (g.stay) return g.stay.mood >= 0.95 ? 'Stayed the night: slept well' : 'Stayed the night';
     if (g.stayingIn) return 'Staying the night';
-    if (g.state === 'room') return 'Asking for a room';
     if (g.state !== 'gone') return g.state === 'arriving' ? 'Coming in' : g.state === 'eating' ? 'Eating' : g.had.length ? 'Another round' : 'Waiting';
     if (!o) return 'Gone';
     if (o.how === 'no room') return 'No room for them';
+    if (o.how === 'unsettled') return 'Left without settling up';
     if (o.how === 'gave up') return 'Gave up waiting';
     if (o.how === 'dismissed') return 'Sent on their way';
     return o.mood >= 0.95 ? 'Left delighted' : o.mood >= 0.7 ? 'Left happy' : 'Left content';

@@ -13,10 +13,11 @@
  * or click the slot). Anything goes in any empty slot, but the wrong course or not what they asked for
  * leaves them less happy (and the inn less renowned); the line at the top says how it fits. A main
  * brings clean cutlery with it, if there's some to hand. X politely dismisses the chosen guest (they pay
- * nothing, and mind less the sooner it's done). Y has a word with them: small talk, mostly, but now and
- * then something worth remembering. A guest asking for a room: choose them, then one of the inn's rooms
- * (each shown with whether it's ready, and which of the comforts they'd like it has). B steps back, or
- * leaves.
+ * nothing, and mind less the sooner it's done). A guest who's had all they asked for may be in the mood to
+ * talk (their row shows the button, Y): what they say is said once, and can lead somewhere. A guest asking
+ * for a room: choose them, then one of the inn's rooms (each shown with whether it's ready, and which of
+ * the comforts they'd like it has). By the hearth (the same menu): guests in for just a room, and guests
+ * down from their rooms to settle up (choose them to take their payment). B steps back, or leaves.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -71,8 +72,10 @@ export class TableScreen implements Screen {
     private readonly cutlery: () => string | null,
     /** A guest has left (dismissed). */
     private readonly left: (g: Guest, o: Outcome) => void,
-    /** A word with a guest: what they say. */
+    /** A word with a guest in the mood to talk: what they say. */
     private readonly talk: (g: Guest) => string,
+    /** Settle up with a guest down from their room: why not, or null. */
+    private readonly collect: (seat: Seat) => string | null,
     /** The inn's guest rooms. */
     private readonly rooms: () => RoomChoice[],
     private readonly content: Content,
@@ -93,6 +96,7 @@ export class TableScreen implements Screen {
   private rows(): Seat[] {
     const g = (s: Seat) => this.service.guests.get(s.key);
     const dirty = (s: Seat) => !!this.service.dirty.get(s.key)?.length;
+    if (this.seats.every((s) => s.hearth)) return this.seats.filter(g).sort((a, b) => g(a)!.seated - g(b)!.seated); // by the hearth: just who's there
     return [
       ...this.seats.filter(g).sort((a, b) => g(a)!.seated - g(b)!.seated),
       ...this.seats.filter((s) => !g(s) && dirty(s)),
@@ -119,10 +123,10 @@ export class TableScreen implements Screen {
     return true;
   }
 
-  /** Have a word with the chosen guest. */
+  /** Have a word with the chosen guest, if they're in the mood. */
   private chat(): void {
     const g = this.guestAt(this.seat);
-    if (!g || g.state === 'arriving') return this.say(g ? "They're still coming in" : 'Nobody is sitting there');
+    if (!g?.chatty) return;
     this.speech = { text: `"${this.talk(g)}"`, until: this.time + TALK_TIME };
   }
 
@@ -165,6 +169,8 @@ export class TableScreen implements Screen {
     const g = this.service.guests.get(seat.key);
     if (!g && this.service.dirty.get(seat.key)?.length) return this.clear(seat, 0);
     if (g?.state === 'room') return this.chooseRoom(seat);
+    if (g?.state === 'checkout') return this.settleUp(seat);
+    if (g?.state === 'settled') return this.say(g.chatty ? "They've settled up, and would like a word" : "They've settled up");
     if (this.picked === null) return this.say(this.service.ready.length ? 'Choose something ready first' : 'Nothing ready: plate something at the plating station');
     if (!g) return this.say('Nobody is sitting there');
     if (this.pane === 'seats') {
@@ -178,6 +184,14 @@ export class TableScreen implements Screen {
       return;
     }
     this.place(seat.key, this.service.wants(g)[this.slot]);
+  }
+
+  /** Take payment from a guest down from their room. */
+  private settleUp(seat: Seat): void {
+    const why = this.collect(seat);
+    if (why) return this.say(why);
+    const stay = [...this.service.visits].reverse().find((v) => v.seat === seat.key && v.stay);
+    if (stay?.stay) this.say(`+${stay.stay.coins} coins. "${stay.stay.remark}"`);
   }
 
   /** A guest asking for a room: choosing one of the inn's, then giving it to them. */
@@ -308,11 +322,20 @@ export class TableScreen implements Screen {
       r.ctx.globalAlpha = 1;
       return;
     }
+    if (g.state === 'checkout' || g.state === 'settled') {
+      r.ctx.globalAlpha = 0.85;
+      drawText(r, assets, g.state === 'checkout' ? 'Ready to settle up for the night' : 'Settled up', p.x + 104, p.y + 6);
+      r.ctx.globalAlpha = 1;
+      if (g.state === 'checkout') this.drawChits(r, g, p);
+      this.drawChatty(r, g, p);
+      return;
+    }
     if (g.state === 'eating' || g.state === 'arriving') {
       r.ctx.globalAlpha = 0.7;
       drawText(r, assets, g.state === 'eating' ? 'Enjoying their meal' : 'Coming in...', p.x + 38, p.y + 22);
       r.ctx.globalAlpha = 1;
     } else this.drawChits(r, g, p);
+    this.drawChatty(r, g, p);
     const wants = service.wants(g);
     wants.forEach((c, k) => {
       const sx = p.x + LIST_W - 4 - (wants.length - k) * (SLOT + 2);
@@ -333,6 +356,15 @@ export class TableScreen implements Screen {
         r.ctx.globalAlpha = 1;
       }
     });
+  }
+
+  /** In the mood to talk: the talk button, by their name. */
+  private drawChatty(r: Renderer, g: Guest, p: { x: number; y: number }): void {
+    if (!g.chatty) return;
+    const glyph = this.device === 'gamepad' ? 'xb_y' : 'key_r';
+    const bob = Math.floor(this.time * 2) % 2;
+    const x = p.x + 38 + measure(this.content.folk[g.folk]?.name ?? g.folk) + 6;
+    r.sprite(glyph, x, p.y + 2 - bob);
   }
 
   /** A waiting guest's patience: a row of chits, marked off one at a time. */
@@ -382,7 +414,7 @@ export class TableScreen implements Screen {
     const rows = this.rows();
     if (!rows.length) {
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, 'No seats here yet', this.x + 12, this.y + TOP + 4);
+      drawText(r, assets, this.seats.some((s) => s.hearth) ? 'Nobody waiting by the hearth' : 'No seats here yet', this.x + 12, this.y + TOP + 4);
       r.ctx.globalAlpha = 1;
     }
     rows.forEach((seat, i) => {
@@ -414,9 +446,10 @@ export class TableScreen implements Screen {
       r.ctx.globalAlpha = 0.9;
       drawText(r, assets, says, this.x + 20 + measure(this.title), this.y + 10);
       r.ctx.globalAlpha = 1;
-    } else if (chosen?.state === 'room' && this.pane === 'seats') {
+    } else if (chosen && ['room', 'checkout', 'settled'].includes(chosen.state) && this.pane === 'seats') {
+      const says = chosen.state === 'room' ? 'Wants a room for the night' : chosen.state === 'checkout' ? 'Down from their room, to settle up' : 'All settled';
       r.ctx.globalAlpha = 0.8;
-      drawText(r, assets, 'Wants a room for the night', this.x + 20 + measure(this.title), this.y + 10);
+      drawText(r, assets, says, this.x + 20 + measure(this.title), this.y + 10);
       r.ctx.globalAlpha = 1;
     } else if (chosen && this.pane === 'seats') {
       const want = service.wants(chosen).map((c) => service.describe(c, chosen.order[c]!)).join(', ');
@@ -458,11 +491,12 @@ export class TableScreen implements Screen {
     const onDirty = seat && !service.guests.has(seat.key) && !!service.dirty.get(seat.key)?.length;
     const help = msg ? this.message.text
       : this.pane === 'rooms' ? hint(this.device, [['interact', 'give them this room'], ['back', 'not yet']])
-      : chosen?.state === 'room' && this.pane === 'seats' ? hint(this.device, [['interact', 'give a room'], ['recipes', 'talk'], ['cook', 'no room'], ['back', 'leave']])
+      : chosen?.state === 'room' && this.pane === 'seats' ? hint(this.device, [['interact', 'give a room'], ['cook', 'no room'], ['back', 'leave']])
+      : chosen?.state === 'checkout' && this.pane === 'seats' ? hint(this.device, [['interact', 'settle up'], ['back', 'leave']])
       : this.pane === 'slots' ? hint(this.device, [['interact', 'serve it here'], ['back', 'another guest']])
       : this.picked !== null ? hint(this.device, [['interact', 'choose who'], ['back', 'put it back']])
       : onDirty && this.pane === 'seats' ? hint(this.device, [['interact', 'clear a dish'], ['back', 'leave']])
-      : hint(this.device, [['interact', 'choose'], ['recipes', 'talk'], ['cook', 'dismiss'], ['back', 'leave']]);
+      : hint(this.device, [['interact', 'choose'], ['cook', 'dismiss'], ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + 12, this.y + H - 16);
     r.ctx.globalAlpha = 1;

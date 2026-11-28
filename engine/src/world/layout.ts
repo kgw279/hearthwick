@@ -35,7 +35,11 @@ export type Behavior =
   /** A container: `slots` of storage the player can put things in and take them out of, by its id. */
   | { type: 'storage'; id: string; slots: number; contents?: Array<{ item: string; count: number }> }
   /** Washes the dirty tableware the player carries. */
-  | { type: 'wash' };
+  | { type: 'wash' }
+  /** A clock: tells the time. */
+  | { type: 'clock' }
+  /** A plaque by a guest room's door: the room's map, and the name the player gave it. */
+  | { type: 'plaque'; room: string; name?: string };
 
 export type PropLayer = 'floor' | 'wall' | 'top';
 export const PROP_LAYERS: PropLayer[] = ['floor', 'wall', 'top'];
@@ -114,10 +118,10 @@ const FLOOR_CHARS = new Set(['w', 's']);
 
 const FACINGS = new Set(['down', 'up', 'left', 'right']);
 /** Each behavior's fields: s = non-empty string, n = whole number above 0; ? = may be left out. */
-const BEHAVIOR_FIELDS: Record<Behavior['type'], Record<string, 's' | 'n' | 'contents?'>> = {
+const BEHAVIOR_FIELDS: Record<Behavior['type'], Record<string, 's' | 's?' | 'n' | 'contents?'>> = {
   talk: { who: 's', line: 's' }, read: { text: 's' }, enter: { to: 's', spawn: 's' }, shop: { shop: 's' }, market: { shop: 's' },
   pet: {}, draw_water: {}, forage: { node: 's' }, fish: { item: 's' }, stairs: { to: 's' }, door: { to: 's' },
-  storage: { id: 's', slots: 'n', contents: 'contents?' }, wash: {},
+  storage: { id: 's', slots: 'n', contents: 'contents?' }, wash: {}, clock: {}, plaque: { room: 's', name: 's?' },
 };
 const PROP_KEYS = new Set(['sprite', 'x', 'y', 'layer', 'rot', 'collider', 'depth', 'fps', 'sortOffset', 'use', 'behavior']);
 
@@ -202,7 +206,7 @@ export function checkLayout(l: Layout, file = l?.id ?? '?'): Layout {
       for (const k of Object.keys(b)) if (k !== 'type' && !(k in fields)) fail(`${p}.behavior.${k}`, `is not a ${pr.behavior.type} field`);
       for (const [f, kind] of Object.entries(fields)) {
         const at = `${p}.behavior.${f}`;
-        if (kind === 's') str(b[f], at);
+        if (kind === 's' || (kind === 's?' && b[f] !== undefined)) str(b[f], at);
         else if (kind === 'n' && !(Number.isInteger(b[f]) && (b[f] as number) > 0)) fail(at, 'must be a whole number above 0');
         else if (kind === 'contents?' && b[f] !== undefined) {
           if (!Array.isArray(b[f])) fail(at, 'must be a list of {item, count}');

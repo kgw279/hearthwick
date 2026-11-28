@@ -39,7 +39,9 @@ import { Reputation } from '../state/reputation';
 import { Pops } from '../ui/fx';
 import { Washing } from '../state/washing';
 import { WashScreen } from '../ui/washScreen';
-import { barKey, platingStations, seating, type Seat } from './seating';
+import { barKey, hearthKey, isHearth, platingStations, seating, type Seat } from './seating';
+import { newSeed, seeded, type Rng } from '../core/rng';
+import { NameScreen } from '../ui/nameScreen';
 import { GuestEntity, ReadyEntity, TopEntity, WalkerEntity } from './serviceView';
 import { TableScreen } from '../ui/tableScreen';
 import { containerOf } from '../world/containers';
@@ -88,8 +90,13 @@ export class Game {
   readonly service: Service;
   /** The inn's reputation: filled by serving guests, it brings more of them. */
   readonly reputation: Reputation;
+  /** This game's seed: everything random in it comes from it (a new game, a new seed). */
+  readonly seed = newSeed();
+  private readonly rng: Rng = seeded(this.seed);
   /** The time of day. */
   readonly clock = new Clock();
+  /** Whether the inn's open: closed, no new guests come in (those inside stay till they're done). */
+  innOpen = true;
   private day = this.clock.day;
   /** The inn's guest rooms. */
   readonly rooms: Rooms;
@@ -111,6 +118,7 @@ export class Game {
   stats: LoopStats = { fps: 0 };
 
   constructor(readonly assets: Assets, readonly renderer: Renderer) {
+    const game = this; // eslint-disable-line @typescript-eslint/no-this-alias
     this.content = new Content(assets.data);
     this.player = new Player(assets, 0, 0);
     this.camera = new Camera(VIEW_W, VIEW_H);
@@ -134,19 +142,34 @@ export class Game {
       },
       openStorage: (box, art) => {
         const spec = containerOf(art);
-        const inv = this.storage.get(box.id, box.slots, box.contents, accepts(spec, this.content), spec?.kinds);
+        const inv = this.storage.get(box.id, box.slots, box.contents, accepts(spec, this.content));
         this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
       },
       openStation: (station) => (this.screen = new PrepScreen(station, this.kitchen, this.cookbook, this.content, assets)),
       openPlating: () => (this.screen = new PlatingScreen(this.service.ready, this.kitchen, this.cookbook, () => this.service.changed(), this.content, assets)),
       openBar: () => this.openTable(barKey(this.scene.id), 'The bar'),
       openTable: (key) => this.openTable(`${this.scene.id}:${key}`, 'Table'),
+      clock: () => this.dialog.show(`It's ${this.clock.spoken}.`, 'The clock', this.time),
+      nameRoom: (plaque) => {
+        this.screen = new NameScreen(`Name ${this.rooms.name(plaque.room)}`, plaque.name ?? '', (name) => {
+          plaque.name = name;
+          this.editor.markChanged(this.scene.id);
+          this.rebuildScene(false);
+        }, assets);
+      },
+      doorAlt: (to) => (to === 'inn_ground' ? {
+        get label() { return game.innOpen ? 'Close the inn' : 'Open the inn'; }, // eslint-disable-line
+        use: () => {
+          this.innOpen = !this.innOpen;
+          this.floats.pop(this.innOpen ? 'The inn is open' : 'The inn is closed: no new guests', this.player.center.x, this.player.y, this.time);
+        },
+      } : undefined),
       wash: () => (this.screen = new WashScreen(this.washing, this.kitchen,
         { count: (item) => this.service.dirtyReady(item), take: (item) => this.service.takeDirty(item) }, this.content, assets)),
     };
     const e = this.content.economy;
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins, e.bag_weight, (item) => this.content.items[item]?.weight ?? 1);
-    this.shops = new Shops(this.content, this.clock);
+    this.shops = new Shops(this.content, this.clock, this.rng);
     this.storage = new Storage(e.stack_size);
     this.furnish = new Furnish({
       assets, content: this.content, player: this.player,
@@ -164,7 +187,7 @@ export class Game {
     this.rooms = new Rooms(this.layouts, this.storage, this.content);
     const looks = (assets.sheets.find((sh) => sh.name === 'guests')?.frames ?? []).filter((f) => f.endsWith('_down_idle')).map((f) => f.replace(/_down_idle$/, ''));
     this.reputation = new Reputation();
-    this.service = new Service(this.content, looks, this.reputation);
+    this.service = new Service(this.content, looks, this.reputation, this.rng);
     this.cookbook = new Cookbook(this.content);
     this.washing = new Washing(this.content);
     this.editor = new Editor(this);
@@ -187,21 +210,14 @@ export class Game {
     for (let i = 1; i < 10; i++) r.rect(bx + Math.round((bw * i) / 10), by, 1, 4, '#45283c', true);
   }
 
-  /** The day and the time, under the reputation meter. */
-  private drawClock(r: Renderer): void {
-    const t = `Day ${this.clock.day}   ${this.clock.time}`;
-    r.nine('panel_dark', 4, 56, measure(t) + 14, 20);
-    drawText(r, this.assets, t, 10, 62);
-  }
-
   /** Every seat in the inn, with how long a guest takes to walk there from the door. */
-  private seats(): Array<Seat & { walk: number }> {
+  private seats(): Array<Seat & { walk: number; stairs: number }> {
+    // guests walk up or down, then across (see WalkerEntity)
+    const far = (a: { x: number; y: number }, b: { x: number; y: number }) => (Math.abs(a.x - b.x) + Math.abs(a.y - b.y)) / GUEST_SPEED;
     return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => {
       const door = this.doorOf(l.id);
-      return seating(l, this.assets, this.content).seats.map((s) => {
-        const to = this.seatSpot(s);
-        return { ...s, walk: Math.hypot(to.x - door.x, to.y - door.y) / GUEST_SPEED };
-      });
+      const stairs = this.stairsOf(l.id) ?? door;
+      return seating(l, this.assets, this.content).seats.map((s) => ({ ...s, walk: far(this.seatSpot(s), door), stairs: far(this.seatSpot(s), stairs) }));
     });
   }
 
@@ -246,13 +262,10 @@ export class Game {
     this.emotes.pop(o.mood >= 0.8 ? 'emote_happy' : o.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
   }
 
-  /** Morning: guests who stayed the night settle up for their rooms. */
+  /** Morning: guests who stayed the night get up, and come down to the hearth to settle up. */
   private morning(): void {
     this.hudPops.pop(VIEW_W / 2, 70, this.time, { text: `Day ${this.clock.day}`, big: true });
-    this.service.checkout(this.rooms, (g, o) => {
-      this.earn(o);
-      this.hudPops.pop(VIEW_W / 2, 92, this.time, { text: `${this.rooms.name(g.stayingIn!)}: +${o.coins} coins. "${o.remark}"` });
-    });
+    this.service.morning(this.rooms);
   }
 
   /** Pack a piece of furniture up into the bag: why not, or null once it's in. */
@@ -262,10 +275,13 @@ export class Game {
     if (!item) return "That can't be packed up";
     const b = prop.behavior;
     const spec = containerOf(sprite);
-    if (b?.type === 'storage' && this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content), spec?.kinds).contents().length) {
+    if (b?.type === 'storage' && this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content)).contents().length) {
       return 'Empty it out first';
     }
     if (this.service.lodgers.some((g) => g.stayingIn === this.scene.id) && item === 'bed') return 'Someone is sleeping in it!';
+    // guests wait by the hearth: the inn always keeps one
+    const hearths = [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => l.props.filter(isHearth)).length;
+    if (isHearth(prop) && hearths <= 1) return 'The inn needs its hearth';
     if (this.bag.add(item, 1) !== 1) return this.bag.why(item) ?? 'Your bag is full';
     return null;
   }
@@ -299,8 +315,14 @@ export class Game {
     const rooms = () => this.rooms.list().map((id) => ({
       id, name: this.rooms.name(id), why: this.rooms.notReady(id), has: (c: string) => this.rooms.has(id, c),
     }));
+    const chat = (g: Guest) => {
+      const said = talk(g, this.content, this.cookbook, this.rooms.list().length > 0, this.rng);
+      this.service.talked(g, said.then);
+      return said.line;
+    };
+    const collect = (seat: Seat) => this.service.collect(seat, (g, o) => this.guestLeft(g, o));
     this.screen = new TableScreen(title, seats, this.service, () => this.kitchen.takeCutlery(), (g, o) => this.guestLeft(g, o),
-      (g) => talk(g, this.content, this.cookbook), rooms, this.content, this.assets);
+      chat, collect, rooms, this.content, this.assets);
   }
 
   /** Guests eat, pay and leave, and new ones arrive (wherever the player is). */
@@ -316,9 +338,9 @@ export class Game {
       this.seenTimer = 1;
       this.noteSeen();
     }
-    const h = this.clock.hour;
+    const c = this.clock;
     this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (g, o) => this.guestLeft(g, o),
-      { busy: this.clock.busy, evening: h >= 18 || this.clock.night, rooms: this.rooms.list().length > 0 });
+      { busy: c.busy, open: this.innOpen, evening: c.evening, lodging: c.lodging, rooms: this.rooms.list().length > 0 });
   }
 
   /** Serving as seen in this map: what's ready on the plating station, seated guests, what's on the tables and bar. */
@@ -333,15 +355,17 @@ export class Game {
     for (const seat of seats) {
       const g = this.service.guests.get(seat.key);
       if (!g || !props[seat.chair]) continue;
-      if (g.state === 'arriving') out.push(new WalkerEntity(g.look, door, this.seatSpot(seat), 1 - g.walk / g.walkTotal, this.assets, this.time));
-      else out.push(new GuestEntity(g, seat, props[seat.chair], this.assets));
+      // walking in from the door (or down the stairs from their room), or there
+      const from = g.stayingIn ? this.stairsOf(l.id) ?? door : door;
+      if (g.state === 'arriving') out.push(new WalkerEntity(g.look, from, this.seatSpot(seat), 1 - g.walk / g.walkTotal, this.assets, this.time));
+      else out.push(new GuestEntity(g, seat, props[seat.chair], this.assets, seat.hearth ? () => this.openTable(hearthKey(l.id), 'By the hearth') : undefined));
     }
     const stairs = this.stairsOf(l.id) ?? door;
     for (const w of this.service.leavers) {
       const seat = seats.find((s) => s.key === w.seat);
       // what they said about it goes out the door with them (or up the stairs, to bed)
       const to = w.guest.stayingIn ? stairs : door;
-      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), to, w.t / w.total, this.assets, this.time, w.guest.outcome?.remark));
+      if (w.layout === l.id && seat) out.push(new WalkerEntity(w.guest.look, this.seatSpot(seat), to, w.t / w.total, this.assets, this.time, w.says));
     }
     // on each table and along the bar: each guest's meal in front of them while they eat, and the
     // dishes left at each seat once they've gone
@@ -528,7 +552,7 @@ export class Game {
         if (action && tapped) {
           action.use();
           this.target = this.findTarget(); // using something can change or remove its action
-        }
+        } else if (action?.alt && this.input.pressed('cook')) action.alt.use();
       }
     }
     if (!this.editor.active) {
@@ -587,6 +611,7 @@ export class Game {
     if (this.target && action && !this.dialog.open && !this.transition) {
       const p = this.player.at(alpha);
       drawPrompt(r, this.assets, this.input, 'interact', action.label, Math.round(p.x + 16 - cx), Math.round(p.y - cy - 24), this.time);
+      if (action.alt) drawPrompt(r, this.assets, this.input, 'cook', action.alt.label, Math.round(p.x + 16 - cx), Math.round(p.y - cy - 48), this.time);
       const a = this.target.useArea();
       if (this.debug && a) r.rect(a.x - cx, a.y - cy, a.w, a.h, '#fbf236');
     }
@@ -600,7 +625,6 @@ export class Game {
       r.nine('panel_dark', 4, 4, 28 + String(this.bag.coins).length * 6, 24);
       drawCoins(r, this.assets, this.bag.coins, 8, 8);
       this.drawReputation(r);
-      this.drawClock(r);
       if (this.furnish.carrying) {
         const t = hint(this.input.device, [['interact', 'set down'], ['cook', 'pack away'], ['back', 'put back']]);
         r.nine('panel_dark', Math.round((VIEW_W - measure(t)) / 2) - 8, VIEW_H - 26, measure(t) + 16, 20);

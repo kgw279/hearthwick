@@ -11199,6 +11199,69 @@
       ],
       "store": "furniture",
       "weight": 0
+    },
+    "wall_clock": {
+      "name": "Wall clock",
+      "kind": "furniture",
+      "tags": [],
+      "value": 16,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "wall_clock"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "wall_clock",
+        "behavior": {
+          "type": "clock"
+        },
+        "layer": "wall"
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 16
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
+    },
+    "standing_clock": {
+      "name": "Standing clock",
+      "kind": "furniture",
+      "tags": [],
+      "value": 35,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "furniture",
+        "frame": "standing_clock"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "prop": {
+        "sprite": "standing_clock",
+        "behavior": {
+          "type": "clock"
+        }
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "furnisher",
+          "price": 35
+        }
+      ],
+      "store": "furniture",
+      "weight": 0
     }
   },
   "dishes": {
@@ -16411,7 +16474,7 @@
       "shelf": 5,
       "hours": [
         6,
-        14
+        16
       ]
     },
     "grocer": {
@@ -16595,7 +16658,7 @@
       ],
       "shelf": 5,
       "hours": [
-        8,
+        7,
         18
       ]
     },
@@ -16653,7 +16716,7 @@
       "shelf": 4,
       "hours": [
         6,
-        13
+        15
       ]
     },
     "butcher": {
@@ -16717,8 +16780,8 @@
       ],
       "shelf": 4,
       "hours": [
-        8,
-        16
+        7,
+        17
       ]
     },
     "fish": {
@@ -16751,7 +16814,7 @@
       "shelf": 3,
       "hours": [
         6,
-        12
+        14
       ]
     },
     "spice": {
@@ -16815,8 +16878,8 @@
       ],
       "shelf": 4,
       "hours": [
-        9,
-        17
+        8,
+        18
       ]
     },
     "market": {
@@ -16951,7 +17014,7 @@
       "always": [],
       "shelf": 6,
       "hours": [
-        7,
+        6,
         13
       ]
     },
@@ -16974,6 +17037,8 @@
         "nightstand",
         "potted_plant",
         "rug",
+        "standing_clock",
+        "wall_clock",
         "wardrobe"
       ],
       "market": false,
@@ -17057,13 +17122,23 @@
           "item": "keg",
           "price": 20,
           "daily_qty": 3
+        },
+        {
+          "item": "wall_clock",
+          "price": 16,
+          "daily_qty": 3
+        },
+        {
+          "item": "standing_clock",
+          "price": 35,
+          "daily_qty": 3
         }
       ],
       "pool": [],
       "shelf": 0,
       "hours": [
-        9,
-        17
+        8,
+        18
       ]
     }
   },

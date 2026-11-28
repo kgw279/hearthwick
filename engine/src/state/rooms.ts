@@ -1,5 +1,6 @@
 /**
- * The inn's guest rooms: each of its bedroom maps (an inn map whose id has "_room" in it) is a room. A room
+ * The inn's guest rooms: each of its bedroom maps (an inn map whose id has "_room" in it) is a room, named
+ * on the plaque by its door (the player names it there; guests are given rooms by that name). A room
  * can be given to a guest once it has a bed made up with clean linens and a pillow (see gamedata "rooms").
  * What it has besides (a rug, a wardrobe, two pillows, soap in the nightstand...) is what a guest staying
  * the night looks for: the comforts they asked for, met or not. In the morning their bedding is left used
@@ -27,8 +28,11 @@ export class Rooms {
     return [...this.layouts.keys()].filter((id) => isInn(id) && id.includes('_room')).sort();
   }
 
-  /** "Room 2". */
+  /** The name on the plaque by the room's door, if it's been named; else "Room 2". */
   name(id: string): string {
+    for (const l of this.layouts.values()) {
+      for (const p of l.props) if (p.behavior?.type === 'plaque' && p.behavior.room === id && p.behavior.name) return p.behavior.name;
+    }
     return `Room ${this.list().indexOf(id) + 1}`;
   }
 
@@ -46,7 +50,7 @@ export class Rooms {
       if (b?.type !== 'storage' || typeof p.sprite !== 'string') continue;
       const spec = containerOf(p.sprite);
       if (!spec) continue;
-      out.push({ piece: pieceName(p.sprite), inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content), spec.kinds) });
+      out.push({ piece: pieceName(p.sprite), inv: this.storage.get(b.id, b.slots, b.contents, accepts(spec, this.content)) });
     }
     return out.sort((a, b) => Number(b.piece === this.content.rooms.bed.prop) - Number(a.piece === this.content.rooms.bed.prop));
   }

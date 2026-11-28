@@ -12,6 +12,8 @@ export interface Interaction {
   label: string;
   /** Called when the player presses interact while facing this. */
   use: () => void;
+  /** A second thing it does, on X (F): e.g. closing the inn, at its door. */
+  alt?: { label: string; use: () => void };
 }
 
 export interface PropSpec {
