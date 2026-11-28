@@ -10620,6 +10620,39 @@
         }
       }
     },
+    "supply_items": {
+      "image": "supply_items.png",
+      "cell": [
+        32,
+        32
+      ],
+      "frames": {
+        "pillow": {
+          "x": 0,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "bed_linens": {
+          "x": 32,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "candles": {
+          "x": 64,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        },
+        "soap": {
+          "x": 96,
+          "y": 0,
+          "w": 32,
+          "h": 32
+        }
+      }
+    },
     "tables": {
       "image": "tables.png",
       "cell": [

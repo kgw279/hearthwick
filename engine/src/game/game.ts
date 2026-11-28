@@ -14,7 +14,7 @@ import type { Scene } from '../world/scene';
 import { drawText } from '../ui/text';
 import { DialogBox, drawPrompt, Emotes, FloatTexts } from '../ui/widgets';
 import { loadLayouts, type Layout } from '../world/layout';
-import { buildScene, type SceneHooks } from './build';
+import { buildScene, titleOf, type SceneHooks } from './build';
 import { Content } from './data';
 import { Editor } from '../editor/editor';
 import { Bag } from '../state/inventory';
@@ -22,12 +22,16 @@ import { Storage } from '../state/storage';
 import { Furnish } from './furnish';
 import { StorageScreen } from '../ui/storageScreen';
 import { Shops } from '../state/shops';
-import { BagScreen } from '../ui/bagScreen';
+import { InventoryScreen } from '../ui/inventoryScreen';
+import { CookScreen } from '../ui/cookScreen';
+import { accepts, InnStores, isInn, Kitchen, Serving } from '../state/kitchen';
+import { containerOf } from '../world/containers';
 import { drawCoins } from '../ui/items';
 import type { Screen } from '../ui/screen';
 import { ShopScreen } from '../ui/shopScreen';
 import { Player } from './player';
 
+const SERVING_SLOTS = 12; // dishes the serving counter holds at once
 const FADE = 0.22; // seconds for each half of a scene transition
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
@@ -61,6 +65,8 @@ export class Game {
   readonly shops: Shops;
   /** What's in every storage container, by its id. */
   readonly storage: Storage;
+  /** The inn's containers as one store, the dishes waiting on the counter, and cooking with them. */
+  readonly kitchen: Kitchen;
   /** Picking furniture up and setting it down in play. */
   readonly furnish: Furnish;
   /** A full-screen UI (bag, shop) that has the input while it's open. */
@@ -88,10 +94,12 @@ export class Game {
         return got === n;
       },
       openShop: (shop) => (this.screen = new ShopScreen(shop, this.shops, this.bag, this.content, assets)),
-      openStorage: (box, title) => {
-        const inv = this.storage.get(box.id, box.slots, box.contents);
-        this.screen = new StorageScreen(title, inv, this.bag, this.content, assets);
+      openStorage: (box, art) => {
+        const inv = this.storage.get(box.id, box.slots, box.contents, accepts(containerOf(art), this.content));
+        this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
       },
+      openStation: (station) => (this.screen = new CookScreen({ station }, this.kitchen, this.content, assets)),
+      openCounter: () => (this.screen = new CookScreen({ counter: true }, this.kitchen, this.content, assets)),
       wash: () => this.washDishes(),
     };
     const e = this.content.economy;
@@ -109,22 +117,25 @@ export class Game {
     this.shops.restock(1);
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
+    this.kitchen = new Kitchen(new InnStores(this.storage, this.layouts, this.content), this.bag, new Serving(SERVING_SLOTS), this.content);
     this.editor = new Editor(this);
     this.enter('town', 'start');
   }
 
-  /** The wash tub: every dirty piece of tableware the player carries comes clean. */
+  /** The wash tub: every dirty piece of tableware the player carries, and in the inn's stores, comes clean. */
   private washDishes(): void {
     let washed = 0;
-    this.bag.slots.forEach((s, i) => {
-      const clean = s && this.content.item(s.item).washes_to;
-      if (!s || !clean) return;
-      // out of its slot and back in clean, joining any clean stack already carried (the freed slot
-      // means it always fits)
-      this.bag.slots[i] = null;
-      this.bag.add(clean, s.count);
-      washed += s.count;
-    });
+    for (const inv of [this.bag, ...this.kitchen.stores.boxes().map((b) => b.inv)]) {
+      inv.slots.forEach((s, i) => {
+        const clean = s && this.content.item(s.item).washes_to;
+        if (!s || !clean) return;
+        // out of its slot and back in clean, joining any clean stack already there (the freed slot
+        // means it always fits)
+        inv.slots[i] = null;
+        inv.add(clean, s.count);
+        washed += s.count;
+      });
+    }
     const at = this.player.center;
     this.floats.pop(washed ? `Washed ${washed} dish${washed > 1 ? 'es' : ''}` : 'Nothing to wash', at.x, this.player.y, this.time);
   }
@@ -252,7 +263,9 @@ export class Game {
       if (this.input.pressed('interact') || this.input.pressed('back')) this.dialog.advance();
       this.target = null;
     } else {
-      if (this.input.pressed('menu')) this.screen = new BagScreen(this.bag, this.content, this.assets);
+      if (this.input.pressed('menu')) {
+        this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.kitchen.serving, isInn(this.scene.id), this.content, this.assets);
+      }
       const g = this.scene.ground;
       this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1, this.furnish.carrying);
       const exit = this.exitHit();

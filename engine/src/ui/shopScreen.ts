@@ -10,7 +10,7 @@ import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
 import type { Bag } from '../state/inventory';
 import type { Shops, TradeResult } from '../state/shops';
-import { gridMove, inside } from './bagScreen';
+import { gridMove, inside } from './inventoryScreen';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';

@@ -23,7 +23,12 @@ export interface SceneHooks {
   give(item: string, n: number): boolean;
   openShop(shop: string): void;
   /** Open a storage container (its contents beside the bag). */
-  openStorage(box: { id: string; slots: number; contents?: Array<{ item: string; count: number }> }, title: string): void;
+  /** art: the frame the container shows (its title, and what it holds: see world/containers.ts). */
+  openStorage(box: { id: string; slots: number; contents?: Array<{ item: string; count: number }> }, art: string): void;
+  /** Work at a cooking station (by its gamedata id). */
+  openStation(station: string): void;
+  /** Plate dishes at the serving counter. */
+  openCounter(): void;
   /** Wash the dirty tableware the player carries. */
   wash(): void;
 }
@@ -62,7 +67,7 @@ export function buildGround(g: LayoutGround, assets: Assets): Ground {
 interface Wired { frames?: string[]; interaction?: (prop: Prop) => Interaction }
 
 /** A piece's art name as a title: "barrel_stack" -> "Barrel stack". */
-function titleOf(frame: string): string {
+export function titleOf(frame: string): string {
   const t = frame.replace(/^anim:/, '').replace(/_f\d+$/, '').replace(/_/g, ' ');
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
@@ -95,7 +100,7 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
     case 'door':
       return {}; // an exit, not a button: see passageLink
     case 'storage':
-      return { interaction: () => ({ label: 'Open', use: () => hooks.openStorage(b, titleOf(art)) }) };
+      return { interaction: () => ({ label: 'Open', use: () => hooks.openStorage(b, art) }) };
     case 'wash':
       return { interaction: () => ({ label: 'Wash dishes', use: () => hooks.wash() }) };
     case 'forage': {
@@ -115,6 +120,20 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
   }
 }
 
+/** The serving counter's art (a bar counter with no shop on it). */
+const COUNTER = /^bar_counter/;
+
+/**
+ * Kitchen pieces work by what they are, wherever they're placed: a cooking station's art opens that
+ * station, a bar counter (that isn't a shop's) is the serving counter.
+ */
+function workplace(frame: string, content: Content, hooks: SceneHooks): Interaction | null {
+  const station = content.stationOfArt(frame);
+  if (station) return { label: content.stations[station].verb, use: () => hooks.openStation(station) };
+  if (COUNTER.test(frame)) return { label: 'Serve', use: () => hooks.openCounter() };
+  return null;
+}
+
 /** The frames a placed prop shows (its own sprite, an atlas animation, or what its behavior supplies). */
 export function propFrames(p: PlacedProp, assets: Assets, content: Content): string[] {
   if (p.sprite !== undefined) {
@@ -126,7 +145,9 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
   return fromBehavior;
 }
 
-const NO_HOOKS: SceneHooks = { say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {} };
+const NO_HOOKS: SceneHooks = {
+  say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openCounter() {},
+};
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */
 export interface Placement { x: number; y: number; solid?: Rect; sortOffset?: number }
@@ -249,6 +270,10 @@ export function buildProp(p: PlacedProp, assets: Assets, content: Content, hooks
     frames, x: at.x, y: at.y, solid: at.solid, sortOffset: at.sortOffset, fps: p.fps, use: p.use, rot: p.rot,
   });
   if (wired?.interaction) prop.setInteraction(wired.interaction(prop));
+  else if (!p.behavior) {
+    const use = workplace(frames[0], content, hooks);
+    if (use) prop.setInteraction(use);
+  }
   return prop;
 }
 

@@ -18,6 +18,8 @@ import content_drinks
 import revisions
 import content_animals
 import content_tableware
+import content_supplies
+import art_supplies
 import art_tableware
 
 # Content packs layered on top of the prototype design. Each may add items,
@@ -243,6 +245,12 @@ def build():
         items[iid] = it
     for iid, p in content_tableware.stock():
         shops[content_tableware.SELLER]['stock'].append({'item': iid, 'price': p})
+    # inn supplies: pillows, linens... kept in the inn's chests and wardrobes (content_supplies.py)
+    for iid, it in content_supplies.items().items():
+        if iid in items: raise ValueError(f'supply {iid} already exists')
+        items[iid] = it
+    for iid, p in content_supplies.stock():
+        shops[content_supplies.SELLER]['stock'].append({'item': iid, 'price': p})
     for pname, P in PACKS.items():   # packs may add stock to existing shops
         for sh, stock in getattr(P, 'SHOP_STOCK', {}).items():
             for i, p in stock:
@@ -276,6 +284,7 @@ def build():
     for loop, node in content_animals.AMBIENT.items():
         if node not in nodes: raise ValueError(f'ambient {loop}: unknown forage node {node}')
 
+    for iid, it in items.items(): it['store'] = store_class(it, dishes)
     data = {
         'schema': SCHEMA,
         'animals': animals,
@@ -295,6 +304,25 @@ def build():
     return data
 
 
+STORES = {
+    'pantry': 'raw ingredients: crates, chests and cupboards',
+    'shelf': 'prepped food: shelves',
+    'cask': 'drinks: barrels and kegs',
+    'tableware': 'plates, bowls, mugs, cutlery: crates, chests and cupboards',
+    'supply': "the inn's supplies: crates, chests and wardrobes",
+}
+
+
+def store_class(it, dishes):
+    """Where an item is kept in the inn (STORES). A prepared item is a drink if it's brewed, or every dish
+    it goes into is a drink."""
+    if it['kind'] in ('tableware', 'supply'): return it['kind']
+    if it['kind'] == 'raw': return 'pantry'
+    into = [dishes[d]['kind'] for d in it['used_in']['dishes']]
+    if it.get('method') == 'ferment' or (into and all(k == 'drink' for k in into)): return 'cask'
+    return 'shelf'
+
+
 def validate(data):
     errs, warns = [], []
     items, dishes = data['items'], data['dishes']
@@ -307,6 +335,10 @@ def validate(data):
             errs.append(f'{iid}: raw item has no source')
         if it['kind'] == 'prepared' and not it['made_by']:
             errs.append(f'{iid}: prepared item has no recipe')
+        if it.get('store') not in STORES: errs.append(f'{iid}: unknown store {it.get("store")}')
+        if it['kind'] == 'supply':
+            if not art_supplies.has(iid): errs.append(f'{iid}: missing sprite')
+            continue
         if it['kind'] == 'tableware':
             if not art_tableware.has(iid): errs.append(f'{iid}: missing sprite')
             if it.get('washes_to') and it['washes_to'] not in items: errs.append(f'{iid}: washes to unknown {it["washes_to"]}')

@@ -5,6 +5,7 @@
 import type { Assets } from '../core/assets';
 import type { Content } from '../game/data';
 import type { PlacedProp } from '../world/layout';
+import { CONTAINERS } from '../world/containers';
 
 export interface PaletteItem { name: string; prop: PlacedProp }
 export interface Category { name: string; items: PaletteItem[] }
@@ -17,8 +18,6 @@ const FLOOR = /rug|runner|mat\b|doormat|carpet|^stairs_/;
 const WALL = /^deco_|^wall_|^shelf_jars$/;
 /** Art that sits on top of furniture: place settings and things set on a table. */
 const TOP = /^place_setting|^salt_cellar|^pepper_mill/;
-/** Containers, and how many slots of storage each holds. */
-const STORAGE: Record<string, number> = { crate: 8, barrel: 6, barrel_stack: 12, chest: 12, cupboard: 12, wardrobe: 16 };
 /** Old art no longer offered: tables with the dishes drawn on (tables are bare now, with place settings set on them). */
 const RETIRED = /^dining_table/;
 
@@ -27,10 +26,12 @@ const RETIRED = /^dining_table/;
  * storage; its id is given when it's placed, see the editor).
  */
 function placement(name: string): Partial<PlacedProp> {
+  const box = CONTAINERS[name];
+  // a container keeps its layer too (wall shelves hang on the wall and hold prepped food)
+  if (box) return { ...(WALL.test(name) ? { layer: 'wall' as const } : {}), behavior: { type: 'storage', id: '', slots: box.slots } };
   if (FLOOR.test(name)) return { layer: 'floor' };
   if (WALL.test(name)) return { layer: 'wall' };
   if (TOP.test(name)) return { layer: 'top' };
-  if (name in STORAGE) return { behavior: { type: 'storage', id: '', slots: STORAGE[name] } };
   if (name === 'wash_tub') return { behavior: { type: 'wash' } };
   if (/^table_\d$/.test(name)) return { collider: name }; // a table blocks its whole top, not just its legs
   if (/^house_/.test(name)) return { collider: 'house' };

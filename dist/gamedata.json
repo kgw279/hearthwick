@@ -277,7 +277,8 @@
           "boiled_grain"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "herbs": {
       "name": "Herbs",
@@ -309,7 +310,8 @@
           "herb_broth"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "honey": {
       "name": "Honey",
@@ -365,7 +367,8 @@
           "dish_honey_herb_tea",
           "dish_porridge_and_honey"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "egg": {
       "name": "Egg",
@@ -405,7 +408,8 @@
           "bread_pudding"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "berries": {
       "name": "Berries",
@@ -441,7 +445,8 @@
           "dish_berries_and_clotted_cream",
           "dish_porridge_and_berries"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "mushroom": {
       "name": "Mushroom",
@@ -472,7 +477,8 @@
           "mushroom_broth"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "acorns": {
       "name": "Acorns",
@@ -506,7 +512,8 @@
           "toasted_nuts"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "venison": {
       "name": "Venison",
@@ -543,7 +550,8 @@
           "braised_venison"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "trout": {
       "name": "Trout",
@@ -580,7 +588,8 @@
           "salt_crusted_trout"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "cress": {
       "name": "Cress",
@@ -616,7 +625,8 @@
         "dishes": [
           "dish_meadow_salad"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "onion": {
       "name": "Onion",
@@ -653,7 +663,8 @@
           "onion_broth"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "milk": {
       "name": "Milk",
@@ -694,7 +705,8 @@
           "dish_shortbread_and_milk",
           "dish_toasted_oats_and_milk"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "apple": {
       "name": "Apple",
@@ -727,7 +739,8 @@
           "baked_apple"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "mutton": {
       "name": "Mutton",
@@ -759,7 +772,8 @@
           "braised_mutton"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "cheese": {
       "name": "Cheese",
@@ -798,7 +812,8 @@
           "dish_oatcakes_and_cheese",
           "dish_cheese_and_wine_board"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "tomato": {
       "name": "Tomato",
@@ -835,7 +850,8 @@
           "roasted_tomato"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "potato": {
       "name": "Potato",
@@ -872,7 +888,8 @@
           "boiled_potato"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "carrot": {
       "name": "Carrot",
@@ -910,7 +927,8 @@
           "boiled_carrots"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "beef": {
       "name": "Beef",
@@ -946,7 +964,8 @@
           "pepper_steak"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "ember_pepper": {
       "name": "Ember pepper",
@@ -979,7 +998,8 @@
           "ember_chicken"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "water": {
       "name": "Water",
@@ -1037,7 +1057,8 @@
         "dishes": [
           "dish_cup_of_well_water"
         ]
-      }
+      },
+      "store": "pantry"
     },
     "salt": {
       "name": "Salt",
@@ -1076,7 +1097,8 @@
           "salted_acorns"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "peppercorns": {
       "name": "Peppercorns",
@@ -1106,7 +1128,8 @@
           "cracked_pepper"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "chicken": {
       "name": "Chicken",
@@ -1138,7 +1161,8 @@
           "chicken_stock"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "pork": {
       "name": "Pork",
@@ -1172,7 +1196,8 @@
           "honey_baked_ham"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "oats": {
       "name": "Oats",
@@ -1207,7 +1232,8 @@
           "toasted_oats"
         ],
         "dishes": []
-      }
+      },
+      "store": "pantry"
     },
     "toasted_grain": {
       "name": "Toasted grain",
@@ -1243,7 +1269,8 @@
         "dishes": [
           "dish_crunchy_honey_grain"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "boiled_grain": {
       "name": "Boiled grain",
@@ -1281,7 +1308,8 @@
           "dish_honey_grain_bowl",
           "dish_grain_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "flour": {
       "name": "Flour",
@@ -1326,7 +1354,8 @@
           "shortbread"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "nut_meal": {
       "name": "Nut meal",
@@ -1362,7 +1391,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "batter": {
       "name": "Batter",
@@ -1399,7 +1429,8 @@
           "carrot_cake"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "bread_dough": {
       "name": "Bread dough",
@@ -1440,7 +1471,8 @@
           "sausage_rolls"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "pasta_dough": {
       "name": "Pasta dough",
@@ -1473,7 +1505,8 @@
           "fresh_noodles"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "flatbread_dough": {
       "name": "Flatbread dough",
@@ -1508,7 +1541,8 @@
           "crackers"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "fresh_noodles": {
       "name": "Fresh noodles",
@@ -1541,7 +1575,8 @@
           "cooked_noodles"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "cooked_noodles": {
       "name": "Cooked noodles",
@@ -1581,7 +1616,8 @@
           "dish_egg_noodle_broth",
           "dish_cheesy_noodles"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fried_noodles": {
       "name": "Fried noodles",
@@ -1621,7 +1657,8 @@
         "dishes": [
           "dish_onion_noodle_pan"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "tortilla": {
       "name": "Tortilla",
@@ -1654,7 +1691,8 @@
         "dishes": [
           "dish_tavern_wrap"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "flatbread": {
       "name": "Flatbread",
@@ -1688,7 +1726,8 @@
           "dish_tomato_flatbread",
           "dish_ember_chicken_and_flatbread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "bread_loaf": {
       "name": "Bread loaf",
@@ -1724,7 +1763,8 @@
         "dishes": [
           "dish_farmhouse_loaf"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "bread_slices": {
       "name": "Bread slices",
@@ -1769,7 +1809,8 @@
           "dish_chicken_and_cress_sandwich",
           "dish_bacon_sandwich"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "toast": {
       "name": "Toast",
@@ -1823,7 +1864,8 @@
           "dish_poached_egg_on_toast",
           "dish_sausages_and_onions_on_toast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "sponge_cake": {
       "name": "Sponge cake",
@@ -1857,7 +1899,8 @@
         "dishes": [
           "dish_honey_cake"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "pancakes": {
       "name": "Pancakes",
@@ -1891,7 +1934,8 @@
         "dishes": [
           "dish_honey_pancakes"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "hard_boiled_egg": {
       "name": "Hard-boiled egg",
@@ -1929,7 +1973,8 @@
           "dish_boiled_egg",
           "dish_egg_noodle_broth"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chopped_egg": {
       "name": "Chopped egg",
@@ -1963,7 +2008,8 @@
           "dish_garden_greens",
           "dish_egg_and_herb_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fried_egg": {
       "name": "Fried egg",
@@ -2003,7 +2049,8 @@
           "dish_full_hearthwick_breakfast",
           "dish_bacon_and_eggs"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "whisked_egg": {
       "name": "Whisked egg",
@@ -2041,7 +2088,8 @@
           "cheese_omelette"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "scrambled_eggs": {
       "name": "Scrambled eggs",
@@ -2076,7 +2124,8 @@
           "dish_herb_omelette",
           "dish_soft_scramble"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "honey_glaze": {
       "name": "Honey glaze",
@@ -2116,7 +2165,8 @@
           "dish_crunchy_honey_grain",
           "dish_honey_fritters"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "honey_syrup": {
       "name": "Honey syrup",
@@ -2158,7 +2208,8 @@
           "dish_elven_nectar_bowl",
           "dish_bread_pudding"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chopped_herbs": {
       "name": "Chopped herbs",
@@ -2215,7 +2266,8 @@
           "dish_salt_crusted_trout",
           "dish_honey_glazed_chicken"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "crispy_herbs": {
       "name": "Crispy herbs",
@@ -2255,7 +2307,8 @@
           "dish_hunters_roast",
           "dish_crispy_potatoes_and_herbs"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "herb_broth": {
       "name": "Herb broth",
@@ -2298,7 +2351,8 @@
           "dish_dumpling_broth",
           "dish_egg_noodle_broth"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "crushed_berries": {
       "name": "Crushed berries",
@@ -2341,7 +2395,8 @@
           "dish_berry_meringue_mess",
           "dish_grain_pudding_and_berries"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "berry_compote": {
       "name": "Berry compote",
@@ -2388,7 +2443,8 @@
           "dish_custard_and_compote",
           "dish_cream_tea"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "sliced_mushroom": {
       "name": "Sliced mushroom",
@@ -2423,7 +2479,8 @@
           "mushroom_frittata"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "sauteed_mushrooms": {
       "name": "Sautéed mushrooms",
@@ -2465,7 +2522,8 @@
           "dish_creamy_mushrooms",
           "dish_chicken_in_mushroom_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "grilled_mushroom": {
       "name": "Grilled mushroom",
@@ -2502,7 +2560,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "mushroom_broth": {
       "name": "Mushroom broth",
@@ -2544,7 +2603,8 @@
         "dishes": [
           "dish_mushroom_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chopped_nuts": {
       "name": "Chopped nuts",
@@ -2585,7 +2645,8 @@
         "dishes": [
           "dish_orchard_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "toasted_nuts": {
       "name": "Toasted nuts",
@@ -2629,7 +2690,8 @@
           "dish_foragers_plate",
           "dish_dwarven_stonebread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "diced_venison": {
       "name": "Diced venison",
@@ -2663,7 +2725,8 @@
           "venison_pie"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "grilled_venison": {
       "name": "Grilled venison",
@@ -2697,7 +2760,8 @@
         "dishes": [
           "dish_honey_glazed_venison"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_venison": {
       "name": "Roast venison",
@@ -2731,7 +2795,8 @@
         "dishes": [
           "dish_hunters_roast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "braised_venison": {
       "name": "Braised venison",
@@ -2771,7 +2836,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "seared_venison": {
       "name": "Seared venison",
@@ -2811,7 +2877,8 @@
         "dishes": [
           "dish_venison_in_cream_sauce"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "trout_fillet": {
       "name": "Trout fillet",
@@ -2855,7 +2922,8 @@
           "oat_crusted_trout"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "grilled_trout": {
       "name": "Grilled trout",
@@ -2895,7 +2963,8 @@
         "dishes": [
           "dish_grilled_trout"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "pan_fried_trout": {
       "name": "Pan-fried trout",
@@ -2936,7 +3005,8 @@
           "dish_pan_fried_trout",
           "dish_brown_butter_trout"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fish_stock": {
       "name": "Fish stock",
@@ -2984,7 +3054,8 @@
           "dish_river_chowder",
           "dish_bog_broth"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chopped_cress": {
       "name": "Chopped cress",
@@ -3028,7 +3099,8 @@
           "dish_chicken_and_cress_sandwich",
           "dish_oat_crusted_trout_and_cress"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "wilted_cress": {
       "name": "Wilted cress",
@@ -3067,7 +3139,8 @@
         "dishes": [
           "dish_wilted_greens_and_egg"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "diced_onion": {
       "name": "Diced onion",
@@ -3106,7 +3179,8 @@
         "dishes": [
           "dish_river_chowder"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "caramelized_onion": {
       "name": "Caramelized onion",
@@ -3150,7 +3224,8 @@
           "dish_onion_noodle_pan",
           "dish_sausages_and_onions_on_toast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "onion_broth": {
       "name": "Onion broth",
@@ -3193,7 +3268,8 @@
           "dish_beef_noodle_soup",
           "dish_hearthwick_onion_soup"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "charred_onion": {
       "name": "Charred onion",
@@ -3224,7 +3300,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "warm_milk": {
       "name": "Warm milk",
@@ -3264,7 +3341,8 @@
           "dish_honeyed_porridge",
           "dish_warm_honey_milk"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "whipped_cream": {
       "name": "Whipped cream",
@@ -3307,7 +3385,8 @@
           "dish_berry_meringue_mess",
           "dish_berry_crumble_and_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "cheese_sauce": {
       "name": "Cheese sauce",
@@ -3349,7 +3428,8 @@
         "dishes": [
           "dish_cheesy_noodles"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "sliced_apple": {
       "name": "Sliced apple",
@@ -3389,7 +3469,8 @@
         "dishes": [
           "dish_orchard_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "baked_apple": {
       "name": "Baked apple",
@@ -3420,7 +3501,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "applesauce": {
       "name": "Applesauce",
@@ -3460,7 +3542,8 @@
           "dish_pork_chop_and_applesauce",
           "dish_roast_pork_supper"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "grilled_apple": {
       "name": "Grilled apple",
@@ -3497,7 +3580,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "diced_mutton": {
       "name": "Diced mutton",
@@ -3529,7 +3613,8 @@
           "braised_mutton"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "grilled_mutton_chop": {
       "name": "Grilled mutton chop",
@@ -3561,7 +3646,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "braised_mutton": {
       "name": "Braised mutton",
@@ -3603,7 +3689,8 @@
         "dishes": [
           "dish_mutton_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_mutton": {
       "name": "Roast mutton",
@@ -3638,7 +3725,8 @@
           "dish_shepherds_supper",
           "dish_stuffed_mutton_roast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "grated_cheese": {
       "name": "Grated cheese",
@@ -3675,7 +3763,8 @@
           "cheese_omelette"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "melted_cheese": {
       "name": "Melted cheese",
@@ -3717,7 +3806,8 @@
           "dish_tomato_flatbread",
           "dish_hearthwick_onion_soup"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fried_cheese": {
       "name": "Fried cheese",
@@ -3755,7 +3845,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "minced_pepper": {
       "name": "Minced pepper",
@@ -3790,7 +3881,8 @@
         "dishes": [
           "dish_bog_broth"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "charred_pepper": {
       "name": "Charred pepper",
@@ -3824,7 +3916,8 @@
         "dishes": [
           "dish_ember_honeycomb"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fire_oil": {
       "name": "Fire oil",
@@ -3861,7 +3954,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "diced_tomato": {
       "name": "Diced tomato",
@@ -3900,7 +3994,8 @@
           "dish_grain_salad",
           "dish_quiche_and_garden_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "tomato_sauce": {
       "name": "Tomato sauce",
@@ -3939,7 +4034,8 @@
         "dishes": [
           "dish_noodles_in_tomato_sauce"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roasted_tomato": {
       "name": "Roasted tomato",
@@ -3981,7 +4077,8 @@
           "dish_tavern_scotch_egg",
           "dish_full_hearthwick_breakfast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "diced_potato": {
       "name": "Diced potato",
@@ -4016,7 +4113,8 @@
           "boiled_potato"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "boiled_potato": {
       "name": "Boiled potato",
@@ -4060,7 +4158,8 @@
           "dish_beef_stew",
           "dish_honey_ham_and_potatoes"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "mashed_potatoes": {
       "name": "Mashed potatoes",
@@ -4096,7 +4195,8 @@
           "dish_chicken_pie_and_mash",
           "dish_bangers_and_mash"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "baked_potato": {
       "name": "Baked potato",
@@ -4130,7 +4230,8 @@
           "dish_steak_and_potatoes",
           "dish_roast_chicken_supper"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fried_potatoes": {
       "name": "Fried potatoes",
@@ -4172,7 +4273,8 @@
           "dish_pepper_steak_and_fries",
           "dish_fried_chicken_and_fries"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "sliced_carrot": {
       "name": "Sliced carrot",
@@ -4211,7 +4313,8 @@
           "carrot_cake"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "boiled_carrots": {
       "name": "Boiled carrots",
@@ -4252,7 +4355,8 @@
         "dishes": [
           "dish_beef_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_carrots": {
       "name": "Roast carrots",
@@ -4295,7 +4399,8 @@
           "dish_roast_chicken_supper",
           "dish_roast_pork_supper"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "glazed_carrots": {
       "name": "Glazed carrots",
@@ -4335,7 +4440,8 @@
         "dishes": [
           "dish_buttered_carrots"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "diced_beef": {
       "name": "Diced beef",
@@ -4369,7 +4475,8 @@
           "braised_beef"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "grilled_steak": {
       "name": "Grilled steak",
@@ -4403,7 +4510,8 @@
         "dishes": [
           "dish_steak_and_potatoes"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_beef": {
       "name": "Roast beef",
@@ -4437,7 +4545,8 @@
         "dishes": [
           "dish_sunday_roast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "braised_beef": {
       "name": "Braised beef",
@@ -4480,7 +4589,8 @@
           "dish_beef_noodle_soup",
           "dish_beef_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "seared_beef": {
       "name": "Seared beef",
@@ -4518,7 +4628,8 @@
       "used_in": {
         "items": [],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "ground_beef": {
       "name": "Ground beef",
@@ -4558,7 +4669,8 @@
           "scotch_egg"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "beef_patty": {
       "name": "Beef patty",
@@ -4593,7 +4705,8 @@
         "dishes": [
           "dish_patty_on_bread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fried_mince": {
       "name": "Fried mince",
@@ -4627,7 +4740,8 @@
         "dishes": [
           "dish_tavern_wrap"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "carrot_cake": {
       "name": "Carrot cake",
@@ -4662,7 +4776,8 @@
         "dishes": [
           "dish_carrot_cake_and_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "venison_pie": {
       "name": "Venison pie",
@@ -4697,7 +4812,8 @@
         "dishes": [
           "dish_venison_pie"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "apple_pie": {
       "name": "Apple pie",
@@ -4733,7 +4849,8 @@
           "dish_apple_pie_and_cream",
           "dish_apple_pie_and_custard"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "berry_cake": {
       "name": "Berry cake",
@@ -4775,7 +4892,8 @@
         "dishes": [
           "dish_berry_cake_and_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "dumplings": {
       "name": "Dumplings",
@@ -4810,7 +4928,8 @@
           "dish_dumpling_broth",
           "dish_chicken_and_dumplings"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "dough_balls": {
       "name": "Dough balls",
@@ -4842,7 +4961,8 @@
           "bread_rolls"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "bread_rolls": {
       "name": "Bread rolls",
@@ -4876,7 +4996,8 @@
           "dish_warm_rolls",
           "dish_pork_and_apple_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fritters": {
       "name": "Fritters",
@@ -4910,7 +5031,8 @@
         "dishes": [
           "dish_honey_fritters"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "crackers": {
       "name": "Crackers",
@@ -4943,7 +5065,8 @@
         "dishes": [
           "dish_crackers_and_cheese"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "breadcrumbs": {
       "name": "Breadcrumbs",
@@ -4983,7 +5106,8 @@
           "scotch_egg"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "croutons": {
       "name": "Croutons",
@@ -5018,7 +5142,8 @@
           "dish_hearthwick_onion_soup",
           "dish_fireside_potato_soup"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "bread_pudding": {
       "name": "Bread pudding",
@@ -5054,7 +5179,8 @@
         "dishes": [
           "dish_bread_pudding"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "herb_stuffing": {
       "name": "Herb stuffing",
@@ -5090,7 +5216,8 @@
         "dishes": [
           "dish_stuffed_mutton_roast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "crumbed_trout": {
       "name": "Crumbed trout",
@@ -5126,7 +5253,8 @@
         "dishes": [
           "dish_crumbed_trout"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "granola": {
       "name": "Granola",
@@ -5161,7 +5289,8 @@
         "dishes": [
           "dish_granola_and_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "baked_egg": {
       "name": "Baked egg",
@@ -5194,7 +5323,8 @@
         "dishes": [
           "dish_baked_egg_and_herbs"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "egg_mash": {
       "name": "Egg mash",
@@ -5228,7 +5358,8 @@
           "dish_stuffed_eggs",
           "dish_egg_mash_on_toast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "whipped_egg_whites": {
       "name": "Whipped egg whites",
@@ -5260,7 +5391,8 @@
           "meringues"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "meringues": {
       "name": "Meringues",
@@ -5293,7 +5425,8 @@
           "dish_meringue_kisses",
           "dish_berry_meringue_mess"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "custard": {
       "name": "Custard",
@@ -5331,7 +5464,8 @@
           "dish_apple_pie_and_custard",
           "dish_apple_crumble_and_custard"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "mushroom_frittata": {
       "name": "Mushroom frittata",
@@ -5367,7 +5501,8 @@
         "dishes": [
           "dish_frittata_and_greens"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "cheese_omelette": {
       "name": "Cheese omelette",
@@ -5403,7 +5538,8 @@
           "dish_cheesy_omelette",
           "dish_bacon_and_cheese_omelette"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "cheese_quiche": {
       "name": "Cheese quiche",
@@ -5439,7 +5575,8 @@
         "dishes": [
           "dish_quiche_and_garden_salad"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "scotch_egg": {
       "name": "Scotch egg",
@@ -5476,7 +5613,8 @@
         "dishes": [
           "dish_tavern_scotch_egg"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "butter": {
       "name": "Butter",
@@ -5516,7 +5654,8 @@
           "dish_buttered_carrots",
           "dish_buttered_toast"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "brown_butter": {
       "name": "Brown butter",
@@ -5549,7 +5688,8 @@
         "dishes": [
           "dish_brown_butter_trout"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "fresh_curds": {
       "name": "Fresh curds",
@@ -5583,7 +5723,8 @@
           "dish_curds_and_honey",
           "dish_fresh_curds_and_herbs"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "cream_sauce": {
       "name": "Cream sauce",
@@ -5619,7 +5760,8 @@
           "dish_venison_in_cream_sauce",
           "dish_chicken_in_mushroom_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "clotted_cream": {
       "name": "Clotted cream",
@@ -5653,7 +5795,8 @@
           "dish_berries_and_clotted_cream",
           "dish_cream_tea"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "grain_pudding": {
       "name": "Grain pudding",
@@ -5689,7 +5832,8 @@
         "dishes": [
           "dish_grain_pudding_and_berries"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "potato_soup": {
       "name": "Potato soup",
@@ -5725,7 +5869,8 @@
         "dishes": [
           "dish_fireside_potato_soup"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "scones": {
       "name": "Scones",
@@ -5760,7 +5905,8 @@
         "dishes": [
           "dish_cream_tea"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "shortbread": {
       "name": "Shortbread",
@@ -5796,7 +5942,8 @@
           "dish_shortbread_and_milk",
           "dish_tea_and_shortbread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "boiling_water": {
       "name": "Boiling water",
@@ -5831,7 +5978,8 @@
           "poached_trout"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "herb_tea": {
       "name": "Herb tea",
@@ -5867,7 +6015,8 @@
           "dish_honey_herb_tea",
           "dish_tea_and_shortbread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "spiced_apple_tea": {
       "name": "Spiced apple tea",
@@ -5902,7 +6051,8 @@
         "dishes": [
           "dish_spiced_apple_tea"
         ]
-      }
+      },
+      "store": "cask"
     },
     "berry_cordial": {
       "name": "Berry cordial",
@@ -5937,7 +6087,8 @@
         "dishes": [
           "dish_berry_cordial"
         ]
-      }
+      },
+      "store": "cask"
     },
     "poached_egg": {
       "name": "Poached egg",
@@ -5972,7 +6123,8 @@
           "dish_poached_egg_on_toast",
           "dish_poached_egg_and_cress"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "poached_trout": {
       "name": "Poached trout",
@@ -6007,7 +6159,8 @@
         "dishes": [
           "dish_poached_trout_and_greens"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "vegetable_stock": {
       "name": "Vegetable stock",
@@ -6042,7 +6195,8 @@
           "garden_soup"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "garden_soup": {
       "name": "Garden soup",
@@ -6079,7 +6233,8 @@
         "dishes": [
           "dish_garden_soup_and_bread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "brine": {
       "name": "Brine",
@@ -6113,7 +6268,8 @@
           "pickled_carrots"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "pickled_onions": {
       "name": "Pickled onions",
@@ -6150,7 +6306,8 @@
           "dish_salt_beef_sandwich",
           "dish_pork_pie_and_pickles"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "pickled_carrots": {
       "name": "Pickled carrots",
@@ -6185,7 +6342,8 @@
         "dishes": [
           "dish_pickled_carrots_and_cress"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "salt_beef": {
       "name": "Salt beef",
@@ -6222,7 +6380,8 @@
           "dish_salt_beef_and_mash",
           "dish_salt_beef_sandwich"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "salt_crusted_trout": {
       "name": "Salt-crusted trout",
@@ -6257,7 +6416,8 @@
         "dishes": [
           "dish_salt_crusted_trout"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "salted_acorns": {
       "name": "Salted acorns",
@@ -6291,7 +6451,8 @@
         "dishes": [
           "dish_salted_acorns"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "cracked_pepper": {
       "name": "Cracked pepper",
@@ -6324,7 +6485,8 @@
           "pepper_steak"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "pepper_steak": {
       "name": "Pepper steak",
@@ -6359,7 +6521,8 @@
         "dishes": [
           "dish_pepper_steak_and_fries"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chicken_pieces": {
       "name": "Chicken pieces",
@@ -6394,7 +6557,8 @@
           "ember_chicken"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "grilled_chicken": {
       "name": "Grilled chicken",
@@ -6429,7 +6593,8 @@
           "dish_grilled_chicken_and_cress",
           "dish_chicken_and_cress_sandwich"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_chicken": {
       "name": "Roast chicken",
@@ -6464,7 +6629,8 @@
         "dishes": [
           "dish_roast_chicken_supper"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "pan_fried_chicken": {
       "name": "Pan-fried chicken",
@@ -6499,7 +6665,8 @@
           "dish_fried_chicken_and_fries",
           "dish_chicken_in_mushroom_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chicken_stock": {
       "name": "Chicken stock",
@@ -6536,7 +6703,8 @@
           "dish_cup_of_chicken_broth",
           "dish_chicken_and_dumplings"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chicken_noodle_soup": {
       "name": "Chicken noodle soup",
@@ -6573,7 +6741,8 @@
         "dishes": [
           "dish_chicken_noodle_soup"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "chicken_pie": {
       "name": "Chicken pie",
@@ -6608,7 +6777,8 @@
         "dishes": [
           "dish_chicken_pie_and_mash"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "honey_glazed_chicken": {
       "name": "Honey-glazed chicken",
@@ -6643,7 +6813,8 @@
         "dishes": [
           "dish_honey_glazed_chicken"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "ember_chicken": {
       "name": "Ember chicken",
@@ -6678,7 +6849,8 @@
         "dishes": [
           "dish_ember_chicken_and_flatbread"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "diced_pork": {
       "name": "Diced pork",
@@ -6712,7 +6884,8 @@
           "pork_pie"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "sausage_meat": {
       "name": "Sausage meat",
@@ -6746,7 +6919,8 @@
           "sausage_rolls"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "fried_sausages": {
       "name": "Fried sausages",
@@ -6782,7 +6956,8 @@
           "dish_sausages_and_onions_on_toast",
           "dish_skirlie_and_sausages"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "bacon": {
       "name": "Bacon",
@@ -6816,7 +6991,8 @@
           "crispy_bacon"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "crispy_bacon": {
       "name": "Crispy bacon",
@@ -6852,7 +7028,8 @@
           "dish_bacon_sandwich",
           "dish_bacon_and_cheese_omelette"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "grilled_pork_chop": {
       "name": "Grilled pork chop",
@@ -6886,7 +7063,8 @@
         "dishes": [
           "dish_pork_chop_and_applesauce"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "roast_pork": {
       "name": "Roast pork",
@@ -6921,7 +7099,8 @@
         "dishes": [
           "dish_roast_pork_supper"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "honey_baked_ham": {
       "name": "Honey-baked ham",
@@ -6957,7 +7136,8 @@
         "dishes": [
           "dish_honey_ham_and_potatoes"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "lard": {
       "name": "Lard",
@@ -6989,7 +7169,8 @@
           "hot_water_pastry"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "hot_water_pastry": {
       "name": "Hot-water pastry",
@@ -7023,7 +7204,8 @@
           "pork_pie"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "pork_pie": {
       "name": "Pork pie",
@@ -7059,7 +7241,8 @@
           "dish_pork_pie_and_pickles",
           "dish_pie_and_a_pint"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "sausage_rolls": {
       "name": "Sausage rolls",
@@ -7094,7 +7277,8 @@
         "dishes": [
           "dish_sausage_rolls"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "pork_and_apple_stew": {
       "name": "Pork & apple stew",
@@ -7131,7 +7315,8 @@
         "dishes": [
           "dish_pork_and_apple_stew"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "rolled_oats": {
       "name": "Rolled oats",
@@ -7168,7 +7353,8 @@
           "oat_crusted_trout"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "toasted_oats": {
       "name": "Toasted oats",
@@ -7203,7 +7389,8 @@
         "dishes": [
           "dish_toasted_oats_and_milk"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "oat_porridge": {
       "name": "Oat porridge",
@@ -7239,7 +7426,8 @@
           "dish_porridge_and_honey",
           "dish_porridge_and_berries"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "oatcakes": {
       "name": "Oatcakes",
@@ -7275,7 +7463,8 @@
           "dish_oatcakes_and_cheese",
           "dish_cheese_and_wine_board"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "honey_flapjacks": {
       "name": "Honey flapjacks",
@@ -7310,7 +7499,8 @@
         "dishes": [
           "dish_honey_flapjacks"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "crumble_topping": {
       "name": "Crumble topping",
@@ -7346,7 +7536,8 @@
           "berry_crumble"
         ],
         "dishes": []
-      }
+      },
+      "store": "shelf"
     },
     "apple_crumble": {
       "name": "Apple crumble",
@@ -7381,7 +7572,8 @@
         "dishes": [
           "dish_apple_crumble_and_custard"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "berry_crumble": {
       "name": "Berry crumble",
@@ -7416,7 +7608,8 @@
         "dishes": [
           "dish_berry_crumble_and_cream"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "skirlie": {
       "name": "Skirlie",
@@ -7451,7 +7644,8 @@
         "dishes": [
           "dish_skirlie_and_sausages"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "oat_crusted_trout": {
       "name": "Oat-crusted trout",
@@ -7486,7 +7680,8 @@
         "dishes": [
           "dish_oat_crusted_trout_and_cress"
         ]
-      }
+      },
+      "store": "shelf"
     },
     "apple_juice": {
       "name": "Apple juice",
@@ -7521,7 +7716,8 @@
         "dishes": [
           "dish_glass_of_apple_juice"
         ]
-      }
+      },
+      "store": "cask"
     },
     "hearth_ale": {
       "name": "Hearth ale",
@@ -7555,7 +7751,8 @@
           "dish_tankard_of_ale",
           "dish_pie_and_a_pint"
         ]
-      }
+      },
+      "store": "cask"
     },
     "oat_stout": {
       "name": "Oat stout",
@@ -7589,7 +7786,8 @@
         "dishes": [
           "dish_pint_of_oat_stout"
         ]
-      }
+      },
+      "store": "cask"
     },
     "orchard_cider": {
       "name": "Orchard cider",
@@ -7624,7 +7822,8 @@
         "dishes": [
           "dish_mug_of_cider"
         ]
-      }
+      },
+      "store": "cask"
     },
     "honey_mead": {
       "name": "Honey mead",
@@ -7657,7 +7856,8 @@
         "dishes": [
           "dish_goblet_of_mead"
         ]
-      }
+      },
+      "store": "cask"
     },
     "berry_wine": {
       "name": "Berry wine",
@@ -7692,7 +7892,8 @@
           "dish_goblet_of_berry_wine",
           "dish_cheese_and_wine_board"
         ]
-      }
+      },
+      "store": "cask"
     },
     "mulled_cider": {
       "name": "Mulled cider",
@@ -7726,7 +7927,8 @@
         "dishes": [
           "dish_mulled_cider"
         ]
-      }
+      },
+      "store": "cask"
     },
     "mulled_wine": {
       "name": "Mulled wine",
@@ -7760,7 +7962,8 @@
         "dishes": [
           "dish_mulled_wine"
         ]
-      }
+      },
+      "store": "cask"
     },
     "berry_milk": {
       "name": "Berry milk",
@@ -7794,7 +7997,8 @@
         "dishes": [
           "dish_berry_milk"
         ]
-      }
+      },
+      "store": "cask"
     },
     "eggnog": {
       "name": "Eggnog",
@@ -7829,7 +8033,8 @@
         "dishes": [
           "dish_eggnog"
         ]
-      }
+      },
+      "store": "cask"
     },
     "wood_plate": {
       "kind": "tableware",
@@ -7858,7 +8063,8 @@
           "shop": "grocer",
           "price": 2
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_wood_plate": {
       "kind": "tableware",
@@ -7886,7 +8092,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "clay_plate": {
       "kind": "tableware",
@@ -7915,7 +8122,8 @@
           "shop": "grocer",
           "price": 5
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_clay_plate": {
       "kind": "tableware",
@@ -7943,7 +8151,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "pewter_plate": {
       "kind": "tableware",
@@ -7972,7 +8181,8 @@
           "shop": "grocer",
           "price": 10
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_pewter_plate": {
       "kind": "tableware",
@@ -8000,7 +8210,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "wood_bowl": {
       "kind": "tableware",
@@ -8029,7 +8240,8 @@
           "shop": "grocer",
           "price": 2
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_wood_bowl": {
       "kind": "tableware",
@@ -8057,7 +8269,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "clay_bowl": {
       "kind": "tableware",
@@ -8086,7 +8299,8 @@
           "shop": "grocer",
           "price": 5
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_clay_bowl": {
       "kind": "tableware",
@@ -8114,7 +8328,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "pewter_bowl": {
       "kind": "tableware",
@@ -8143,7 +8358,8 @@
           "shop": "grocer",
           "price": 10
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_pewter_bowl": {
       "kind": "tableware",
@@ -8171,7 +8387,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "wood_mug": {
       "kind": "tableware",
@@ -8200,7 +8417,8 @@
           "shop": "grocer",
           "price": 2
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_wood_mug": {
       "kind": "tableware",
@@ -8228,7 +8446,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "clay_mug": {
       "kind": "tableware",
@@ -8257,7 +8476,8 @@
           "shop": "grocer",
           "price": 5
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_clay_mug": {
       "kind": "tableware",
@@ -8285,7 +8505,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "pewter_mug": {
       "kind": "tableware",
@@ -8314,7 +8535,8 @@
           "shop": "grocer",
           "price": 10
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_pewter_mug": {
       "kind": "tableware",
@@ -8342,7 +8564,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "wood_cutlery": {
       "kind": "tableware",
@@ -8371,7 +8594,8 @@
           "shop": "grocer",
           "price": 2
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_wood_cutlery": {
       "kind": "tableware",
@@ -8399,7 +8623,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "iron_cutlery": {
       "kind": "tableware",
@@ -8428,7 +8653,8 @@
           "shop": "grocer",
           "price": 5
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_iron_cutlery": {
       "kind": "tableware",
@@ -8456,7 +8682,8 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "pewter_cutlery": {
       "kind": "tableware",
@@ -8485,7 +8712,8 @@
           "shop": "grocer",
           "price": 10
         }
-      ]
+      ],
+      "store": "tableware"
     },
     "dirty_pewter_cutlery": {
       "kind": "tableware",
@@ -8513,7 +8741,104 @@
           "type": "used",
           "note": "left dirty by a served guest"
         }
-      ]
+      ],
+      "store": "tableware"
+    },
+    "pillow": {
+      "name": "Pillow",
+      "kind": "supply",
+      "tags": [],
+      "value": 6,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "pillow"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 6
+        }
+      ],
+      "store": "supply"
+    },
+    "bed_linens": {
+      "name": "Bed linens",
+      "kind": "supply",
+      "tags": [],
+      "value": 8,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "bed_linens"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 8
+        }
+      ],
+      "store": "supply"
+    },
+    "candles": {
+      "name": "Candles",
+      "kind": "supply",
+      "tags": [],
+      "value": 3,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "candles"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 3
+        }
+      ],
+      "store": "supply"
+    },
+    "soap": {
+      "name": "Soap",
+      "kind": "supply",
+      "tags": [],
+      "value": 2,
+      "shelf_life_days": null,
+      "sprite": {
+        "sheet": "supply_items",
+        "frame": "soap"
+      },
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "sources": [
+        {
+          "type": "shop",
+          "shop": "grocer",
+          "price": 2
+        }
+      ],
+      "store": "supply"
     }
   },
   "dishes": {
@@ -12327,6 +12652,26 @@
           "daily_qty": 3
         },
         {
+          "item": "pillow",
+          "price": 6,
+          "daily_qty": 6
+        },
+        {
+          "item": "bed_linens",
+          "price": 8,
+          "daily_qty": 3
+        },
+        {
+          "item": "candles",
+          "price": 3,
+          "daily_qty": 10
+        },
+        {
+          "item": "soap",
+          "price": 2,
+          "daily_qty": 10
+        },
+        {
           "item": "salt",
           "price": 2,
           "pack": "seasoning",
@@ -12335,6 +12680,8 @@
       ],
       "building": "general_store",
       "buys": [
+        "bed_linens",
+        "candles",
         "carrot",
         "clay_bowl",
         "clay_mug",
@@ -12346,8 +12693,10 @@
         "pewter_cutlery",
         "pewter_mug",
         "pewter_plate",
+        "pillow",
         "potato",
         "salt",
+        "soap",
         "tomato",
         "wood_bowl",
         "wood_cutlery",
