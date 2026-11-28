@@ -8086,11 +8086,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_wood_plate"
       },
-      "washes_to": "wood_plate",
+      "washes_to": "wet_wood_plate",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_wood_plate": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "plate",
+        "material": "wood",
+        "tier": 1
+      },
+      "name": "Wet wooden plate",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_wood_plate"
+      },
+      "dries_to": "wood_plate",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8145,11 +8174,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_clay_plate"
       },
-      "washes_to": "clay_plate",
+      "washes_to": "wet_clay_plate",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_clay_plate": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "plate",
+        "material": "clay",
+        "tier": 2
+      },
+      "name": "Wet clay plate",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_clay_plate"
+      },
+      "dries_to": "clay_plate",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8204,11 +8262,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_pewter_plate"
       },
-      "washes_to": "pewter_plate",
+      "washes_to": "wet_pewter_plate",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_pewter_plate": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "plate",
+        "material": "pewter",
+        "tier": 3
+      },
+      "name": "Wet pewter plate",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_pewter_plate"
+      },
+      "dries_to": "pewter_plate",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8263,11 +8350,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_wood_bowl"
       },
-      "washes_to": "wood_bowl",
+      "washes_to": "wet_wood_bowl",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_wood_bowl": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "bowl",
+        "material": "wood",
+        "tier": 1
+      },
+      "name": "Wet wooden bowl",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_wood_bowl"
+      },
+      "dries_to": "wood_bowl",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8322,11 +8438,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_clay_bowl"
       },
-      "washes_to": "clay_bowl",
+      "washes_to": "wet_clay_bowl",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_clay_bowl": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "bowl",
+        "material": "clay",
+        "tier": 2
+      },
+      "name": "Wet clay bowl",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_clay_bowl"
+      },
+      "dries_to": "clay_bowl",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8381,11 +8526,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_pewter_bowl"
       },
-      "washes_to": "pewter_bowl",
+      "washes_to": "wet_pewter_bowl",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_pewter_bowl": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "bowl",
+        "material": "pewter",
+        "tier": 3
+      },
+      "name": "Wet pewter bowl",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_pewter_bowl"
+      },
+      "dries_to": "pewter_bowl",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8440,11 +8614,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_wood_mug"
       },
-      "washes_to": "wood_mug",
+      "washes_to": "wet_wood_mug",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_wood_mug": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "mug",
+        "material": "wood",
+        "tier": 1
+      },
+      "name": "Wet wooden mug",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_wood_mug"
+      },
+      "dries_to": "wood_mug",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8499,11 +8702,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_clay_mug"
       },
-      "washes_to": "clay_mug",
+      "washes_to": "wet_clay_mug",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_clay_mug": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "mug",
+        "material": "clay",
+        "tier": 2
+      },
+      "name": "Wet clay mug",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_clay_mug"
+      },
+      "dries_to": "clay_mug",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8558,11 +8790,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_pewter_mug"
       },
-      "washes_to": "pewter_mug",
+      "washes_to": "wet_pewter_mug",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_pewter_mug": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "mug",
+        "material": "pewter",
+        "tier": 3
+      },
+      "name": "Wet pewter mug",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_pewter_mug"
+      },
+      "dries_to": "pewter_mug",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8617,11 +8878,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_wood_cutlery"
       },
-      "washes_to": "wood_cutlery",
+      "washes_to": "wet_wood_cutlery",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_wood_cutlery": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "cutlery",
+        "material": "wood",
+        "tier": 1
+      },
+      "name": "Wet wooden cutlery",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_wood_cutlery"
+      },
+      "dries_to": "wood_cutlery",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8676,11 +8966,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_iron_cutlery"
       },
-      "washes_to": "iron_cutlery",
+      "washes_to": "wet_iron_cutlery",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_iron_cutlery": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "cutlery",
+        "material": "iron",
+        "tier": 2
+      },
+      "name": "Wet iron cutlery",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_iron_cutlery"
+      },
+      "dries_to": "iron_cutlery",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"
@@ -8735,11 +9054,40 @@
         "sheet": "tableware_items",
         "frame": "dirty_pewter_cutlery"
       },
-      "washes_to": "pewter_cutlery",
+      "washes_to": "wet_pewter_cutlery",
       "sources": [
         {
           "type": "used",
           "note": "left dirty by a served guest"
+        }
+      ],
+      "store": "tableware"
+    },
+    "wet_pewter_cutlery": {
+      "kind": "tableware",
+      "tags": [],
+      "shelf_life_days": null,
+      "made_by": [],
+      "used_in": {
+        "items": [],
+        "dishes": []
+      },
+      "tableware": {
+        "kind": "cutlery",
+        "material": "pewter",
+        "tier": 3
+      },
+      "name": "Wet pewter cutlery",
+      "value": 0,
+      "sprite": {
+        "sheet": "tableware_items",
+        "frame": "wet_pewter_cutlery"
+      },
+      "dries_to": "pewter_cutlery",
+      "sources": [
+        {
+          "type": "washed",
+          "note": "washed at the wash tub, still to dry"
         }
       ],
       "store": "tableware"

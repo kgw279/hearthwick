@@ -349,7 +349,8 @@ def validate(data):
             continue
         if it['kind'] == 'tableware':
             if not art_tableware.has(iid): errs.append(f'{iid}: missing sprite')
-            if it.get('washes_to') and it['washes_to'] not in items: errs.append(f'{iid}: washes to unknown {it["washes_to"]}')
+            for k in ('washes_to', 'dries_to'):
+                if it.get(k) and it[k] not in items: errs.append(f'{iid}: {k} unknown {it[k]}')
             continue
         if not it['used_in']['items'] and not it['used_in']['dishes']:
             warns.append(f'{iid}: not used in anything (sell-only / future content)')

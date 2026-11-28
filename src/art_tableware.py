@@ -94,13 +94,28 @@ def dirty(kind, m):
     return s
 
 
+DROPS = {'plate': [(10, 16), (20, 18), (15, 20), (22, 15)], 'bowl': [(10, 17), (21, 16), (15, 22)],
+         'mug': [(11, 14), (17, 18), (12, 22), (22, 16)], 'cutlery': [(9, 12), (20, 10), (21, 17), (9, 20)]}
+
+
+def wet(kind, m):
+    """Washed but not dried: beads of water on it, and a drip below."""
+    s = DRAW[kind](m)
+    for x, y in DROPS[kind]:
+        s.set(x, y, 'p'); s.set(x, y + 1, 'c')
+    lo = max(y for y in range(32) for x in range(32) if s.px[y][x] is not None)
+    s.set(16, min(31, lo + 2), 'c')
+    return s
+
+
 def item_ids():
     """(id, kind, material, tier 1-3) for every clean piece of tableware."""
     return [(f'{m}_{k}', k, m, t + 1) for k, mats in TIERS.items() for t, m in enumerate(mats)]
 
 
 ITEMS = ([(iid, (lambda k=k, m=m: DRAW[k](m))) for iid, k, m, _ in item_ids()]
-         + [(f'dirty_{iid}', (lambda k=k, m=m: dirty(k, m))) for iid, k, m, _ in item_ids()])
+         + [(f'dirty_{iid}', (lambda k=k, m=m: dirty(k, m))) for iid, k, m, _ in item_ids()]
+         + [(f'wet_{iid}', (lambda k=k, m=m: wet(k, m))) for iid, k, m, _ in item_ids()])
 
 
 def has(iid):

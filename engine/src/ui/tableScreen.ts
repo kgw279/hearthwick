@@ -1,39 +1,36 @@
 /**
- * Serving a table, or the bar. Left: the seats, each with who's sitting there, what they ordered (a dish
- * and/or a drink; what's been brought shows dimmed) and how long they've waited.
- *  - At a table, the tray you're carrying is on the right, one row per meal: choose a meal, then the
- *    seat to serve it to. Everything in it must be what that guest is still waiting for (cutlery goes
- *    with an ordered dish).
- *  - At the bar, choosing a guest hands their order straight over the counter, made up from the stores
- *    (a drink in a mug, a simple dish on a plate, a snack as it is).
- * Once they have all they ordered they eat, pay and leave, and what they ate from is left dirty where
- * they sat: Y clears it into your bag. X politely dismisses the chosen guest (they pay nothing, and mind
- * less the sooner it's done). B / Esc puts down a chosen meal, or leaves.
+ * Serving a table, or the bar (it works the same). Left: the seats, each with who's sitting there, what
+ * they ordered (dimmed once it's been brought) and a bar for how much longer they'll stay: their patience
+ * while they wait, their meal while they eat. Right: what's ready at the plating station. Choose
+ * something ready, then the guest to serve it to: it must be something they ordered. A dish brings a
+ * clean set of cutlery with it, if there's one to hand. Once they have all they ordered they eat, pay and
+ * leave, and what they ate from is left dirty where they sat: Y clears it into your bag. X politely
+ * dismisses the chosen guest (they pay nothing, and mind less the sooner it's done). B puts back what you
+ * chose to serve, or leaves.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
-import { hint } from './buttons';
 import type { Renderer } from '../core/renderer';
 import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
 import type { Seat } from '../game/seating';
-import { TRAY_MEALS, type Guest, type Leaving, type Service, type Tray } from '../state/service';
+import { READY_MAX, type Guest, type Leaving, type Service } from '../state/service';
+import { hint } from './buttons';
 import { drawItem, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
-import { drawText, measure, wrap } from './text';
-import { drawTrayGrid, TRAY_COLS, trayCell } from './trayGrid';
+import { drawText, measure } from './text';
 
 const W = 464;
-const H = 240;
-const ROW = 40;
-const LIST_W = 250;
-const TOP = 44;
+const H = 248;
+const ROW = 42;
+const LIST_W = 300;
+const TOP = 32;
 
 export class TableScreen implements Screen {
-  private pane: 'tray' | 'seats';
+  private pane: 'ready' | 'seats';
   private seat = 0;
-  private cell = { row: 0, col: 0 };
-  /** The meal (tray row) chosen to serve. */
+  private readySel = 0;
+  /** The ready dish chosen to serve. */
   private picked: number | null = null;
   private readonly nav = new Nav();
   private message = { text: '', until: 0 };
@@ -41,20 +38,20 @@ export class TableScreen implements Screen {
   private device: Device = 'keyboard';
 
   constructor(
+    private readonly title: string,
     private readonly table: string,
     private readonly seats: Seat[],
     private readonly service: Service,
-    private readonly tray: Tray | undefined,
     /** Put a dirty piece in the bag; false if it doesn't fit. */
     private readonly toBag: (item: string) => boolean,
+    /** A clean set of cutlery to go with a dish, if there's one. */
+    private readonly cutlery: () => string | null,
     /** A guest has left (dismissed). */
     private readonly left: (l: Leaving) => void,
-    /** At the bar: hand a guest their order over the counter (why not, or null). */
-    private readonly barServe: ((seat: Seat) => string | null) | null,
     private readonly content: Content,
     private readonly assets: Assets,
   ) {
-    this.pane = tray?.meals.length && !barServe ? 'tray' : 'seats';
+    this.pane = service.ready.length ? 'ready' : 'seats';
   }
 
   private get x(): number {
@@ -76,7 +73,7 @@ export class TableScreen implements Screen {
     if (input.pressed('back') || input.pressed('menu')) {
       if (this.picked === null) return false;
       this.picked = null;
-      this.pane = 'tray';
+      this.pane = 'ready';
       return true;
     }
     const d = this.nav.step(input, dt);
@@ -89,44 +86,31 @@ export class TableScreen implements Screen {
 
   private move(d: { x: number; y: number }): void {
     if (this.pane === 'seats') {
-      if (d.x > 0 && this.tray && !this.barServe) {
-        this.pane = 'tray';
-        return;
-      }
-      if (d.y) this.seat = Math.max(0, Math.min(this.seats.length - 1, this.seat + d.y));
+      if (d.x > 0) this.pane = 'ready';
+      else if (d.y) this.seat = Math.max(0, Math.min(this.seats.length - 1, this.seat + d.y));
       return;
     }
-    if (d.x < 0 && this.cell.col === 0) {
-      this.pane = 'seats';
-      return;
-    }
-    this.cell = {
-      row: Math.max(0, Math.min(TRAY_MEALS - 1, this.cell.row + d.y)),
-      col: Math.max(0, Math.min(TRAY_COLS - 1, this.cell.col + d.x)),
-    };
+    if (d.x < 0) this.pane = 'seats';
+    else if (d.y) this.readySel = Math.max(0, Math.min(READY_MAX - 1, this.readySel + d.y));
   }
 
   private choose(): void {
-    if (this.pane === 'tray') {
-      if (!this.tray?.meals[this.cell.row]) return this.say('Nothing there');
-      this.picked = this.cell.row;
+    if (this.pane === 'ready') {
+      if (!this.service.ready[this.readySel]) return this.say(this.service.ready.length ? 'Nothing there' : 'Nothing ready: plate something at the plating station');
+      this.picked = this.readySel;
       this.pane = 'seats';
       this.say('Now choose who to serve it to');
       return;
     }
+    if (this.picked === null) return this.say(this.service.ready.length ? 'Choose something ready first' : 'Nothing ready: plate something at the plating station');
     const seat = this.seats[this.seat];
-    if (this.barServe) {
-      if (!seat) return;
-      return this.say(this.barServe(seat) ?? 'Served!');
-    }
-    if (this.picked === null) return this.say(this.tray ? 'Choose a meal on your tray first' : 'Bring a serving tray to serve');
-    if (!seat || !this.tray) return;
-    const why = this.service.serve(this.tray, this.picked, seat.key);
+    if (!seat) return;
+    const why = this.service.serve(this.picked, seat.key, this.cutlery);
     if (why) return this.say(why);
     this.say('Served!');
     this.picked = null;
-    this.pane = this.tray.meals.length ? 'tray' : 'seats';
-    this.cell = { row: 0, col: 0 };
+    this.readySel = 0;
+    this.pane = this.service.ready.length ? 'ready' : 'seats';
   }
 
   private dismiss(): void {
@@ -148,11 +132,11 @@ export class TableScreen implements Screen {
   }
 
   private rowAt(i: number): { x: number; y: number } {
-    return { x: this.x + 10, y: this.y + TOP - 12 + i * ROW };
+    return { x: this.x + 10, y: this.y + TOP + i * ROW };
   }
 
-  private get gridX(): number {
-    return this.x + W - 12 - TRAY_COLS * (SLOT + 2);
+  private readySlot(i: number): { x: number; y: number } {
+    return { x: this.x + W - 12 - SLOT, y: this.y + TOP + 4 + i * (SLOT + 4) };
   }
 
   pointer(px: number, py: number, button: number): boolean {
@@ -162,22 +146,18 @@ export class TableScreen implements Screen {
         this.pane = 'seats';
         this.seat = i;
         if (button === 0) this.choose();
+        if (button === 2) this.dismiss();
         return true;
       }
     }
-    if (this.tray && !this.barServe) {
-      for (let row = 0; row < TRAY_MEALS; row++) {
-        for (let col = 0; col < TRAY_COLS; col++) {
-          const p = trayCell(this.gridX, this.y + TOP, row, col);
-          if (px < p.x || py < p.y || px >= p.x + SLOT || py >= p.y + SLOT) continue;
-          this.pane = 'tray';
-          this.cell = { row, col };
-          if (button === 0) this.choose();
-          return true;
-        }
-      }
+    for (let i = 0; i < READY_MAX; i++) {
+      const p = this.readySlot(i);
+      if (px < p.x || py < p.y || px >= p.x + SLOT || py >= p.y + SLOT) continue;
+      this.pane = 'ready';
+      this.readySel = i;
+      if (button === 0) this.choose();
+      return true;
     }
-
     const outside = px < this.x || py < this.y || px >= this.x + W || py >= this.y + H;
     return !(button === 0 && outside);
   }
@@ -185,11 +165,11 @@ export class TableScreen implements Screen {
   draw(r: Renderer): void {
     const { assets, content } = this;
     r.nine('panel_dark', this.x, this.y, W, H);
-    drawText(r, assets, this.barServe ? 'The bar' : 'Table', this.x + 12, this.y + 10);
+    drawText(r, assets, this.title, this.x + 12, this.y + 10);
 
     if (!this.seats.length) {
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, this.barServe ? 'No stools at the bar yet' : 'No chairs at this table yet', this.x + 12, this.y + TOP);
+      drawText(r, assets, 'No seats here yet', this.x + 12, this.y + TOP + 4);
       r.ctx.globalAlpha = 1;
     }
     this.seats.forEach((_, i) => {
@@ -198,16 +178,19 @@ export class TableScreen implements Screen {
       r.nine(this.pane === 'seats' && i === this.seat ? 'slot_selected' : 'slot', p.x, p.y, LIST_W, ROW - 2);
       if (!g) {
         r.ctx.globalAlpha = 0.6;
-        drawText(r, assets, 'Empty seat', p.x + 38, p.y + 13);
+        drawText(r, assets, 'Empty seat', p.x + 38, p.y + 15);
         r.ctx.globalAlpha = 1;
         return;
       }
-      r.sprite(`${g.look}_down_idle`, p.x + 2, p.y + 3);
-      drawText(r, assets, content.folk[g.folk]?.name ?? g.folk, p.x + 38, p.y + 7);
-      const wait = this.service.restless(g);
-      const status = g.state === 'eating' ? 'Eating' : wait < 0.4 ? 'Just sat down' : wait < 0.8 ? 'Waiting a while' : 'Getting ready to leave';
+      r.sprite(`${g.look}_down_idle`, p.x + 2, p.y + 4);
+      drawText(r, assets, content.folk[g.folk]?.name ?? g.folk, p.x + 38, p.y + 6);
+      // how much longer they'll stay
+      const left = this.service.stayLeft(g);
+      const bw = 90;
+      r.rect(p.x + 38, p.y + 20, bw, 5, '#45283c', true);
+      r.rect(p.x + 38, p.y + 20, Math.round(bw * left), 5, g.state === 'eating' ? '#99e550' : left > 0.3 ? '#fbf236' : '#df7126', true);
       r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, status, p.x + 38, p.y + 21);
+      drawText(r, assets, g.state === 'eating' ? 'Eating' : 'Waiting', p.x + 38, p.y + 28);
       r.ctx.globalAlpha = 1;
       // the order: each thing, dimmed once it's been brought
       let ox = p.x + LIST_W - 4;
@@ -215,43 +198,48 @@ export class TableScreen implements Screen {
         const dish = g.order[part];
         if (!dish) continue;
         ox -= SLOT + 2;
-        drawSlot(r, ox, p.y + 1, false);
-        drawItem(r, assets, content, dish, ox, p.y + 1, 1, !!g.got[part]);
+        drawSlot(r, ox, p.y + 3, false);
+        drawItem(r, assets, content, dish, ox, p.y + 3, 1, !!g.got[part]);
       }
     });
-    // what the chosen guest ordered, by name
     const g = this.guest(this.seat);
     if (g && this.pane === 'seats') {
       const want = [g.order.food, g.order.drink].filter((d): d is string => !!d).map((d) => content.itemName(d)).join(' and ');
-      drawText(r, assets, `Ordered ${want}`, this.x + 12, this.y + H - 44);
+      r.ctx.globalAlpha = 0.8;
+      drawText(r, assets, `Ordered ${want}`, this.x + 20 + measure(this.title), this.y + 10);
+      r.ctx.globalAlpha = 1;
     }
 
-    if (this.barServe) {
-      r.ctx.globalAlpha = 0.7;
-      wrap('Choose a guest to hand them their order over the counter', W - LIST_W - 40).forEach((l, i) => drawText(r, assets, l, this.x + LIST_W + 26, this.y + TOP + i * 11));
-      r.ctx.globalAlpha = 1;
-    } else if (this.tray) {
-      drawTrayGrid(r, assets, content, this.tray, this.gridX, this.y + TOP, this.pane === 'tray' ? this.cell : null, this.picked);
-    } else {
-      r.ctx.globalAlpha = 0.7;
-      drawText(r, assets, 'Bring a serving tray', this.gridX - 20, this.y + TOP + 10);
-      r.ctx.globalAlpha = 1;
+    // what's ready at the plating station
+    const label = 'Ready';
+    drawText(r, assets, label, this.readySlot(0).x + (SLOT - measure(label)) / 2, this.y + TOP - 8);
+    for (let i = 0; i < READY_MAX; i++) {
+      const p = this.readySlot(i);
+      if (this.picked === i) r.nine('slot_selected', p.x - 3, p.y - 3, SLOT + 6, SLOT + 6);
+      drawSlot(r, p.x, p.y, this.pane === 'ready' && i === this.readySel);
+      const s = this.service.ready[i];
+      if (s) drawItem(r, assets, content, s.dish, p.x, p.y);
+    }
+    const chosen = this.pane === 'ready' ? this.service.ready[this.readySel] : undefined;
+    if (chosen) {
+      const name = content.itemName(chosen.dish);
+      drawText(r, assets, name, this.readySlot(0).x - measure(name) - 8, this.readySlot(this.readySel).y + 12);
     }
 
     // what's been left dirty here
     const dirty = this.service.dirty.get(this.table) ?? [];
     if (dirty.length) {
-      const label = 'Left on the table:';
-      drawText(r, assets, label, this.x + 12, this.y + H - 30);
+      const label2 = 'Left here:';
+      drawText(r, assets, label2, this.x + 12, this.y + H - 30);
       dirty.slice(0, 12).forEach((item, i) => {
         const { sheet, frame } = content.item(item).sprite;
-        r.sprite(`${sheet}/${frame}`, this.x + 16 + measure(label) + i * 16, this.y + H - 40);
+        r.sprite(`${sheet}/${frame}`, this.x + 16 + measure(label2) + i * 16, this.y + H - 40);
       });
     }
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
       : this.picked !== null ? hint(this.device, [['interact', 'serve them'], ['back', 'put it back']])
-      : hint(this.device, [['interact', this.barServe ? 'serve' : 'choose'], ['cook', 'dismiss'], ...(dirty.length ? [['recipes', 'clear'] as ['recipes', string]] : []), ['back', 'leave']]);
+      : hint(this.device, [['interact', 'choose'], ['cook', 'dismiss'], ...(dirty.length ? [['recipes', 'clear'] as ['recipes', string]] : []), ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + 12, this.y + H - 16);
     r.ctx.globalAlpha = 1;

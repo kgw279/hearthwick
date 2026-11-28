@@ -7,8 +7,10 @@
  * (prepped food onto shelves, drinks into barrels), or isn't made if there's no room.
  *
  * D-pad / stick / arrows move (across from the grid's right edge into the tray and back). A (E, click)
- * puts the chosen ingredient in; B (Esc, right-click) takes one of it back out (in the tray: the chosen
- * one); RT (X key, click the result) makes one; Y (R) empties the tray; X (F) leaves the station.
+ * puts the chosen ingredient in; X (F, right-click) takes one of it back out (in the tray: the chosen
+ * one); RT (X key, click the result) makes one; Y (R) empties the tray; Menu (Tab) opens the recipe book
+ * (known recipes; choosing one puts its ingredients in); B (Esc) leaves the station. Working out
+ * something new writes it in the book.
  */
 import type { Assets } from '../core/assets';
 import type { Device, Input } from '../core/input';
@@ -21,6 +23,8 @@ import { InnStores, type Kitchen } from '../state/kitchen';
 import { drawItem, drawItemInfo, drawSlot, SLOT } from './items';
 import { gridMove } from './inventoryScreen';
 import { Nav, type Screen } from './screen';
+import { RecipeBook } from './recipeBook';
+import type { Cookbook } from '../state/cookbook';
 import { drawText, measure } from './text';
 
 const W = 464;
@@ -29,6 +33,7 @@ const COLS = 6;
 const ROWS = 5;
 const TOP = 30;
 const PAD = 12;
+const BOOK_ROWS = 5;
 
 type Pane = 'grid' | 'tray';
 
@@ -44,15 +49,18 @@ export class PrepScreen implements Screen {
   private message = { text: '', until: 0 };
   private time = 0;
   private device: Device = 'keyboard';
+  private readonly book: RecipeBook;
 
   constructor(
     private readonly station: string,
     private readonly kitchen: Kitchen,
+    private readonly cookbook: Cookbook,
     private readonly content: Content,
     private readonly assets: Assets,
   ) {
     this.size = content.mostInputsAt(station);
     this.usable = content.ingredientsAt(station);
+    this.book = new RecipeBook(() => cookbook.at(station), (i) => kitchen.have(i), content, assets);
   }
 
   private get x(): number {
@@ -85,11 +93,17 @@ export class PrepScreen implements Screen {
   update(input: Input, dt: number): boolean {
     this.time += dt;
     this.device = input.device;
-    if (input.pressed('cook') || input.pressed('menu')) return false;
+    if (this.book.open) {
+      const pick = this.book.update(input, dt, BOOK_ROWS);
+      if (pick) this.fill(pick.inputs);
+      return true;
+    }
+    if (input.pressed('back')) return false;
+    if (input.pressed('menu')) this.book.open = true;
     const d = this.nav.step(input, dt);
     if (d) this.move(d);
     if (input.pressed('interact')) this.add();
-    if (input.pressed('back')) this.takeOut();
+    if (input.pressed('cook')) this.takeOut();
     if (input.pressed('cat_next')) this.make();
     if (input.pressed('recipes')) this.tray = [];
     return true;
@@ -140,12 +154,20 @@ export class PrepScreen implements Screen {
     if (i >= 0) this.tray.splice(i, 1);
   }
 
+  /** Put a recipe's ingredients in (from the book), as far as there are any to hand. */
+  private fill(inputs: string[]): void {
+    const short = inputs.find((i) => this.kitchen.have(i) < inputs.filter((x) => x === i).length);
+    this.tray = [...inputs];
+    if (short) this.say(`Not enough ${this.content.itemName(short)} to hand`);
+  }
+
   /** Make one of what the tray holds; the tray stays filled for the next. */
   private make(): void {
     const r = this.recipe();
     if (!r) return this.say(this.tray.length ? 'That makes nothing here' : 'Put some ingredients in first');
     const why = this.kitchen.make(r);
-    this.say(why ?? `Made ${this.content.itemName(r.out)}`);
+    const name = this.content.itemName(r.out);
+    this.say(why ?? (this.cookbook.learn(this.station, r.out, r.inputs) ? `New recipe: ${name}! Made one` : `Made ${name}`));
     this.keepSelection();
   }
 
@@ -174,6 +196,12 @@ export class PrepScreen implements Screen {
   }
 
   pointer(px: number, py: number, button: number): boolean {
+    if (this.book.open) {
+      const b = this.bookAt();
+      const pick = button === 0 ? this.book.pointer(px, py, b.x, b.y, b.w, BOOK_ROWS) : null;
+      if (pick) this.fill(pick.inputs);
+      return true;
+    }
     const hit = (p: { x: number; y: number }) => px >= p.x && py >= p.y && px < p.x + SLOT && py < p.y + SLOT;
     const n = this.stock().length;
     for (let i = this.scroll * COLS; i < Math.min(n, (this.scroll + ROWS) * COLS); i++) {
@@ -199,10 +227,21 @@ export class PrepScreen implements Screen {
     return !(button === 0 && outside);
   }
 
+  private bookAt(): { x: number; y: number; w: number } {
+    return { x: this.x + 30, y: this.y + 26, w: W - 60 };
+  }
+
   draw(r: Renderer): void {
     const { assets, content, kitchen } = this;
     r.nine('panel_dark', this.x, this.y, W, H);
     drawText(r, assets, content.stations[this.station].name, this.x + PAD, this.y + 10);
+    // the chosen ingredient, by name
+    const chosen = this.pane === 'grid' ? this.stock()[this.sel.grid]?.item : this.tray[this.sel.tray];
+    if (chosen) {
+      r.ctx.globalAlpha = 0.8;
+      drawText(r, assets, content.itemName(chosen), this.x + PAD + 110, this.y + 10);
+      r.ctx.globalAlpha = 1;
+    }
 
     // the ingredients to hand
     const stock = this.stock();
@@ -250,9 +289,13 @@ export class PrepScreen implements Screen {
 
     const msg = this.time < this.message.until;
     const help = msg ? this.message.text
-      : hint(this.device, [['interact', 'add'], ['back', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['cook', 'leave']]);
+      : hint(this.device, [['interact', 'add'], ['cook', 'take out'], ['cat_next', 'make'], ['recipes', 'clear'], ['menu', 'recipes'], ['back', 'leave']]);
     r.ctx.globalAlpha = msg ? 1 : 0.6;
     drawText(r, assets, help, this.x + PAD, this.y + H - 18);
     r.ctx.globalAlpha = 1;
+    if (this.book.open) {
+      const b = this.bookAt();
+      this.book.draw(r, b.x, b.y, b.w, BOOK_ROWS);
+    }
   }
 }

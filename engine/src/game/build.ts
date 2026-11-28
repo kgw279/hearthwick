@@ -27,15 +27,13 @@ export interface SceneHooks {
   openStorage(box: { id: string; slots: number; contents?: Array<{ item: string; count: number }> }, art: string): void;
   /** Work at a cooking station (by its gamedata id). */
   openStation(station: string): void;
-  /** A plating station (by its position in this map): set a carried tray down on it, or plate onto its trays. */
-  openPlating(at: string): void;
+  /** The plating station: make up dishes, ready to serve. */
+  openPlating(): void;
   /** The bar: serve the guests sat at it. */
   openBar(): void;
   /** Serve a table (by its key in this map: see seating.ts). */
   openTable(key: string): void;
-  /** Whether the player is carrying a serving tray (what the counter and tables offer depends on it). */
-  carryingTray(): boolean;
-  /** Wash the dirty tableware the player carries. */
+  /** Open the wash station (washing and drying tableware). */
   wash(): void;
 }
 
@@ -91,11 +89,11 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
       const shop = content.shop(b.shop);
       return {
         frames: shop.building ? [shop.building] : undefined, // a shop prop without a sprite is its building
-        interaction: () => ({ label: 'Shop', use: () => hooks.openShop(b.shop) }),
+        interaction: () => ({ label: shop.name, use: () => hooks.openShop(b.shop) }),
       };
     }
     case 'market':
-      return { interaction: () => ({ label: 'Browse', use: () => hooks.openShop(b.shop) }) };
+      return { interaction: () => ({ label: content.shop(b.shop).name, use: () => hooks.openShop(b.shop) }) };
     case 'pet':
       return { interaction: () => ({ label: 'Pet', use: () => hooks.emote('emote_love') }) };
     case 'draw_water':
@@ -108,7 +106,7 @@ function wire(b: Behavior, content: Content, hooks: SceneHooks, art = ''): Wired
     case 'storage':
       return { interaction: () => ({ label: 'Open', use: () => hooks.openStorage(b, art) }) };
     case 'wash':
-      return { interaction: () => ({ label: 'Wash dishes', use: () => hooks.wash() }) };
+      return { interaction: () => ({ label: 'Wash up', use: () => hooks.wash() }) };
     case 'forage': {
       const node = content.forageNode(b.node);
       return {
@@ -138,14 +136,10 @@ const TABLE = /^table_\d$/;
 function workplace(p: PlacedProp, frame: string, content: Content, hooks: SceneHooks): Interaction | null {
   const at = `${Math.round(p.x)},${Math.round(p.y)}`;
   const station = content.stationOfArt(frame);
-  if (station === 'plate') {
-    return { get label() { return hooks.carryingTray() ? 'Set tray down' : content.stations.plate.verb; }, use: () => hooks.openPlating(at) };
-  }
+  if (station === 'plate') return { label: content.stations.plate.verb, use: () => hooks.openPlating() };
   if (station) return { label: content.stations[station].verb, use: () => hooks.openStation(station) };
   if (COUNTER.test(frame)) return { label: 'Serve', use: () => hooks.openBar() };
-  if (TABLE.test(frame)) {
-    return { get label() { return hooks.carryingTray() ? 'Serve' : 'Table'; }, use: () => hooks.openTable(at) };
-  }
+  if (TABLE.test(frame)) return { label: 'Serve', use: () => hooks.openTable(at) };
   return null;
 }
 
@@ -161,7 +155,7 @@ export function propFrames(p: PlacedProp, assets: Assets, content: Content): str
 }
 
 const NO_HOOKS: SceneHooks = {
-  say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openPlating() {}, openBar() {}, openTable() {}, carryingTray: () => false,
+  say() {}, emote() {}, float() {}, go() {}, give: () => false, openShop() {}, openStorage() {}, wash() {}, openStation() {}, openPlating() {}, openBar() {}, openTable() {},
 };
 
 /** Where a placed prop's sprite goes and what it blocks, in world pixels (solid is sprite-relative). */

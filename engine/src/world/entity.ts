@@ -12,8 +12,6 @@ export interface Interaction {
   label: string;
   /** Called when the player presses interact while facing this. */
   use: () => void;
-  /** Called when the player holds interact on this (picking it up), if it does anything. */
-  hold?: () => void;
 }
 
 export interface PropSpec {

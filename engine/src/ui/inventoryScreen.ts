@@ -12,7 +12,7 @@ import { VIEW_H, VIEW_W } from '../core/renderer';
 import type { Content } from '../game/data';
 import type { Bag, Stack } from '../state/inventory';
 import { InnStores } from '../state/kitchen';
-import type { Tray } from '../state/service';
+import { READY_MAX, type Served } from '../state/service';
 import { drawCoins, drawItem, drawItemInfo, drawSlot, SLOT } from './items';
 import { Nav, type Screen } from './screen';
 import { drawText, measure } from './text';
@@ -45,7 +45,7 @@ export class InventoryScreen implements Screen {
   constructor(
     private readonly bag: Bag,
     private readonly stores: InnStores,
-    private readonly trays: Tray[],
+    private readonly ready: Served[],
     private readonly inInn: boolean,
     private readonly content: Content,
     private readonly assets: Assets,
@@ -190,8 +190,7 @@ export class InventoryScreen implements Screen {
         cy += 12;
       }
       if (this.tab === 'Kitchen') {
-        const meals = this.trays.reduce((n, t) => n + t.meals.length, 0);
-        drawText(r, assets, `On the trays  ${meals} meal${meals === 1 ? '' : 's'}`, ix, cy + 4);
+        drawText(r, assets, `Ready to serve  ${this.ready.length}/${READY_MAX}`, ix, cy + 4);
       }
     }
     const msg = this.time < this.message.until;

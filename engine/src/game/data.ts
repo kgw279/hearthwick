@@ -18,8 +18,10 @@ export interface ItemData {
   value: number;
   shelf_life_days?: number;
   sprite: { sheet: string; frame: string };
-  /** Tableware: the clean piece a dirty one washes back to. */
+  /** Tableware: the wet piece a dirty one washes to. */
   washes_to?: string;
+  /** Tableware: the clean piece a wet one dries to. */
+  dries_to?: string;
   /** Tableware: what a clean piece becomes once used. */
   dirty?: string;
 }

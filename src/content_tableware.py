@@ -3,7 +3,8 @@ General Store sells every tier), used (a served guest leaves them dirty), washed
 upgraded by buying a better tier. They're items like any other, so they fill bag and storage slots.
 
   <material>_<kind>        clean, e.g. wood_plate, clay_mug, pewter_cutlery
-  dirty_<material>_<kind>  after use; washing gives back the clean one
+  dirty_<material>_<kind>  after use; washing gives a wet one
+  wet_<material>_<kind>    washed; drying gives back the clean one
 Tiers, cheapest first: plates, bowls and mugs in wood, clay, pewter; cutlery in wood, iron, pewter.
 """
 from art_tableware import item_ids
@@ -24,8 +25,11 @@ def items():
                         sprite={'sheet': 'tableware_items', 'frame': iid}, dirty=f'dirty_{iid}',
                         sources=[{'type': 'shop', 'shop': SELLER, 'price': VALUE[tier]}])
         out[f'dirty_{iid}'] = dict(base, name=f'Dirty {NAMES[mat].lower()} {KINDS[kind]}', value=0,
-                                   sprite={'sheet': 'tableware_items', 'frame': f'dirty_{iid}'}, washes_to=iid,
+                                   sprite={'sheet': 'tableware_items', 'frame': f'dirty_{iid}'}, washes_to=f'wet_{iid}',
                                    sources=[{'type': 'used', 'note': 'left dirty by a served guest'}])
+        out[f'wet_{iid}'] = dict(base, name=f'Wet {NAMES[mat].lower()} {KINDS[kind]}', value=0,
+                                 sprite={'sheet': 'tableware_items', 'frame': f'wet_{iid}'}, dries_to=iid,
+                                 sources=[{'type': 'washed', 'note': 'washed at the wash tub, still to dry'}])
     return out
 
 

@@ -26,9 +26,12 @@ import { InventoryScreen } from '../ui/inventoryScreen';
 import { PrepScreen } from '../ui/prepScreen';
 import { PlatingScreen } from '../ui/platingScreen';
 import { accepts, InnStores, isInn, Kitchen } from '../state/kitchen';
-import { Service, type Leaving, type Tray } from '../state/service';
-import { barKey, seating, spotsAt, traySpots, type Seat } from './seating';
-import { drawTray, GuestEntity, TopEntity, TrayEntity } from './serviceView';
+import { Service, type Leaving } from '../state/service';
+import { Cookbook } from '../state/cookbook';
+import { Washing } from '../state/washing';
+import { WashScreen } from '../ui/washScreen';
+import { barKey, platingStations, seating, type Seat } from './seating';
+import { GuestEntity, ReadyEntity, TopEntity } from './serviceView';
 import { TableScreen } from '../ui/tableScreen';
 import { containerOf } from '../world/containers';
 import { drawCoins } from '../ui/items';
@@ -36,7 +39,6 @@ import type { Screen } from '../ui/screen';
 import { ShopScreen } from '../ui/shopScreen';
 import { Player } from './player';
 
-const SERVING_TRAYS = 2; // serving trays the inn starts with
 const FADE = 0.22; // seconds for each half of a scene transition
 
 interface Transition { phase: 'out' | 'in'; t: number; to: string; spawn: string }
@@ -72,8 +74,12 @@ export class Game {
   readonly storage: Storage;
   /** The inn's containers as one store, the dishes waiting on the counter, and cooking with them. */
   readonly kitchen: Kitchen;
-  /** Serving trays, and the guests at the tables. */
+  /** What's ready to serve, and the guests at the tables. */
   readonly service: Service;
+  /** The recipes the player knows. */
+  readonly cookbook: Cookbook;
+  /** The wash station's tub and drying rack. */
+  readonly washing: Washing;
   /** Picking furniture up and setting it down in play. */
   readonly furnish: Furnish;
   /** A full-screen UI (bag, shop) that has the input while it's open. */
@@ -105,12 +111,11 @@ export class Game {
         const inv = this.storage.get(box.id, box.slots, box.contents, accepts(containerOf(art), this.content));
         this.screen = new StorageScreen(titleOf(art), inv, this.bag, this.content, assets);
       },
-      openStation: (station) => (this.screen = new PrepScreen(station, this.kitchen, this.content, assets)),
-      openPlating: (at) => this.atPlating(at),
-      openBar: () => this.openTable(barKey(this.scene.id), true),
-      openTable: (key) => this.openTable(`${this.scene.id}:${key}`),
-      carryingTray: () => !!this.service.carriedTray,
-      wash: () => this.washDishes(),
+      openStation: (station) => (this.screen = new PrepScreen(station, this.kitchen, this.cookbook, this.content, assets)),
+      openPlating: () => (this.screen = new PlatingScreen(this.service.ready, this.kitchen, this.cookbook, () => this.service.changed(), this.content, assets)),
+      openBar: () => this.openTable(barKey(this.scene.id), 'The bar'),
+      openTable: (key) => this.openTable(`${this.scene.id}:${key}`, 'Table'),
+      wash: () => (this.screen = new WashScreen(this.washing, this.kitchen, this.content, assets)),
     };
     const e = this.content.economy;
     this.bag = new Bag(e.bag_slots, e.stack_size, e.starting_coins);
@@ -123,64 +128,22 @@ export class Game {
       rebuild: () => this.rebuildScene(false),
       changed: (id) => this.editor.markChanged(id),
       say: (text) => this.floats.pop(text, this.player.center.x, this.player.y, this.time),
-      hold: () => this.holdTarget(),
     });
     this.shops.restock(1);
     this.listenMouse(renderer.ctx.canvas);
     this.layouts = loadLayouts();
     this.kitchen = new Kitchen(new InnStores(this.storage, this.layouts, this.content), this.bag, this.content);
     const looks = (assets.sheets.find((sh) => sh.name === 'guests')?.frames ?? []).filter((f) => f.endsWith('_down_idle')).map((f) => f.replace(/_down_idle$/, ''));
-    this.service = new Service(SERVING_TRAYS, this.content, looks);
+    this.service = new Service(this.content, looks);
+    this.cookbook = new Cookbook(this.content);
+    this.washing = new Washing(this.content);
     this.editor = new Editor(this);
     this.enter('town', 'start');
-  }
-
-  /** Holding use on something: a tray picks up (hands full while carrying one). False if nothing held. */
-  private holdTarget(): boolean {
-    if (this.service.carriedTray) {
-      this.floats.pop('Set the tray down first', this.player.center.x, this.player.y, this.time);
-      return true;
-    }
-    const hold = this.target?.interaction()?.hold;
-    if (!hold) return false;
-    hold();
-    return true;
-  }
-
-  private say(text: string): void {
-    this.floats.pop(text, this.player.center.x, this.player.y, this.time);
   }
 
   /** Every seat in the inn. */
   private seats(): Seat[] {
     return [...this.layouts.values()].filter((l) => isInn(l.id)).flatMap((l) => seating(l, this.assets, this.content).seats);
-  }
-
-  /** The trays resting on a plating station (by its index in this map's layout). */
-  private traysAt(prop: number): Tray[] {
-    const spots = spotsAt(traySpots(this.layouts.get(this.scene.id)!, this.assets, this.content), prop);
-    return this.service.trays.filter((t) => t.spot !== null && spots.includes(t.spot));
-  }
-
-  /** At a plating station: set a carried tray down on it, or plate onto the trays resting there. */
-  private atPlating(at: string): void {
-    const layout = this.layouts.get(this.scene.id)!;
-    const prop = layout.props.findIndex((p) => p.sprite === 'plating_station' && `${Math.round(p.x)},${Math.round(p.y)}` === at);
-    const carried = this.service.carriedTray;
-    if (carried) {
-      const here = spotsAt(traySpots(layout, this.assets, this.content), prop);
-      const taken = new Set(this.service.trays.map((t) => t.spot));
-      const free = here.find((i) => !taken.has(i));
-      if (free === undefined) return this.say('No room for another tray here');
-      carried.spot = free;
-      this.service.changed();
-      return;
-    }
-    this.openPlating(this.traysAt(prop));
-  }
-
-  private openPlating(trays: Tray[], first?: Tray): void {
-    this.screen = new PlatingScreen(trays, first, this.kitchen, () => this.service.changed(), this.content, this.assets);
   }
 
   /** A guest has left: their coins, and how they felt about it, over where they sat. */
@@ -194,41 +157,20 @@ export class Game {
     this.emotes.pop(l.mood >= 0.8 ? 'emote_happy' : l.mood > 0 ? 'emote_sweat' : 'emote_sleep', x, s.art.y - 4, this.time, 1.6);
   }
 
-  /** Serving a table (key: map and position), or the bar: its seats and guests. */
-  private openTable(key: string, bar = false): void {
+  /** Serving a table (key: map and position), or the bar: its seats, from what's ready at the plating station. */
+  private openTable(key: string, title: string): void {
     const seats = seating(this.layouts.get(this.scene.id)!, this.assets, this.content).seats.filter((s) => s.table === key);
-    const barServe = bar ? (seat: Seat) => this.serveAtBar(seat) : null;
-    this.screen = new TableScreen(key, seats, this.service, this.service.carriedTray, (item) => this.bag.add(item, 1) === 1,
-      (l) => this.guestLeft(l), barServe, this.content, this.assets);
-  }
-
-  /** Hand a guest at the bar what they're still waiting for, made up from the stores. */
-  private serveAtBar(seat: Seat): string | null {
-    const g = this.service.guests.get(seat.key);
-    if (!g) return 'Nobody is sitting there';
-    if (g.state !== 'waiting') return "They've already been served";
-    let served = 0;
-    let why: string | null = null;
-    for (const part of ['drink', 'food'] as const) {
-      const want = g.order[part];
-      if (!want || g.got[part]) continue;
-      const s = this.kitchen.barServe(want);
-      if (typeof s === 'string' || s === null) {
-        why ??= s;
-        continue;
-      }
-      this.service.give(seat.key, { [part]: s });
-      served++;
-    }
-    return served ? null : why;
+    this.screen = new TableScreen(title, key, seats, this.service, (item) => this.bag.add(item, 1) === 1,
+      () => this.kitchen.takeCutlery(), (l) => this.guestLeft(l), this.content, this.assets);
   }
 
   /** Guests eat, pay and leave, and new ones arrive (wherever the player is). */
   private tickService(dt: number): void {
     this.service.update(dt, this.seats(), (bar) => this.kitchen.menu(bar), (l) => this.guestLeft(l));
+    this.washing.update(dt, (item) => this.kitchen.put(item));
   }
 
-  /** Serving as seen in this map: trays on plating stations, seated guests, what's on the tables and bar. */
+  /** Serving as seen in this map: what's ready on the plating station, seated guests, what's on the tables and bar. */
   private serviceEntities(): Entity[] {
     const l = this.layouts.get(this.scene.id);
     if (!l || !isInn(l.id)) return [];
@@ -267,38 +209,12 @@ export class Game {
       const front = Math.max(props[counter].sortY, ...barSeats.map((s) => (props[s.chair]?.sortY ?? 0) + 0.2));
       if (meals.length || pile.items.length) out.push(new TopEntity({ sortY: front }, meals, pile, this.content));
     }
-    const spots = traySpots(l, this.assets, this.content);
-    for (const tray of this.service.trays) {
-      const spot = tray.spot === null ? undefined : spots[tray.spot];
-      if (!spot || !props[spot.prop]) continue;
-      out.push(new TrayEntity(tray, spot, props[spot.prop], this.content, {
-        label: 'Tray',
-        use: () => this.openPlating(this.traysAt(spot.prop), tray),
-        hold: () => {
-          tray.spot = null;
-          this.service.changed();
-        },
-      }));
+    // what's ready to serve, on top of the plating station
+    const station = platingStations(l, this.assets, this.content)[0];
+    if (station && this.service.ready.length && props[station.prop]) {
+      out.push(new ReadyEntity(this.service.ready, station.art, props[station.prop], this.content));
     }
     return out;
-  }
-
-  /** The wash tub: every dirty piece of tableware the player carries, and in the inn's stores, comes clean. */
-  private washDishes(): void {
-    let washed = 0;
-    for (const inv of [this.bag, ...this.kitchen.stores.boxes().map((b) => b.inv)]) {
-      inv.slots.forEach((s, i) => {
-        const clean = s && this.content.item(s.item).washes_to;
-        if (!s || !clean) return;
-        // out of its slot and back in clean, joining any clean stack already there (the freed slot
-        // means it always fits)
-        inv.slots[i] = null;
-        inv.add(clean, s.count);
-        washed += s.count;
-      });
-    }
-    const at = this.player.center;
-    this.floats.pop(washed ? `Washed ${washed} dish${washed > 1 ? 'es' : ''}` : 'Nothing to wash', at.x, this.player.y, this.time);
   }
 
   /** Forget a scene so it's rebuilt from its layout on the next visit (after the editor changes it). */
@@ -425,7 +341,7 @@ export class Game {
       this.target = null;
     } else {
       if (this.input.pressed('menu')) {
-        this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.trays, isInn(this.scene.id), this.content, this.assets);
+        this.screen = new InventoryScreen(this.bag, this.kitchen.stores, this.service.ready, isInn(this.scene.id), this.content, this.assets);
       }
       const g = this.scene.ground;
       this.player.move(dt, this.input, this.blocked, (x, y) => g.speedAt?.(x, y) ?? 1, this.furnish.carrying);
@@ -433,7 +349,7 @@ export class Game {
       if (exit) {
         this.goTo(exit.to, exit.spawn);
       } else {
-        // the use button: a tap uses what's in front; holding it picks things up (trays; furniture: see Furnish)
+        // the use button: a tap uses what's in front; holding it picks furniture up (see Furnish)
         const tapped = this.furnish.update(dt, this.input);
         this.target = this.furnish.carrying ? null : this.findTarget();
         const action = this.target?.interaction();
@@ -470,14 +386,6 @@ export class Game {
     if (this.debug) this.scene.ground.drawDebug?.(r, cx, cy);
     for (const e of this.entities) r.queueDraw(e.sortY, () => e.draw(r, cx, cy, this.time, alpha));
     if (!this.editor.active) this.furnish.draw(r, cx, cy);
-    const tray = this.service.carriedTray;
-    if (tray && !this.editor.active) {
-      // held in front (behind them when they face away)
-      const p = this.player.at(alpha);
-      const tx = Math.round(p.x - cx);
-      const ty = Math.round(p.y - cy) - 8;
-      r.queueDraw(this.player.sortY + (this.player.facing === 'up' ? -0.5 : 0.5), () => drawTray(r, this.content, tray, tx, ty));
-    }
     r.flush();
     this.emotes.draw(r, cx, cy, this.time);
     this.floats.draw(r, this.assets, cx, cy, this.time);

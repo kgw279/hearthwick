@@ -4,7 +4,7 @@
  *  - a seat is a chair facing a table: the chair's art is just short of a table's in the way it faces,
  *    and overlaps it across that way; or a stool just in front of the bar (a bar counter that isn't a
  *    shop's), facing it. Everyone at the bar is at one "table", the bar;
- *  - tray spots are the top of a plating station: room for two trays side by side.
+ *  - what's ready to serve is shown on top of the plating station.
  * Keys name a seat or table by its map and position.
  */
 import type { Assets } from '../core/assets';
@@ -28,8 +28,6 @@ export interface Seat {
 }
 
 export interface Table { key: string; layout: string; prop: number; art: Rect }
-
-export interface Spot { layout: string; prop: number; x: number; y: number }
 
 const REACH = 14; // px a chair can be from its table
 const CHAIR = /^chair_(down|up|left|right)$/;
@@ -78,18 +76,11 @@ function faces(c: Rect, t: Rect, facing: Facing): boolean {
   }
 }
 
-/** Spots for trays: two on top of each plating station, in map order. */
-export function traySpots(layout: Layout, assets: Assets, content: Content): Spot[] {
-  const out: Spot[] = [];
+/** The plating stations in a map: their index in the layout and their art. */
+export function platingStations(layout: Layout, assets: Assets, content: Content): Array<{ prop: number; art: Rect }> {
+  const out: Array<{ prop: number; art: Rect }> = [];
   layout.props.forEach((p, i) => {
-    if (typeof p.sprite !== 'string' || !PLATING.test(p.sprite)) return;
-    const a = artRect(p, propFrames(p, assets, content)[0], assets);
-    for (const k of [0.25, 0.75]) out.push({ layout: layout.id, prop: i, x: Math.round(a.x + a.w * k), y: a.y + 11 });
+    if (typeof p.sprite === 'string' && PLATING.test(p.sprite)) out.push({ prop: i, art: artRect(p, propFrames(p, assets, content)[0], assets) });
   });
   return out;
-}
-
-/** Which tray spots belong to the plating station at prop index `prop`. */
-export function spotsAt(spots: Spot[], prop: number): number[] {
-  return spots.map((s, i) => (s.prop === prop ? i : -1)).filter((i) => i >= 0);
 }

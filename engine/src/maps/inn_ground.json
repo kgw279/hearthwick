@@ -73,7 +73,7 @@
     {"sprite": "chair_left", "x": 239, "y": 168},
     {"sprite": "chair_right", "x": 228, "y": 205},
     {"sprite": "chair_left", "x": 277, "y": 205},
-    {"sprite": "pantry_shelf", "x": 48, "y": 94, "behavior": {"type": "storage", "id": "inn_ground_pantry_shelf_1", "slots": 8}},
-    {"sprite": "plating_station", "x": 172, "y": 94}
+    {"sprite": "pantry_shelf", "x": 48, "y": 70, "behavior": {"type": "storage", "id": "inn_ground_pantry_shelf_1", "slots": 8}},
+    {"sprite": "plating_station", "x": 172, "y": 70}
   ]
 }

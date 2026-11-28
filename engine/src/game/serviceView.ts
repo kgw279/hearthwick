@@ -1,16 +1,16 @@
 /**
- * Serving, as seen in the world: trays on the plating station (and their meals), guests in their seats,
+ * Serving, as seen in the world: what's ready on the plating station, guests in their seats,
  * and on each table (and the bar) what's being eaten and what's been left dirty. What guests ordered is
  * shown in the table's menu, not over their heads. Rebuilt from the service state whenever it's drawn;
  * none of it is in the map.
  */
 import type { Assets } from '../core/assets';
 import type { Renderer } from '../core/renderer';
-import type { Rect } from '../core/geom';
-import { Entity, type Interaction } from '../world/entity';
+import { Entity } from '../world/entity';
 import type { Content } from './data';
-import type { Guest, Meal, Tray } from '../state/service';
-import type { Seat, Spot } from './seating';
+import type { Guest, Meal, Served } from '../state/service';
+import type { Seat } from './seating';
+import type { Rect } from '../core/geom';
 
 /** The small piece shown for a served part, or a dirty piece. */
 function mini(content: Content, item: string, part: 'food' | 'drink' | 'cutlery' | 'dirty'): string {
@@ -29,38 +29,28 @@ export function drawMeal(r: Renderer, content: Content, m: Meal, x: number, y: n
   if (m.drink) r.sprite(mini(content, m.drink.ware, 'drink'), x + 3, y - 6);
 }
 
-export class TrayEntity extends Entity {
+/** What's ready to serve, set out along the top of the plating station. */
+export class ReadyEntity extends Entity {
   constructor(
-    private readonly tray: Tray,
-    spot: Spot,
+    private readonly ready: Served[],
+    private readonly art: Rect,
     private readonly station: Entity,
     private readonly content: Content,
-    private readonly action: Interaction,
   ) {
-    super(spot.x - 16, spot.y - 24);
+    super(art.x, art.y);
   }
 
   get sortY(): number {
     return this.station.sortY + 0.02;
   }
 
-  useArea(): Rect {
-    return { x: this.x + 4, y: this.y + 20, w: 24, h: 28 };
-  }
-
-  interaction(): Interaction {
-    return this.action;
-  }
-
   draw(r: Renderer, camX: number, camY: number): void {
-    drawTray(r, this.content, this.tray, this.x - camX, this.y - camY);
+    const gap = (this.art.w - 16) / Math.max(1, this.ready.length);
+    this.ready.forEach((s, i) => {
+      const meal: Meal = this.content.dishes[s.dish]?.kind === 'drink' ? { drink: s } : { food: s };
+      drawMeal(r, this.content, meal, Math.round(this.art.x + 8 + i * gap + gap / 2 - 5) - camX, this.art.y + 7 - camY);
+    });
   }
-}
-
-/** A tray and its meals, its frame's top-left at (x, y) on screen. */
-export function drawTray(r: Renderer, content: Content, tray: Tray, x: number, y: number): void {
-  r.sprite('serving_tray', x, y);
-  tray.meals.forEach((m, i) => drawMeal(r, content, m, x + 4 + i * 6, y + 19));
 }
 
 export class GuestEntity extends Entity {
